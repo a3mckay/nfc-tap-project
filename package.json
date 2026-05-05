@@ -1,0 +1,22 @@
+{
+  "name": "nfc-tap-project",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @nfc/db migrate:up",
+    "db:reset": "docker compose down -v && docker compose up -d postgres && sleep 2 && pnpm db:migrate",
+    "test": "pnpm -r run test",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

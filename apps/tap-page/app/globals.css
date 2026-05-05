@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS custom properties for brand theming — injected per-store in Step 4 */
+:root {
+  --brand-primary: #000000;
+  --brand-bg: #ffffff;
+  --brand-font: system-ui, sans-serif;
+}
