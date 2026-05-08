@@ -14,6 +14,7 @@ import { getCurrentCustomer } from "@/lib/auth.js";
 import { FallbackPage } from "./FallbackPage.js";
 import { ProductShell } from "./ProductShell.js";
 import { ReactionBar } from "./ReactionBar.js";
+import { PicksBar, type LocalTap } from "./PicksBar.js";
 
 interface Props {
   params: Promise<{ tag_uuid: string }>;
@@ -79,9 +80,18 @@ export default async function TapPage({ params }: Props) {
     categoryPattern = await getCategoryPatternForCustomer(pool, customer.id, product.product_type);
   }
 
+  const productImages = product.images as Array<{ url: string; altText: string | null }>;
+  const currentTap: LocalTap = {
+    tagUuid: tag_uuid,
+    productTitle: product.title,
+    productImageUrl: productImages[0]?.url ?? null,
+    tappedAt: Date.now(),
+  };
+
   return (
     <div style={cssVars as React.CSSProperties}>
-      <div style={{ paddingBottom: "4rem" }}>
+      {/* Extra bottom padding for both fixed bars (PicksBar + ReactionBar) */}
+      <div style={{ paddingBottom: "9rem" }}>
         <ProductShell
           product={product}
           theme={theme}
@@ -100,6 +110,7 @@ export default async function TapPage({ params }: Props) {
           sameBrand={sameBrand}
         />
       </div>
+      <PicksBar currentTap={currentTap} primaryColor={primaryColor} />
       <ReactionBar tagId={state.tagId} sessionId={sessionId} primaryColor={primaryColor} customerId={customer?.id ?? null} />
     </div>
   );

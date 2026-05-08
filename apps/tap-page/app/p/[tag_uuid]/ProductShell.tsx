@@ -1,7 +1,6 @@
 import type { Product, Enrichment, Review, FaqItem, ExternalReview, ReviewAggregate, Award, BrandCollectorInsight, CategoryPatternInsight, SimilarProductSuggestion } from "@nfc/db";
 import type { ThemeSettings } from "@/theme.js";
 import { DEFAULT_THEME } from "@/theme.js";
-import { YourTapsStrip, type LocalTap } from "./YourTapsStrip.js";
 import { AuthPromptCard } from "./AuthPromptCard.js";
 import { OfferReveal } from "./OfferReveal.js";
 import { ForYou } from "./ForYou.js";
@@ -73,15 +72,6 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
 
   const inventoryQty = product.inventory_quantity ?? 0;
   const showScarcity = inventoryQty > 0 && inventoryQty <= scarcityThreshold;
-
-  const currentTap: LocalTap = {
-    tagUuid,
-    productTitle: product.title,
-    productImageUrl: primaryImage?.url ?? null,
-    productVendor: product.vendor,
-    storeName,
-    tappedAt: Date.now(),
-  };
 
   const embedUrl = enrichment?.video_url
     ? (getYouTubeEmbedUrl(enrichment.video_url) ?? getVimeoEmbedUrl(enrichment.video_url))
@@ -331,12 +321,7 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
           primaryColor={primaryColor}
         />
 
-        {/* ── Your Taps + Auth ── */}
-        <YourTapsStrip
-          currentTap={currentTap}
-          isAuthenticated={isAuthenticated}
-          primaryColor={primaryColor}
-        />
+        {/* ── Auth ── */}
         <AuthPromptCard
           isAuthenticated={isAuthenticated}
           primaryColor={primaryColor}
