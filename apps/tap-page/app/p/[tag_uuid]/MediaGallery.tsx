@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 
-interface Slide {
+type Slide = {
   type: "image";
   url: string;
   alt: string;
