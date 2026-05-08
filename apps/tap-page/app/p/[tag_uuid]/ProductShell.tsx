@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { Product, Enrichment, Review, FaqItem, ExternalReview, ReviewAggregate, Award, BrandCollectorInsight, CategoryPatternInsight, SimilarProductSuggestion } from "@nfc/db";
 import type { ThemeSettings } from "@/theme.js";
 import { DEFAULT_THEME } from "@/theme.js";
@@ -6,6 +5,7 @@ import { YourTapsStrip, type LocalTap } from "./YourTapsStrip.js";
 import { AuthPromptCard } from "./AuthPromptCard.js";
 import { OfferReveal } from "./OfferReveal.js";
 import { ForYou } from "./ForYou.js";
+import { MediaGallery } from "./MediaGallery.js";
 
 interface ShopifyImage { url: string; altText: string | null }
 interface ShopifyVariant { id: string; sku: string | null; price: string; inventoryQuantity: number }
@@ -87,7 +87,14 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
     ? (getYouTubeEmbedUrl(enrichment.video_url) ?? getVimeoEmbedUrl(enrichment.video_url))
     : null;
 
-  const extraImages = (enrichment?.extra_images ?? []).filter(Boolean);
+  const extraImages = (enrichment?.extra_images ?? []).filter(Boolean) as string[];
+
+  // Build slides: primary image first, then extra images, then video last
+  const slides: Parameters<typeof MediaGallery>[0]["slides"] = [
+    ...(primaryImage ? [{ type: "image" as const, url: primaryImage.url, alt: primaryImage.altText ?? product.title }] : []),
+    ...extraImages.map((url, i) => ({ type: "image" as const, url, alt: `View ${i + 2}` })),
+    ...(embedUrl ? [{ type: "video" as const, embedUrl }] : []),
+  ];
   const reviews = (enrichment?.reviews ?? []) as Review[];
   const awards = enrichment?.awards ?? [];
   const faq = enrichment?.faq ?? [];
@@ -102,61 +109,17 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
   return (
     <main className="mx-auto max-w-lg pb-12">
 
-      {/* ── Hero image ── */}
-      {primaryImage && (
-        <div style={{ position: "relative", width: "100%", aspectRatio: "4/5", background: "#f3f3f3", overflow: "hidden" }}>
-          <Image
-            src={primaryImage.url}
-            alt={primaryImage.altText ?? product.title}
-            fill
-            className="object-cover"
-            priority
-          />
-          {/* Logo overlay — top left */}
-          {logoUrl && (
-            <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "rgba(255,255,255,0.88)", borderRadius: "6px", padding: "4px 10px", backdropFilter: "blur(4px)" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoUrl} alt="Store" style={{ height: "20px", objectFit: "contain", display: "block" }} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Photo strip (extra images) ── */}
-      {extraImages.length > 0 && (
-        <div style={{ display: "flex", gap: "4px", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", padding: "4px 0" }}>
-          {primaryImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={primaryImage.url}
-              alt={primaryImage.altText ?? product.title}
-              style={{ height: "80px", width: "80px", objectFit: "cover", borderRadius: "6px", flexShrink: 0, scrollSnapAlign: "start", border: `2px solid ${primaryColor}` }}
-            />
-          )}
-          {extraImages.map((url, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={url}
-              alt={`View ${i + 2}`}
-              style={{ height: "80px", width: "80px", objectFit: "cover", borderRadius: "6px", flexShrink: 0, scrollSnapAlign: "start" }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ── Video ── */}
-      {embedUrl && (
-        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", marginBottom: "0" }}>
-          <iframe
-            src={embedUrl}
-            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title="Product video"
-          />
-        </div>
-      )}
+      {/* ── Media gallery (images + video carousel) ── */}
+      <div style={{ position: "relative" }}>
+        <MediaGallery slides={slides} primaryColor={primaryColor} />
+        {/* Logo overlay — top left of gallery */}
+        {logoUrl && (
+          <div style={{ position: "absolute", top: "0.75rem", left: "0.75rem", zIndex: 10, background: "rgba(255,255,255,0.88)", borderRadius: "6px", padding: "4px 10px", backdropFilter: "blur(4px)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl} alt="Store" style={{ height: "20px", objectFit: "contain", display: "block" }} />
+          </div>
+        )}
+      </div>
 
       <div className="px-4 pt-5 space-y-6">
 
