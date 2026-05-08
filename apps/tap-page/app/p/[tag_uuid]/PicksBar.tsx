@@ -133,19 +133,26 @@ export function PicksBar({ currentTap, primaryColor }: Props) {
                   width: "40px",
                   height: "40px",
                   borderRadius: "7px",
-                  backgroundImage: t.productImageUrl ? `url(${t.productImageUrl})` : undefined,
-                  backgroundColor: t.productImageUrl ? undefined : "#f0f0f0",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
+                  overflow: "hidden",
                   border: isCurrent
                     ? `2.5px solid ${primaryColor}`
                     : "2.5px solid transparent",
                   boxSizing: "border-box",
-                  outline: isCurrent ? `1px solid ${primaryColor}20` : "none",
+                  background: "#f0f0f0",
                   opacity: isCurrent ? 1 : 0.72,
                   transition: "opacity 0.15s",
+                  flexShrink: 0,
                 }}
-              />
+              >
+                {t.productImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={t.productImageUrl}
+                    alt={t.productTitle}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                )}
+              </div>
             </a>
           );
         })}
