@@ -39,9 +39,10 @@ function getVimeoEmbedUrl(url: string): string | null {
 }
 
 function Stars({ rating }: { rating: number }) {
+  const full = Math.round(rating);
   return (
-    <span style={{ color: "#f59e0b", letterSpacing: "1px" }}>
-      {"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}
+    <span style={{ color: "#f59e0b", letterSpacing: "1px", fontSize: "1rem" }}>
+      {"★".repeat(full)}{"☆".repeat(5 - full)}
     </span>
   );
 }
@@ -87,294 +88,299 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
     : null;
 
   const extraImages = (enrichment?.extra_images ?? []).filter(Boolean);
-  const reviews = enrichment?.reviews ?? [];
+  const reviews = (enrichment?.reviews ?? []) as Review[];
   const awards = enrichment?.awards ?? [];
   const faq = enrichment?.faq ?? [];
 
+  const allReviews = [...externalReviews, ...reviews.map(r => ({ ...r, _manual: true }))];
+  const hasReviews = allReviews.length > 0;
+  const hasDetails = enrichment && (
+    enrichment.backstory || enrichment.materials || enrichment.fit_notes ||
+    enrichment.sustainability_notes || enrichment.care_instructions
+  );
+
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
-      {logoUrl && (
-        <div className="mb-6 flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl} alt="Store logo" className="h-8 object-contain" />
-        </div>
-      )}
+    <main className="mx-auto max-w-lg pb-12">
 
+      {/* ── Hero image ── */}
       {primaryImage && (
-        <div className="relative mb-6 aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-          <Image src={primaryImage.url} alt={primaryImage.altText ?? product.title} fill className="object-cover" priority />
+        <div style={{ position: "relative", width: "100%", aspectRatio: "4/5", background: "#f3f3f3", overflow: "hidden" }}>
+          <Image
+            src={primaryImage.url}
+            alt={primaryImage.altText ?? product.title}
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Logo overlay — top left */}
+          {logoUrl && (
+            <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "rgba(255,255,255,0.88)", borderRadius: "6px", padding: "4px 10px", backdropFilter: "blur(4px)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logoUrl} alt="Store" style={{ height: "20px", objectFit: "contain", display: "block" }} />
+            </div>
+          )}
         </div>
       )}
 
-      <div className="space-y-2 mb-6">
-        {product.vendor && (
-          <p className="text-xs font-medium uppercase tracking-widest text-gray-400">{product.vendor}</p>
-        )}
-        <h1 className="text-2xl font-semibold" style={{ color: primaryColor }}>{product.title}</h1>
-        {displayPrice && <p className="text-xl text-gray-700">${displayPrice}</p>}
+      {/* ── Photo strip (extra images) ── */}
+      {extraImages.length > 0 && (
+        <div style={{ display: "flex", gap: "4px", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", padding: "4px 0" }}>
+          {primaryImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={primaryImage.url}
+              alt={primaryImage.altText ?? product.title}
+              style={{ height: "80px", width: "80px", objectFit: "cover", borderRadius: "6px", flexShrink: 0, scrollSnapAlign: "start", border: `2px solid ${primaryColor}` }}
+            />
+          )}
+          {extraImages.map((url, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={url}
+              alt={`View ${i + 2}`}
+              style={{ height: "80px", width: "80px", objectFit: "cover", borderRadius: "6px", flexShrink: 0, scrollSnapAlign: "start" }}
+            />
+          ))}
+        </div>
+      )}
 
-        {/* Aggregate rating — appears above the fold for trust */}
-        {reviewAggregate.count > 0 && reviewAggregate.avg_rating !== null && (
-          <a href="#reviews" style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", textDecoration: "none", color: "inherit", paddingTop: "0.25rem" }}>
-            <Stars rating={reviewAggregate.avg_rating} />
-            <span style={{ fontSize: "0.82rem", color: "#555" }}>
-              {reviewAggregate.avg_rating.toFixed(1)} · {reviewAggregate.count} review{reviewAggregate.count === 1 ? "" : "s"}
-            </span>
-          </a>
-        )}
+      {/* ── Video ── */}
+      {embedUrl && (
+        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", marginBottom: "0" }}>
+          <iframe
+            src={embedUrl}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="Product video"
+          />
+        </div>
+      )}
 
-        {/* Persuasion strip — scarcity + tap count */}
-        {(showScarcity || tapCount >= 3) && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {showScarcity && (
-              <span style={{
-                fontSize: "0.72rem", fontWeight: 600,
-                padding: "3px 9px", borderRadius: "9999px",
-                background: "#fef2f2", color: "#991b1b",
-                border: "1px solid #fecaca",
-              }}>
-                Only {inventoryQty} left
+      <div className="px-4 pt-5 space-y-6">
+
+        {/* ── Product header ── */}
+        <div className="space-y-1">
+          {product.vendor && (
+            <p style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "#aaa" }}>{product.vendor}</p>
+          )}
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111", lineHeight: 1.2 }}>{product.title}</h1>
+          {displayPrice && (
+            <p style={{ fontSize: "1.25rem", color: "#333", fontWeight: 500 }}>${displayPrice}</p>
+          )}
+
+          {/* Rating link */}
+          {reviewAggregate.count > 0 && reviewAggregate.avg_rating !== null && (
+            <a href="#reviews" style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", textDecoration: "none", color: "inherit", paddingTop: "0.2rem" }}>
+              <Stars rating={reviewAggregate.avg_rating} />
+              <span style={{ fontSize: "0.82rem", color: "#666" }}>
+                {reviewAggregate.avg_rating.toFixed(1)} · {reviewAggregate.count} review{reviewAggregate.count === 1 ? "" : "s"}
               </span>
-            )}
-            {tapCount >= 3 && (
-              <span style={{
-                fontSize: "0.72rem", fontWeight: 500,
-                padding: "3px 9px", borderRadius: "9999px",
-                background: "#f4f4f5", color: "#52525b",
-                border: "1px solid #e4e4e7",
-              }}>
-                Tapped {tapCount} times this month
-              </span>
-            )}
-          </div>
+            </a>
+          )}
+
+          {/* Persuasion badges */}
+          {(showScarcity || tapCount >= 3) && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", paddingTop: "0.4rem" }}>
+              {showScarcity && (
+                <span style={{ fontSize: "0.72rem", fontWeight: 600, padding: "3px 10px", borderRadius: "9999px", background: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca" }}>
+                  Only {inventoryQty} left
+                </span>
+              )}
+              {tapCount >= 3 && (
+                <span style={{ fontSize: "0.72rem", fontWeight: 500, padding: "3px 10px", borderRadius: "9999px", background: "#f4f4f5", color: "#52525b", border: "1px solid #e4e4e7" }}>
+                  Tapped {tapCount}× this month
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Why We Love It ── */}
+        {enrichment && enrichment.reasons_to_buy.length > 0 && (
+          <section>
+            <h2 style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#999", marginBottom: "0.6rem" }}>Why We Love It</h2>
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {(enrichment.reasons_to_buy as string[]).map((reason, i) => (
+                <li key={i} style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", fontSize: "0.9rem", color: "#222" }}>
+                  <span style={{ color: primaryColor, flexShrink: 0, marginTop: "1px", fontWeight: 700 }}>✦</span>
+                  <span>{reason}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
-      </div>
 
-      {enrichment && (
-        <div className="space-y-8 border-t border-gray-100 pt-6">
-
-          {/* Story */}
-          {enrichment.backstory && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">The Story</h2>
-              <p className="text-sm text-gray-700 leading-relaxed">{enrichment.backstory}</p>
-            </section>
-          )}
-
-          {/* Materials */}
-          {enrichment.materials && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Materials</h2>
-              <p className="text-sm text-gray-700 leading-relaxed">{enrichment.materials}</p>
-            </section>
-          )}
-
-          {/* Fit */}
-          {enrichment.fit_notes && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Fit & Feel</h2>
-              <p className="text-sm text-gray-700 leading-relaxed">{enrichment.fit_notes}</p>
-            </section>
-          )}
-
-          {/* Why Buy */}
-          {enrichment.reasons_to_buy.length > 0 && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Why We Love It</h2>
-              <ul className="space-y-1">
-                {enrichment.reasons_to_buy.map((reason, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex gap-2">
-                    <span style={{ color: primaryColor }} className="mt-0.5 shrink-0">✦</span>
-                    <span>{reason}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Awards — manual + external merged */}
-          {(awards.length > 0 || externalAwards.length > 0) && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Recognition</h2>
-              <ul className="space-y-1.5">
-                {externalAwards.map((a) => (
-                  <li key={a.id} className="text-sm text-gray-700 flex gap-2 items-start">
-                    <span style={{ color: primaryColor }} className="shrink-0 mt-0.5">◈</span>
-                    <span>
-                      <strong style={{ fontWeight: 600 }}>{a.title}</strong>
-                      {(a.awarding_body || a.year) && (
-                        <span style={{ color: "#888" }}> — {[a.awarding_body, a.year].filter(Boolean).join(", ")}</span>
-                      )}
-                      {a.source_url && (
-                        <> · <a href={a.source_url} target="_blank" rel="noreferrer" style={{ color: "#888", textDecoration: "underline" }}>source</a></>
-                      )}
-                    </span>
-                  </li>
-                ))}
-                {awards.map((award, i) => (
-                  <li key={`manual-${i}`} className="text-sm text-gray-700 flex gap-2">
-                    <span style={{ color: primaryColor }} className="shrink-0">◈</span>
-                    <span>{award}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Video embed */}
-          {embedUrl && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Watch</h2>
-              <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "8px", overflow: "hidden" }}>
-                <iframe
-                  src={embedUrl}
-                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Product video"
+        {/* ── Staff quote ── */}
+        {enrichment?.staff_quote && (
+          <section style={{ background: "#fafafa", borderLeft: `3px solid ${primaryColor}`, borderRadius: "0 8px 8px 0", padding: "0.875rem 1rem" }}>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+              {enrichment.staff_photo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={enrichment.staff_photo_url}
+                  alt={enrichment.staff_name ?? "Staff"}
+                  style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
                 />
-              </div>
-            </section>
-          )}
-
-          {/* Extra images */}
-          {extraImages.length > 0 && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Details</h2>
-              <div className="grid grid-cols-2 gap-2">
-                {extraImages.map((url, i) => (
-                  <div key={i} className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt={`Detail ${i + 1}`} className="h-full w-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Staff quote */}
-          {enrichment.staff_quote && (
-            <section className="rounded-lg bg-gray-50 px-4 py-4">
-              <div className="flex gap-3 items-start">
-                {enrichment.staff_photo_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={enrichment.staff_photo_url}
-                    alt={enrichment.staff_name ?? "Staff"}
-                    style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid #fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
-                  />
+              )}
+              <div>
+                <blockquote style={{ fontSize: "0.875rem", color: "#333", fontStyle: "italic", lineHeight: 1.55, margin: 0, marginBottom: enrichment.staff_name ? "0.35rem" : 0 }}>
+                  &ldquo;{enrichment.staff_quote}&rdquo;
+                </blockquote>
+                {enrichment.staff_name && (
+                  <p style={{ fontSize: "0.72rem", color: "#999", fontWeight: 600, margin: 0 }}>&mdash; {enrichment.staff_name}</p>
                 )}
-                <div className="flex-1">
-                  <blockquote className="text-sm text-gray-700 italic leading-relaxed mb-2">
-                    &ldquo;{enrichment.staff_quote}&rdquo;
-                  </blockquote>
-                  {enrichment.staff_name && (
-                    <p className="text-xs text-gray-400 font-medium">&mdash; {enrichment.staff_name}</p>
-                  )}
-                </div>
               </div>
-            </section>
-          )}
+            </div>
+          </section>
+        )}
 
-          {/* Reviews — manual + external merged */}
-          {(reviews.length > 0 || externalReviews.length > 0) && (
-            <section id="reviews">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Customer Reviews</h2>
-              <div className="space-y-4">
-                {externalReviews.map((r) => (
-                  <div key={r.id} style={{ borderBottom: "1px solid #f0f0f0", paddingBottom: "1rem" }}>
-                    <div className="flex items-center gap-2 mb-1">
-                      {r.author_avatar_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.author_avatar_url} alt={r.author ?? ""}
-                          style={{ width: "20px", height: "20px", borderRadius: "50%", objectFit: "cover" }} />
-                      )}
-                      {r.rating !== null && <Stars rating={parseFloat(r.rating)} />}
-                      <span className="text-xs text-gray-400">
-                        {r.author ?? "Customer"}
-                        {r.source_label && ` · ${r.source_label}`}
-                      </span>
-                    </div>
-                    {r.title && <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#111", marginBottom: "2px" }}>{r.title}</p>}
-                    <p className="text-sm text-gray-700 leading-relaxed">{r.body}</p>
-                    {r.source_url && (
-                      <p style={{ marginTop: "0.5rem" }}>
-                        <a href={r.source_url} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: primaryColor, textDecoration: "none" }}>
-                          Read full review →
-                        </a>
-                      </p>
+        {/* ── Reviews ── */}
+        {hasReviews && (
+          <section id="reviews">
+            <h2 style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#999", marginBottom: "0.75rem" }}>
+              Customer Reviews
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {externalReviews.slice(0, 4).map((r) => (
+                <div key={r.id} style={{ background: "#fafafa", borderRadius: "10px", padding: "0.875rem 1rem", border: "1px solid #f0f0f0" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
+                    {r.author_avatar_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.author_avatar_url} alt={r.author ?? ""} style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover" }} />
                     )}
+                    {r.rating !== null && <Stars rating={parseFloat(String(r.rating))} />}
+                    <span style={{ fontSize: "0.75rem", color: "#888" }}>
+                      {r.author ?? "Customer"}{r.source_label ? ` · ${r.source_label}` : ""}
+                    </span>
                   </div>
-                ))}
-                {reviews.map((r: Review, i) => (
-                  <div key={`manual-${i}`} style={{ borderBottom: "1px solid #f0f0f0", paddingBottom: "1rem" }}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Stars rating={r.rating} />
-                      <span className="text-xs text-gray-400">{r.author}{r.source ? ` · ${r.source}` : ""}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">{r.text}</p>
+                  {r.title && <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#111", marginBottom: "0.25rem" }}>{r.title}</p>}
+                  <p style={{ fontSize: "0.875rem", color: "#444", lineHeight: 1.55, margin: 0 }}>{r.body}</p>
+                </div>
+              ))}
+              {reviews.slice(0, Math.max(0, 4 - externalReviews.length)).map((r, i) => (
+                <div key={`m-${i}`} style={{ background: "#fafafa", borderRadius: "10px", padding: "0.875rem 1rem", border: "1px solid #f0f0f0" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
+                    <Stars rating={r.rating} />
+                    <span style={{ fontSize: "0.75rem", color: "#888" }}>{r.author}{r.source ? ` · ${r.source}` : ""}</span>
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
+                  <p style={{ fontSize: "0.875rem", color: "#444", lineHeight: 1.55, margin: 0 }}>{r.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-          {/* Sustainability */}
-          {enrichment.sustainability_notes && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Sustainability</h2>
-              <p className="text-sm text-gray-700 leading-relaxed">{enrichment.sustainability_notes}</p>
-            </section>
-          )}
+        {/* ── Awards ── */}
+        {(awards.length > 0 || externalAwards.length > 0) && (
+          <section>
+            <h2 style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#999", marginBottom: "0.6rem" }}>Recognition</h2>
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+              {externalAwards.map((a) => (
+                <li key={a.id} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", fontSize: "0.875rem", color: "#333" }}>
+                  <span style={{ color: primaryColor, flexShrink: 0 }}>◈</span>
+                  <span>
+                    <strong>{a.title}</strong>
+                    {(a.awarding_body || a.year) && <span style={{ color: "#888" }}> — {[a.awarding_body, a.year].filter(Boolean).join(", ")}</span>}
+                  </span>
+                </li>
+              ))}
+              {(awards as string[]).map((award, i) => (
+                <li key={`ma-${i}`} style={{ display: "flex", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                  <span style={{ color: primaryColor }}>◈</span>
+                  <span>{award}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-          {/* Care */}
-          {enrichment.care_instructions && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Care</h2>
-              <p className="text-sm text-gray-700 leading-relaxed">{enrichment.care_instructions}</p>
-            </section>
-          )}
+        {/* ── Product Details (collapsed) ── */}
+        {hasDetails && (
+          <details style={{ borderTop: "1px solid #eee", borderBottom: "1px solid #eee" }}>
+            <summary style={{
+              cursor: "pointer", padding: "0.875rem 0",
+              fontWeight: 600, fontSize: "0.9rem", color: "#333",
+              listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              Product Details
+              <span style={{ color: primaryColor, fontSize: "1.1rem" }}>+</span>
+            </summary>
+            <div style={{ paddingBottom: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {enrichment!.backstory && (
+                <div>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>The Story</p>
+                  <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.backstory}</p>
+                </div>
+              )}
+              {enrichment!.materials && (
+                <div>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Materials</p>
+                  <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.materials}</p>
+                </div>
+              )}
+              {enrichment!.fit_notes && (
+                <div>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Fit & Feel</p>
+                  <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.fit_notes}</p>
+                </div>
+              )}
+              {enrichment!.sustainability_notes && (
+                <div>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Sustainability</p>
+                  <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.sustainability_notes}</p>
+                </div>
+              )}
+              {enrichment!.care_instructions && (
+                <div>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Care</p>
+                  <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.care_instructions}</p>
+                </div>
+              )}
+            </div>
+          </details>
+        )}
 
-          {/* FAQ */}
-          {faq.length > 0 && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Questions</h2>
-              <FaqAccordion items={faq} primaryColor={primaryColor} />
-            </section>
-          )}
+        {/* ── FAQ ── */}
+        {faq.length > 0 && (
+          <section>
+            <h2 style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#999", marginBottom: "0.25rem" }}>Questions</h2>
+            <FaqAccordion items={faq as FaqItem[]} primaryColor={primaryColor} />
+          </section>
+        )}
 
-        </div>
-      )}
+        {/* ── Offer ── */}
+        {offer && (
+          <OfferReveal
+            code={offer.code}
+            message={offer.message}
+            expiresAt={offer.expires_at}
+            primaryColor={primaryColor}
+          />
+        )}
 
-      {/* Reciprocity — discount unlock (Phase 5) */}
-      {offer && (
-        <OfferReveal
-          code={offer.code}
-          message={offer.message}
-          expiresAt={offer.expires_at}
+        {/* ── For You / Collector ── */}
+        <ForYou
+          brandCollector={brandCollector}
+          categoryPattern={categoryPattern}
+          sameBrand={sameBrand}
           primaryColor={primaryColor}
         />
-      )}
 
-      {/* Unity / Collector (Phase 6) */}
-      <ForYou
-        brandCollector={brandCollector}
-        categoryPattern={categoryPattern}
-        sameBrand={sameBrand}
-        primaryColor={primaryColor}
-      />
+        {/* ── Your Taps + Auth ── */}
+        <YourTapsStrip
+          currentTap={currentTap}
+          isAuthenticated={isAuthenticated}
+          primaryColor={primaryColor}
+        />
+        <AuthPromptCard
+          isAuthenticated={isAuthenticated}
+          primaryColor={primaryColor}
+          currentTagUuid={tagUuid}
+        />
 
-      {/* Customer identity & history (Phase 2) */}
-      <YourTapsStrip
-        currentTap={currentTap}
-        isAuthenticated={isAuthenticated}
-        primaryColor={primaryColor}
-      />
-      <AuthPromptCard
-        isAuthenticated={isAuthenticated}
-        primaryColor={primaryColor}
-        currentTagUuid={tagUuid}
-      />
+      </div>
     </main>
   );
 }
