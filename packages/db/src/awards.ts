@@ -68,6 +68,19 @@ export async function getPendingAwardsByStore(
   return rows;
 }
 
+export async function getPendingAwardsByProduct(
+  pool: Pool,
+  productId: string,
+): Promise<Award[]> {
+  const { rows } = await pool.query<Award>(
+    `select * from awards
+      where product_id = $1 and status = 'pending'
+      order by fetched_at desc`,
+    [productId],
+  );
+  return rows;
+}
+
 export async function setAwardStatus(
   pool: Pool,
   id: string,

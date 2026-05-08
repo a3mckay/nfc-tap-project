@@ -161,6 +161,19 @@ export async function getPendingReviewsByStore(
   return rows;
 }
 
+export async function getPendingReviewsByProduct(
+  pool: Pool,
+  productId: string,
+): Promise<ExternalReview[]> {
+  const { rows } = await pool.query<ExternalReview>(
+    `select * from external_reviews
+      where product_id = $1 and status = 'pending'
+      order by fetched_at desc`,
+    [productId],
+  );
+  return rows;
+}
+
 export async function setReviewStatus(
   pool: Pool,
   id: string,

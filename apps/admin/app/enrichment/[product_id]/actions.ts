@@ -69,6 +69,7 @@ export interface GeneratedDraft {
   reasons_to_buy: string[];
   staff_quote: string;
   faq: FaqItem[];
+  video_url: string;
 }
 
 export async function generateEnrichmentAction(
@@ -97,14 +98,22 @@ export async function generateEnrichmentAction(
 
   // Optionally ground copy in real web sources via Brave Search
   let webContext = "";
+  let youtubeUrl = "";
   if (process.env.BRAVE_SEARCH_API_KEY) {
     const query = [product.vendor, product.title].filter(Boolean).join(" ");
     try {
-      const results = await braveSearch(`${query} materials features review`, 6);
+      // Run product research and YouTube searches in parallel
+      const [results, ytResults] = await Promise.all([
+        braveSearch(`${query} materials features review`, 6),
+        braveSearch(`${query} site:youtube.com`, 3),
+      ]);
       if (results.length > 0) {
         webContext = "\n\nWeb research about this product (use to ground your copy in facts):\n" +
           results.map((r, i) => `[${i + 1}] ${r.title}\n${r.description}`).join("\n\n");
       }
+      // Find the first proper YouTube watch URL
+      const ytMatch = ytResults.find((r) => r.url.includes("youtube.com/watch"));
+      if (ytMatch) youtubeUrl = ytMatch.url;
     } catch {
       // Search failed — proceed without web context
     }
@@ -117,37 +126,38 @@ export async function generateEnrichmentAction(
     max_tokens: 4000,
     tools: [{
       name: "submit_product_copy",
-      description: "Submit the generated product copy for a retail product NFC tap page. Write as if speaking directly to a curious customer who just tapped an NFC tag on this product in-store. Tone should match the brand — premium but approachable.",
+      description: "Submit concise product copy for an in-store NFC tap page. Every field must be SHORT — customers are reading on a phone they just pulled out. No fluff, no generic marketing speak.",
       input_schema: {
         type: "object" as const,
         properties: {
-          backstory: { type: "string", description: "2-3 sentences on brand origin, craft, or product design story. Authentic and specific." },
-          materials: { type: "string", description: "Key materials, fabric weight, or construction details. Specific and tactile." },
-          fit_notes: { type: "string", description: "How it fits, sizing guidance, or how to wear/use it. Skip if not applicable." },
-          care_instructions: { type: "string", description: "Care method in plain language (e.g. 'Machine wash cold, lay flat to dry')." },
-          sustainability_notes: { type: "string", description: "Any sustainability, ethics, or certification angle. Leave empty string if none known." },
-          reasons_to_buy: { type: "array", items: { type: "string" }, description: "3-5 punchy bullet points (under 10 words each) — the best reasons to buy this product." },
-          staff_quote: { type: "string", description: "A short, authentic staff member quote about why they love this product. 1-2 sentences, first person." },
+          backstory: { type: "string", description: "1-2 sentences max. Brand origin or what makes this specific product special. Be concrete, not vague." },
+          materials: { type: "string", description: "One sentence. Key material(s) and one standout construction detail. No padding." },
+          fit_notes: { type: "string", description: "One sentence on sizing, fit, or styling. Empty string if not clothing/footwear/accessories." },
+          care_instructions: { type: "string", description: "One plain sentence, e.g. 'Machine wash cold, reshape and air dry.'" },
+          sustainability_notes: { type: "string", description: "One sentence if genuinely applicable. Empty string if nothing meaningful is known." },
+          reasons_to_buy: { type: "array", items: { type: "string" }, description: "3-4 bullet points, max 7 words each. Each must be a specific, different reason." },
+          staff_quote: { type: "string", description: "One punchy first-person sentence a real staff member might say. No clichés." },
+          video_url: { type: "string", description: `YouTube URL for a brand or product video. Use this URL if it looks relevant: ${youtubeUrl || "(none found)"}. Otherwise leave empty string.` },
           faq: {
             type: "array",
             items: {
               type: "object",
               properties: {
                 question: { type: "string" },
-                answer: { type: "string" },
+                answer: { type: "string", description: "1-2 sentences max." },
               },
               required: ["question", "answer"],
             },
-            description: "2-3 frequently asked questions a customer might have when seeing this product in-store.",
+            description: "2-3 questions a customer might actually ask in store. Answers must be brief.",
           },
         },
-        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "faq"],
+        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "video_url", "faq"],
       },
     }],
     tool_choice: { type: "tool", name: "submit_product_copy" },
     messages: [{
       role: "user",
-      content: `Generate compelling in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nWrite copy that would delight a customer who just tapped the NFC tag on this product. Be specific and authentic — avoid generic marketing language. Where web research is provided, ground your copy in those real facts rather than guessing.`,
+      content: `Generate SHORT, punchy in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nIMPORTANT: Keep every field brief — customers are on their phone in a store. Ground copy in the web research where provided; don't invent facts.`,
     }],
   });
   } catch (err: unknown) {
@@ -174,7 +184,7 @@ export async function generateEnrichmentAction(
     staff_quote: draft.staff_quote || null,
     staff_name: null,
     staff_photo_url: null,
-    video_url: null,
+    video_url: draft.video_url || null,
     extra_images: [],
     reviews: [],
     awards: [],

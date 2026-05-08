@@ -48,6 +48,7 @@ export function EnrichmentPageClient({
       sustainability_notes: draft.sustainability_notes || prev.sustainability_notes,
       reasons_to_buy_text: draft.reasons_to_buy?.join("\n") ?? prev.reasons_to_buy_text,
       staff_quote: draft.staff_quote || prev.staff_quote,
+      video_url: draft.video_url || prev.video_url,
       faq: draft.faq?.length ? draft.faq : prev.faq,
     }));
     setFormKey((k) => k + 1);
