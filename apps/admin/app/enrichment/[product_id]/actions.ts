@@ -81,6 +81,8 @@ export async function generateEnrichmentAction(
   const product = await getProductById(pool, productId);
   if (!product || product.store_id !== store.id) return { error: "Product not found" };
 
+  if (!process.env.ANTHROPIC_API_KEY) return { error: "ANTHROPIC_API_KEY is not set" };
+
   const client = new Anthropic();
 
   const productContext = [
@@ -92,9 +94,11 @@ export async function generateEnrichmentAction(
       : null,
   ].filter(Boolean).join("\n");
 
-  const result = await client.messages.create({
+  let result;
+  try {
+    result = await client.messages.create({
     model: "claude-opus-4-7",
-    max_tokens: 2000,
+    max_tokens: 4000,
     thinking: { type: "adaptive" },
     tools: [{
       name: "submit_product_copy",
@@ -131,6 +135,10 @@ export async function generateEnrichmentAction(
       content: `Generate compelling in-store NFC tap page copy for this retail product:\n\n${productContext}\n\nWrite copy that would delight a customer who just tapped the NFC tag on this product. Be specific and authentic — avoid generic marketing language.`,
     }],
   });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: `AI request failed: ${msg}` };
+  }
 
   const toolUse = result.content.find((b) => b.type === "tool_use");
   if (!toolUse || toolUse.type !== "tool_use") {
