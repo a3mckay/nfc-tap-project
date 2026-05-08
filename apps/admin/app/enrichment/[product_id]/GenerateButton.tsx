@@ -1,27 +1,30 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { generateEnrichmentAction } from "./actions.js";
+import type { GeneratedDraft } from "./actions.js";
 
-export function GenerateButton({
-  shop,
-  productId,
-}: {
+interface Props {
   shop: string;
   productId: string;
-}) {
-  const router = useRouter();
+  onDraftReady: (draft: GeneratedDraft) => void;
+  onGeneratingChange: (generating: boolean) => void;
+}
+
+export function GenerateButton({ shop, productId, onDraftReady, onGeneratingChange }: Props) {
   const [pending, startTransition] = useTransition();
 
   function handleGenerate() {
     if (!confirm("Generate AI copy for this product? This will overwrite any existing content.")) return;
+    onGeneratingChange(true);
     startTransition(async () => {
       const r = await generateEnrichmentAction(shop, productId);
       if (r.error) {
         alert(`Generation failed: ${r.error}`);
-      } else {
-        router.refresh();
+        onGeneratingChange(false);
+      } else if (r.draft) {
+        onDraftReady(r.draft);
+        onGeneratingChange(false);
       }
     });
   }

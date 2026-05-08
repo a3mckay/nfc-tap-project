@@ -60,7 +60,7 @@ export async function saveEnrichmentAction(
   return {};
 }
 
-interface GeneratedDraft {
+export interface GeneratedDraft {
   backstory: string;
   materials: string;
   fit_notes: string;

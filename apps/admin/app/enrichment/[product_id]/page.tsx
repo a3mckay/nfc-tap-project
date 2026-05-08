@@ -5,9 +5,7 @@ import {
   getProductById,
   getEnrichmentByProductId,
 } from "@nfc/db";
-import { EnrichmentForm } from "./EnrichmentForm.js";
-import { PublicSearchButton } from "./PublicSearchButton.js";
-import { GenerateButton } from "./GenerateButton.js";
+import { EnrichmentPageClient } from "./EnrichmentPageClient.js";
 import type { EnrichmentFormData } from "./actions.js";
 import {
   formatReasonsForEdit,
@@ -86,19 +84,13 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         Edit details
       </h1>
 
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-        <GenerateButton shop={shop} productId={product_id} />
-        <PublicSearchButton
-          shop={shop}
-          productId={product_id}
-          publicReviewsEnabled={(store as unknown as { public_reviews_enabled?: boolean })?.public_reviews_enabled ?? false}
-        />
-      </div>
-
-      <EnrichmentForm
+      <EnrichmentPageClient
+        shop={shop}
+        productId={product_id}
         initial={initial}
         productTitle={product.title}
         isAiGenerated={enrichment?.ai_generated ?? false}
+        publicReviewsEnabled={(store as unknown as { public_reviews_enabled?: boolean })?.public_reviews_enabled ?? false}
       />
     </main>
   );
