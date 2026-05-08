@@ -7,7 +7,7 @@ import {
   parseExtraImagesInput,
 } from "../../../src/enrichment-utils.js";
 import Anthropic from "@anthropic-ai/sdk";
-import { braveSearch } from "../../lib/public-reviews/search.js";
+import { braveSearch } from "../../../lib/public-reviews/search.js";
 
 export interface EnrichmentFormData {
   shop: string;
