@@ -7,6 +7,7 @@ import {
   parseExtraImagesInput,
 } from "../../../src/enrichment-utils.js";
 import Anthropic from "@anthropic-ai/sdk";
+import { braveSearch } from "../../lib/public-reviews/search.js";
 
 export interface EnrichmentFormData {
   shop: string;
@@ -94,6 +95,21 @@ export async function generateEnrichmentAction(
       : null,
   ].filter(Boolean).join("\n");
 
+  // Optionally ground copy in real web sources via Brave Search
+  let webContext = "";
+  if (process.env.BRAVE_SEARCH_API_KEY) {
+    const query = [product.vendor, product.title].filter(Boolean).join(" ");
+    try {
+      const results = await braveSearch(`${query} materials features review`, 6);
+      if (results.length > 0) {
+        webContext = "\n\nWeb research about this product (use to ground your copy in facts):\n" +
+          results.map((r, i) => `[${i + 1}] ${r.title}\n${r.description}`).join("\n\n");
+      }
+    } catch {
+      // Search failed — proceed without web context
+    }
+  }
+
   let result;
   try {
     result = await client.messages.create({
@@ -131,7 +147,7 @@ export async function generateEnrichmentAction(
     tool_choice: { type: "tool", name: "submit_product_copy" },
     messages: [{
       role: "user",
-      content: `Generate compelling in-store NFC tap page copy for this retail product:\n\n${productContext}\n\nWrite copy that would delight a customer who just tapped the NFC tag on this product. Be specific and authentic — avoid generic marketing language.`,
+      content: `Generate compelling in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nWrite copy that would delight a customer who just tapped the NFC tag on this product. Be specific and authentic — avoid generic marketing language. Where web research is provided, ground your copy in those real facts rather than guessing.`,
     }],
   });
   } catch (err: unknown) {
