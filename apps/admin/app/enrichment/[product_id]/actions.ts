@@ -99,7 +99,6 @@ export async function generateEnrichmentAction(
     result = await client.messages.create({
     model: "claude-opus-4-7",
     max_tokens: 4000,
-    thinking: { type: "adaptive" },
     tools: [{
       name: "submit_product_copy",
       description: "Submit the generated product copy for a retail product NFC tap page. Write as if speaking directly to a curious customer who just tapped an NFC tag on this product in-store. Tone should match the brand — premium but approachable.",
