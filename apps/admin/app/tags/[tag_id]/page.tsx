@@ -43,7 +43,7 @@ export default async function TagEditPage({ params, searchParams }: PageProps) {
         <Link href={`/tags?shop=${shop}`} style={{ color: "#555" }}>← All tags</Link>
       </p>
 
-      <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Edit tag</h1>
+      <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Tag #{tag.tag_number}</h1>
 
       <p style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "#555", marginBottom: "0.25rem" }}>
         {formatTagUuid(tag.tag_uuid)}

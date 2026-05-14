@@ -19,9 +19,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const tapBase = `${process.env.TAP_PAGE_CDN_URL ?? "http://localhost:3001"}/p/`;
 
   const lines = [
-    "tag_uuid,tap_url,product_title,status",
+    "tag_number,tag_uuid,tap_url,product_title,status",
     ...tags.map((t) =>
       [
+        t.tag_number,
         t.tag_uuid,
         `${tapBase}${t.tag_uuid}`,
         t.product_title ? `"${t.product_title.replace(/"/g, '""')}"` : "",
