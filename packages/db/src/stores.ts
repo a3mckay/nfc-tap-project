@@ -7,6 +7,7 @@ export interface Store {
   id: string;
   shopify_shop_domain: string;
   shopify_access_token: string;
+  name: string | null;
   theme_settings: Record<string, unknown>;
   created_at: Date;
   data_sharing_opted_in: boolean;

@@ -4,30 +4,53 @@ interface PageProps {
   searchParams: Promise<{ next?: string; error?: string }>;
 }
 
+const inputStyle: React.CSSProperties = {
+  width: "100%", padding: "0.6rem 0.75rem", border: "1px solid #ddd",
+  borderRadius: "6px", fontSize: "0.95rem", fontFamily: "inherit", boxSizing: "border-box",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#444",
+  textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.35rem",
+};
+
 export default async function LoginPage({ searchParams }: PageProps) {
   const { next, error } = await searchParams;
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}>
       <div style={{ width: "100%", maxWidth: "360px" }}>
-        <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>NFC Admin</h1>
+        <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>TapShelf Admin</h1>
         <p style={{ color: "#888", fontSize: "0.875rem", marginBottom: "2rem" }}>Sign in to continue</p>
 
         <form action={loginAction}>
           <input type="hidden" name="next" value={next ?? "/stores"} />
+
+          {/* Email — leave blank for super-admin (password only) */}
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.35rem" }}>
-              Password
-            </label>
+            <label style={labelStyle}>Email <span style={{ fontWeight: 400, color: "#aaa", textTransform: "none", letterSpacing: 0 }}>(leave blank for super-admin)</span></label>
+            <input
+              type="email"
+              name="email"
+              autoFocus
+              autoComplete="email"
+              placeholder="you@yourstore.com"
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label style={labelStyle}>Password</label>
             <input
               type="password"
               name="password"
-              autoFocus
               required
-              style={{ width: "100%", padding: "0.6rem 0.75rem", border: error ? "1px solid #fca5a5" : "1px solid #ddd", borderRadius: "6px", fontSize: "0.95rem", fontFamily: "inherit", boxSizing: "border-box" }}
+              autoComplete="current-password"
+              style={{ ...inputStyle, ...(error ? { borderColor: "#fca5a5" } : {}) }}
             />
-            {error && <p style={{ marginTop: "0.4rem", fontSize: "0.8rem", color: "#c00" }}>Incorrect password</p>}
+            {error && <p style={{ marginTop: "0.4rem", fontSize: "0.8rem", color: "#c00" }}>Incorrect email or password</p>}
           </div>
+
           <button
             type="submit"
             style={{ width: "100%", padding: "0.65rem", background: "#111", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer" }}
@@ -35,6 +58,10 @@ export default async function LoginPage({ searchParams }: PageProps) {
             Sign in
           </button>
         </form>
+
+        <p style={{ marginTop: "1.5rem", fontSize: "0.8rem", color: "#bbb", textAlign: "center" }}>
+          New store? <a href="https://tapshelf.co/stores/new" style={{ color: "#555" }}>Create an account →</a>
+        </p>
       </div>
     </div>
   );

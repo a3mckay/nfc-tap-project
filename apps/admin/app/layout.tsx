@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers, cookies } from "next/headers";
 import { Suspense } from "react";
-import { verifyAdminCookie, COOKIE_NAME } from "../src/admin-auth.js";
+import { verifySession, COOKIE_NAME } from "../src/admin-auth.js";
 import { StoreSwitcher } from "../src/StoreSwitcher.js";
 import { getPool, getAllStores } from "@nfc/db";
 
-export const metadata: Metadata = { title: "NFC Admin" };
+export const metadata: Metadata = { title: "TapShelf Admin" };
 
 const linkStyle: React.CSSProperties = {
   display: "block",
@@ -28,18 +28,22 @@ function Divider() {
 
 async function Sidebar() {
   const jar = await cookies();
-  const isAuthed = await verifyAdminCookie(jar.get(COOKIE_NAME)?.value);
-  if (!isAuthed) return null;
+  const session = await verifySession(jar.get(COOKIE_NAME)?.value);
+  if (!session) return null;
 
   const headersList = await headers();
+  const role = headersList.get("x-session-role") ?? "super";
   let currentShop = headersList.get("x-current-shop") ?? "";
 
-  const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const stores = await getAllStores(pool);
-
-  // Auto-select the only store on first login
-  if (!currentShop && stores.length === 1) {
-    currentShop = stores[0]!.shopify_shop_domain;
+  // Super-admin: full store switcher
+  let stores: Awaited<ReturnType<typeof getAllStores>> = [];
+  if (role === "super") {
+    const pool = getPool({ connectionString: process.env.DATABASE_URL });
+    stores = await getAllStores(pool);
+    // Auto-select the only store on first login
+    if (!currentShop && stores.length === 1) {
+      currentShop = stores[0]!.shopify_shop_domain;
+    }
   }
 
   const s = currentShop;
@@ -56,12 +60,17 @@ async function Sidebar() {
     }}>
       {/* Brand */}
       <div style={{ padding: "1.25rem 1.25rem 1rem", fontWeight: 700, fontSize: "0.95rem", borderBottom: "1px solid #eee" }}>
-        NFC Admin
+        TapShelf Admin
       </div>
 
-      {/* Store switcher */}
+      {/* Store indicator */}
       <div style={{ borderBottom: "1px solid #eee" }}>
-        {s ? (
+        {role === "store" ? (
+          /* Store admins see their store name, no switcher */
+          <div style={{ ...linkStyle, padding: "0.875rem 1.25rem", fontWeight: 500, color: "#333" }}>
+            {s}
+          </div>
+        ) : s ? (
           <Suspense>
             <StoreSwitcher currentShop={s} stores={stores} />
           </Suspense>
@@ -92,6 +101,9 @@ async function Sidebar() {
             <Link href={`/plan?shop=${s}`} style={dimLinkStyle}>Plan</Link>
             <Link href={`/settings?shop=${s}`} style={dimLinkStyle}>Settings</Link>
             <Link href={`/onboarding?shop=${s}`} style={dimLinkStyle}>Getting Started</Link>
+            {role === "super" && (
+              <Link href="/stores" style={dimLinkStyle}>All Stores</Link>
+            )}
           </div>
         </>
       )}

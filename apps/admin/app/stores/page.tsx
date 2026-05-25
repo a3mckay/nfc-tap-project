@@ -45,8 +45,12 @@ export default async function StoresPage({ searchParams }: PageProps) {
               }}
             >
               <div>
-                <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "2px" }}>{store.shopify_shop_domain}</p>
+                <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "2px" }}>
+                  {store.name ?? store.shopify_shop_domain}
+                </p>
                 <p style={{ fontSize: "0.75rem", color: "#aaa" }}>
+                  {store.shopify_shop_domain}
+                  {" · "}
                   {PLATFORM_LABELS[store.platform] ?? store.platform}
                   {" · Added "}
                   {new Date(store.created_at).toLocaleDateString()}
