@@ -98,9 +98,23 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
 
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: "660px" }}>
-      <p style={{ marginBottom: "1.5rem", fontSize: "0.85rem" }}>
-        <strong>{productTitle}</strong>
-      </p>
+      {/* Product basics — only editable for manual (non-Shopify) products */}
+      {form.is_manual && (
+        <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "#f9f9f9", borderRadius: "6px", border: "1px solid #eee" }}>
+          <p style={{ ...sectionHeadingStyle, marginBottom: "0.75rem" }}>Product basics</p>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Product name</label>
+            <input style={inputStyle} value={form.product_title}
+              onChange={(e) => set("product_title", e.target.value)}
+              placeholder="e.g. Air Force 1" />
+          </div>
+        </div>
+      )}
+      {!form.is_manual && (
+        <p style={{ marginBottom: "1.5rem", fontSize: "0.85rem" }}>
+          <strong>{productTitle}</strong>
+        </p>
+      )}
 
       {/* Product Story */}
       <p style={sectionHeadingStyle}>Product Story</p>
@@ -174,6 +188,16 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
       {/* Media */}
       <div style={sectionStyle}>
         <p style={sectionHeadingStyle}>Media</p>
+        <div style={fieldStyle}>
+          <label style={labelStyle}>Primary image URL</label>
+          <span style={hintStyle}>Main product photo — shown on tap pages and your customer collection. Use a direct image link (jpg, png, webp).</span>
+          <input style={inputStyle} type="url" value={form.primary_image_url}
+            onChange={(e) => set("primary_image_url", e.target.value)}
+            placeholder="https://cdn.example.com/product-main.jpg" />
+          {form.primary_image_url && (
+            <img src={form.primary_image_url} alt="Preview" style={{ marginTop: "0.5rem", height: "80px", width: "80px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eee" }} />
+          )}
+        </div>
         <div style={fieldStyle}>
           <label style={labelStyle}>Video</label>
           <span style={hintStyle}>YouTube or Vimeo URL — shown as an embedded player on the microsite</span>

@@ -53,9 +53,14 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     );
   }
 
+  const productImages = product.images as Array<{ url: string; altText: string | null }> | null;
+
   const initial: EnrichmentFormData = {
     shop,
     product_id,
+    is_manual: product.is_manual,
+    product_title: product.title ?? "",
+    primary_image_url: productImages?.[0]?.url ?? "",
     backstory: enrichment?.backstory ?? "",
     fit_notes: enrichment?.fit_notes ?? "",
     materials: enrichment?.materials ?? "",

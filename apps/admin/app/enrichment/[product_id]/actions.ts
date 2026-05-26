@@ -1,6 +1,6 @@
 "use server";
 
-import { getPool, upsertFullEnrichment, getStoreByDomain, getProductById, type Review, type FaqItem } from "@nfc/db";
+import { getPool, upsertFullEnrichment, getStoreByDomain, getProductById, updateManualProduct, type Review, type FaqItem } from "@nfc/db";
 import { revalidatePath } from "next/cache";
 import {
   parseReasonsInput,
@@ -12,6 +12,9 @@ import { braveSearch } from "../../../lib/public-reviews/search.js";
 export interface EnrichmentFormData {
   shop: string;
   product_id: string;
+  is_manual: boolean;
+  product_title: string;
+  primary_image_url: string;
   backstory: string;
   fit_notes: string;
   materials: string;
@@ -36,6 +39,12 @@ export async function saveEnrichmentAction(
 
   const store = await getStoreByDomain(pool, data.shop);
   if (!store) return { error: "Store not found" };
+
+  // Update mutable product fields (title + primary image) for manual products
+  await updateManualProduct(pool, data.product_id, {
+    ...(data.is_manual && data.product_title.trim() ? { title: data.product_title.trim() } : {}),
+    primaryImageUrl: data.primary_image_url.trim() || null,
+  });
 
   await upsertFullEnrichment(pool, {
     product_id: data.product_id,

@@ -117,6 +117,28 @@ export async function softDeleteProduct(
   );
 }
 
+export async function updateManualProduct(
+  pool: Pool,
+  id: string,
+  fields: { title?: string; primaryImageUrl?: string | null },
+): Promise<void> {
+  if (fields.title !== undefined) {
+    await pool.query(
+      `update products set title = $1 where id = $2 and is_manual = true`,
+      [fields.title, id],
+    );
+  }
+  if (fields.primaryImageUrl !== undefined) {
+    const images = fields.primaryImageUrl
+      ? JSON.stringify([{ url: fields.primaryImageUrl, altText: null }])
+      : JSON.stringify([]);
+    await pool.query(
+      `update products set images = $1 where id = $2`,
+      [images, id],
+    );
+  }
+}
+
 export async function getProductById(pool: Pool, id: string): Promise<Product | null> {
   const { rows } = await pool.query<Product>(
     `select * from products where id = $1`,
