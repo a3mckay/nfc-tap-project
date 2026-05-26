@@ -88,7 +88,7 @@ function Section({ title, taps }: { title: string; taps: CustomerTapRow[] }) {
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "0.75rem" }}>
         {taps.map((t) => (
-          <a key={t.id} href={`/p/${t.tag_id}`} style={{ textDecoration: "none", color: "inherit" }}>
+          <a key={t.id} href={`/p/${t.tag_uuid}`} style={{ textDecoration: "none", color: "inherit" }}>
             <div style={{
               width: "100%", aspectRatio: "1/1", borderRadius: "8px",
               background: t.product_image_url ? `url(${t.product_image_url}) center/cover` : "#f0f0f0",

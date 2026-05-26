@@ -10,6 +10,7 @@ export interface Customer {
 export interface CustomerTapRow {
   id: string;
   tag_id: string;
+  tag_uuid: string;
   product_id: string | null;
   store_id: string;
   reaction: string | null;
@@ -99,11 +100,13 @@ export async function getCustomerTapHistory(
     `select
        ct.id, ct.tag_id, ct.product_id, ct.store_id, ct.reaction,
        ct.first_tapped_at, ct.last_tapped_at, ct.tap_count,
+       t.tag_uuid,
        p.title  as product_title,
        p.vendor as product_vendor,
        (p.images->0->>'url') as product_image_url,
        s.shopify_shop_domain as store_domain
      from customer_taps ct
+     join tags t on t.id = ct.tag_id
      left join products p on p.id = ct.product_id
      join stores s on s.id = ct.store_id
      where ct.customer_id = $1
