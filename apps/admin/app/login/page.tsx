@@ -1,7 +1,7 @@
 import { loginAction } from "./actions.js";
 
 interface PageProps {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; email?: string; welcome?: string }>;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -15,13 +15,27 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default async function LoginPage({ searchParams }: PageProps) {
-  const { next, error } = await searchParams;
+  const { next, error, email, welcome } = await searchParams;
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}>
       <div style={{ width: "100%", maxWidth: "360px" }}>
         <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>TapShelf Admin</h1>
-        <p style={{ color: "#888", fontSize: "0.875rem", marginBottom: "2rem" }}>Sign in to continue</p>
+        <p style={{ color: "#888", fontSize: "0.875rem", marginBottom: welcome ? "1rem" : "2rem" }}>Sign in to continue</p>
+
+        {welcome && (
+          <div style={{
+            padding: "0.65rem 0.875rem",
+            background: "#f0fdf4",
+            border: "1px solid #86efac",
+            borderRadius: "6px",
+            marginBottom: "1.5rem",
+            fontSize: "0.875rem",
+            color: "#166534",
+          }}>
+            🎉 Your store is ready! Sign in with the password you just created.
+          </div>
+        )}
 
         <form action={loginAction}>
           <input type="hidden" name="next" value={next ?? "/stores"} />
@@ -35,6 +49,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
               autoFocus
               autoComplete="email"
               placeholder="you@yourstore.com"
+              defaultValue={email ?? ""}
               style={inputStyle}
             />
           </div>
