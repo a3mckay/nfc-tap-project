@@ -42,7 +42,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
   }
 }
 
-export function magicLinkHtml(link: string): string {
+export function magicLinkHtml(link: string, signInUrl = "https://tapshelf.store/me"): string {
   return `
     <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
       <h1 style="font-size: 18px; font-weight: 600; color: #111; margin-bottom: 16px;">Sign in to your tap collection</h1>
@@ -50,15 +50,22 @@ export function magicLinkHtml(link: string): string {
         Click the button below to access your collection of tapped products and unlock offers from stores you've visited.
       </p>
       <p style="margin-bottom: 24px;">
-        <a href="${link}" style="display: inline-block; background: #111; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">Sign in</a>
+        <a href="${link}" style="display: inline-block; background: #111; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">Sign in →</a>
       </p>
       <p style="font-size: 12px; color: #999;">
         Or paste this link in your browser:<br>
         <span style="font-family: monospace; word-break: break-all;">${link}</span>
       </p>
       <p style="font-size: 12px; color: #999; margin-top: 24px;">
-        This link expires in 15 minutes. If you didn't request it, ignore this email.
+        This link expires in 15 minutes. If you didn't request it, you can safely ignore this email.
       </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p style="font-size: 12px; color: #999; margin-bottom: 12px;">
+        Link expired or need a new one?
+      </p>
+      <a href="${signInUrl}" style="display: inline-block; background: #f5f5f5; color: #333; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500;">
+        Send me a new sign-in link
+      </a>
     </div>
   `;
 }

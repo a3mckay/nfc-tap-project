@@ -2,6 +2,7 @@ import { getPool, getCustomerTapHistory, type CustomerTapRow } from "@nfc/db";
 import { getCurrentCustomer } from "@/lib/auth.js";
 import { SignInForm } from "./SignInForm.js";
 import { signOutAction } from "./actions.js";
+import { AddToHomeScreen } from "./AddToHomeScreen.js";
 
 export const dynamic = "force-dynamic";
 
@@ -48,11 +49,13 @@ export default async function MePage() {
       </div>
 
       {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", margin: "1.5rem 0 2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", margin: "1.5rem 0 1.25rem" }}>
         <Stat label="Tapped" value={taps.length} />
         <Stat label="Loved"  value={loved.length} />
         <Stat label="Stores" value={stores.size} />
       </div>
+
+      <AddToHomeScreen />
 
       {taps.length === 0 ? (
         <p style={{ fontSize: "0.9rem", color: "#888", textAlign: "center", padding: "2rem 0" }}>
