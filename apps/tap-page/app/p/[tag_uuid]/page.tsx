@@ -80,11 +80,14 @@ export default async function TapPage({ params }: Props) {
     categoryPattern = await getCategoryPatternForCustomer(pool, customer.id, product.product_type);
   }
 
-  const productImages = product.images as Array<{ url: string; altText: string | null }>;
+  // Shopify REST API uses "src"; Storefront API and manual entries use "url"
+  const productImages = product.images as Array<{ url?: string; src?: string; altText: string | null }>;
+  const primaryImageUrl =
+    productImages[0]?.url ?? productImages[0]?.src ?? enrichment?.extra_images?.[0] ?? null;
   const currentTap: LocalTap = {
     tagUuid: tag_uuid,
     productTitle: product.title,
-    productImageUrl: productImages[0]?.url ?? null,
+    productImageUrl: primaryImageUrl,
     tappedAt: Date.now(),
   };
 
