@@ -156,3 +156,86 @@ export async function attachSessionTapsToCustomer(
   );
   return parseInt(rows[0]?.count ?? "0", 10);
 }
+
+// ── Active offers for a customer ─────────────────────────────────────────────
+
+export interface CustomerOfferRow {
+  id: string;
+  store_id: string;
+  product_id: string | null;
+  code: string;
+  message: string;
+  expires_at: Date | null;
+  created_at: Date;
+  store_domain: string;
+  store_name: string | null;
+  product_title: string | null;
+  product_image_url: string | null;
+}
+
+export async function getCustomerActiveOffers(
+  pool: Pool,
+  customerId: string,
+): Promise<CustomerOfferRow[]> {
+  const { rows } = await pool.query<CustomerOfferRow>(
+    `select co.id, co.store_id, co.product_id, co.code, co.message,
+            co.expires_at, co.created_at,
+            s.shopify_shop_domain as store_domain,
+            s.name as store_name,
+            p.title as product_title,
+            coalesce(p.images->0->>'url', p.images->0->>'src', e.extra_images->>0) as product_image_url
+     from customer_offers co
+     join stores s on s.id = co.store_id
+     left join products p on p.id = co.product_id
+     left join enrichments e on e.product_id = co.product_id
+     where co.customer_id = $1
+       and (co.expires_at is null or co.expires_at > now())
+     order by co.expires_at asc nulls last, co.created_at desc`,
+    [customerId],
+  );
+  return rows;
+}
+
+// ── New products from stores the customer has already visited ─────────────────
+
+export interface NewProductRow {
+  id: string;
+  title: string;
+  vendor: string | null;
+  product_image_url: string | null;
+  store_domain: string;
+  store_name: string | null;
+  tag_uuid: string | null;
+}
+
+export async function getNewProductsFromVisitedStores(
+  pool: Pool,
+  customerId: string,
+  limit = 12,
+): Promise<NewProductRow[]> {
+  const { rows } = await pool.query<NewProductRow>(
+    `select p.id, p.title, p.vendor,
+            coalesce(p.images->0->>'url', p.images->0->>'src', e.extra_images->>0) as product_image_url,
+            s.shopify_shop_domain as store_domain,
+            s.name as store_name,
+            (select t.tag_uuid from tags t
+              where t.product_id = p.id and t.status = 'deployed'
+              limit 1) as tag_uuid
+     from products p
+     join stores s on s.id = p.store_id
+     left join enrichments e on e.product_id = p.id
+     where s.id in (
+       select distinct ct.store_id from customer_taps ct where ct.customer_id = $1
+     )
+       and p.id not in (
+         select distinct ct.product_id from customer_taps ct
+          where ct.customer_id = $1 and ct.product_id is not null
+       )
+       and p.status = 'active'
+       and p.deleted_at is null
+     order by p.created_at desc
+     limit $2`,
+    [customerId, limit],
+  );
+  return rows;
+}

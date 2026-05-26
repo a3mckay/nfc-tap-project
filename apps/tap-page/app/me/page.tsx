@@ -1,8 +1,14 @@
-import { getPool, getCustomerTapHistory, type CustomerTapRow } from "@nfc/db";
+import {
+  getPool,
+  getCustomerTapHistory,
+  getCustomerActiveOffers,
+  getNewProductsFromVisitedStores,
+} from "@nfc/db";
 import { getCurrentCustomer } from "@/lib/auth.js";
 import { SignInForm } from "./SignInForm.js";
 import { signOutAction } from "./actions.js";
 import { AddToHomeScreen } from "./AddToHomeScreen.js";
+import { CollectionView } from "./CollectionView.js";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +31,15 @@ export default async function MePage() {
   }
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const taps = await getCustomerTapHistory(pool, customer.id, 100);
+
+  const [taps, offers, newProducts] = await Promise.all([
+    getCustomerTapHistory(pool, customer.id, 100),
+    getCustomerActiveOffers(pool, customer.id),
+    getNewProductsFromVisitedStores(pool, customer.id, 12),
+  ]);
 
   const loved = taps.filter((t) => t.reaction === "loved");
-  const stores = new Map<string, number>();
-  for (const t of taps) {
-    stores.set(t.store_domain, (stores.get(t.store_domain) ?? 0) + 1);
-  }
+  const storeCount = new Set(taps.map((t) => t.store_domain)).size;
 
   return (
     <main style={{ maxWidth: "640px", margin: "0 auto", padding: "2rem 1.5rem" }}>
@@ -51,8 +59,8 @@ export default async function MePage() {
       {/* Stats row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", margin: "1.5rem 0 1.25rem" }}>
         <Stat label="Tapped" value={taps.length} />
-        <Stat label="Loved"  value={loved.length} />
-        <Stat label="Stores" value={stores.size} />
+        <Stat label="Loved" value={loved.length} />
+        <Stat label="Stores" value={storeCount} />
       </div>
 
       <AddToHomeScreen />
@@ -62,10 +70,7 @@ export default async function MePage() {
           You haven&apos;t tapped anything yet. Tap a product in-store to start your collection.
         </p>
       ) : (
-        <>
-          {loved.length > 0 && <Section title="Loved" taps={loved} />}
-          <Section title="All taps" taps={taps} />
-        </>
+        <CollectionView taps={taps} offers={offers} newProducts={newProducts} />
       )}
     </main>
   );
@@ -77,41 +82,5 @@ function Stat({ label, value }: { label: string; value: number }) {
       <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111", marginBottom: "2px" }}>{value}</p>
       <p style={{ fontSize: "0.7rem", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</p>
     </div>
-  );
-}
-
-function Section({ title, taps }: { title: string; taps: CustomerTapRow[] }) {
-  return (
-    <section style={{ marginBottom: "2rem" }}>
-      <h2 style={{ fontSize: "0.75rem", fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem" }}>
-        {title}
-      </h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "0.75rem" }}>
-        {taps.map((t) => (
-          <a key={t.id} href={`/p/${t.tag_uuid}`} style={{ textDecoration: "none", color: "inherit" }}>
-            <div style={{
-              width: "100%", aspectRatio: "1/1", borderRadius: "8px",
-              background: t.product_image_url ? `url(${t.product_image_url}) center/cover` : "#f0f0f0",
-              marginBottom: "6px", position: "relative",
-            }}>
-              {t.reaction === "loved" && (
-                <span style={{
-                  position: "absolute", top: "6px", right: "6px",
-                  background: "#fff", borderRadius: "50%", width: "22px", height: "22px",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.7rem", boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                }}>♥</span>
-              )}
-            </div>
-            <p style={{ fontSize: "0.78rem", fontWeight: 500, color: "#111", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-              {t.product_title ?? "Untitled product"}
-            </p>
-            {t.product_vendor && (
-              <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "2px" }}>{t.product_vendor}</p>
-            )}
-          </a>
-        ))}
-      </div>
-    </section>
   );
 }
