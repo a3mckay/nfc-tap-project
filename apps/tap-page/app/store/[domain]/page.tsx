@@ -1,6 +1,5 @@
-import { getPool, getStoreByDomain } from "@nfc/db";
+import { getPool, getStoreByDomain, type Pool } from "@nfc/db";
 import { getCurrentCustomer } from "@/lib/auth.js";
-import { Pool } from "pg";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +18,7 @@ interface StoreProduct {
 }
 
 async function getStoreProducts(pool: Pool, storeId: string, customerId: string | null): Promise<StoreProduct[]> {
-  const { rows } = await (pool as Pool).query<StoreProduct>(
+  const { rows } = await pool.query<StoreProduct>(
     `select p.id, p.title, p.vendor,
             coalesce(p.images->0->>'url', p.images->0->>'src', e.extra_images->>0) as product_image_url,
             (select t.tag_uuid from tags t
