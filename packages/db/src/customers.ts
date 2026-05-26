@@ -103,11 +103,16 @@ export async function getCustomerTapHistory(
        t.tag_uuid,
        p.title  as product_title,
        p.vendor as product_vendor,
-       (p.images->0->>'url') as product_image_url,
+       coalesce(
+         p.images->0->>'url',
+         p.images->0->>'src',
+         e.extra_images->>0
+       ) as product_image_url,
        s.shopify_shop_domain as store_domain
      from customer_taps ct
      join tags t on t.id = ct.tag_id
      left join products p on p.id = ct.product_id
+     left join enrichments e on e.product_id = ct.product_id
      join stores s on s.id = ct.store_id
      where ct.customer_id = $1
      order by ct.last_tapped_at desc
