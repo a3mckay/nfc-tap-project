@@ -24,9 +24,21 @@ export async function POST(req: NextRequest) {
   const token = generateMagicToken();
   await createAuthToken(pool, token, email, 15);
 
-  const origin = req.headers.get("origin") ?? new URL(req.url).origin;
+  // Railway (and most reverse proxies) forward the public-facing host via
+  // x-forwarded-host / x-forwarded-proto rather than exposing it in req.url,
+  // which contains the internal address (e.g. localhost:3001).
+  // BASE_URL env var is the escape hatch for local dev or non-standard proxies.
+  const baseUrl =
+    process.env.BASE_URL ??
+    (() => {
+      const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? "https";
+      const host  = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim()
+                 ?? req.headers.get("host")
+                 ?? "tapshelf.store";
+      return `${proto}://${host}`;
+    })();
   const redirectParam = redirect ? `&redirect=${encodeURIComponent(redirect)}` : "";
-  const link = `${origin}/auth/verify?token=${token}${redirectParam}`;
+  const link = `${baseUrl}/auth/verify?token=${token}${redirectParam}`;
 
   try {
     await sendEmail({
