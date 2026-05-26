@@ -8,6 +8,8 @@ import {
   getStoreReactionTotals,
   getTopReactedProducts,
   getCustomerSummary,
+  getCustomerSegments,
+  getOfferStats,
 } from "@nfc/db";
 import {
   formatCount,
@@ -78,7 +80,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
     );
   }
 
-  const [summary, topProducts, deviceBreakdown, dailyRaw, reactions, topReacted, customers] = await Promise.all([
+  const [summary, topProducts, deviceBreakdown, dailyRaw, reactions, topReacted, customers, customerSegments, offerStats] = await Promise.all([
     getTapSummary(pool, store.id),
     getTopProducts(pool, store.id, days),
     getDeviceBreakdown(pool, store.id, days),
@@ -86,6 +88,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
     getStoreReactionTotals(pool, store.id, days),
     getTopReactedProducts(pool, store.id, days),
     getCustomerSummary(pool, store.id),
+    getCustomerSegments(pool, store.id),
+    getOfferStats(pool, store.id),
   ]);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -212,6 +216,52 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
           <StatCard label="Registered customers" value={formatCount(customers.identified_customers)} sub="all time" />
           <StatCard label="Sessions (7d)" value={formatCount(customers.sessions_7d)} sub="unique visitors" />
           <StatCard label="Active customers (7d)" value={formatCount(customers.identified_sessions_7d)} sub={`${returnRate}% of registered`} />
+        </div>
+      </section>
+
+      {/* Customer segments */}
+      <section style={{ marginBottom: "2rem" }}>
+        <SectionHeader>Customer segments</SectionHeader>
+        {customerSegments.length === 0 ? (
+          <p style={{ color: "#bbb", fontSize: "0.9rem" }}>No customer data yet.</p>
+        ) : (
+          <>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+              {customerSegments.map((seg) => (
+                <StatCard
+                  key={seg.label}
+                  label={seg.label}
+                  value={formatCount(seg.customer_count)}
+                  sub={`avg ${seg.avg_taps} taps`}
+                />
+              ))}
+            </div>
+            {/* Proportion bar */}
+            {(() => {
+              const total = customerSegments.reduce((s, seg) => s + seg.customer_count, 0);
+              const colors: Record<string, string> = { "One-time": "#e5e7eb", "Casual": "#6366f1", "Engaged": "#ec4899" };
+              return total > 0 ? (
+                <div style={{ display: "flex", height: "8px", borderRadius: "4px", overflow: "hidden", maxWidth: "400px" }}>
+                  {customerSegments.map((seg) => (
+                    <div
+                      key={seg.label}
+                      style={{ flex: seg.customer_count, background: colors[seg.label] ?? "#aaa" }}
+                    />
+                  ))}
+                </div>
+              ) : null;
+            })()}
+          </>
+        )}
+      </section>
+
+      {/* Offer performance */}
+      <section style={{ marginBottom: "2rem" }}>
+        <SectionHeader>Offer performance</SectionHeader>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          <StatCard label="Total delivered" value={formatCount(offerStats.total_delivered)} sub="to store customers" />
+          <StatCard label="Active offers" value={formatCount(offerStats.active_offers)} />
+          <StatCard label="Expiring within 7d" value={formatCount(offerStats.offers_expiring_soon)} />
         </div>
       </section>
 

@@ -173,6 +173,91 @@ export async function getTopReactedProducts(
   }));
 }
 
+export interface CustomerSegment {
+  label: string;
+  customer_count: number;
+  avg_taps: number;
+}
+
+export async function getCustomerSegments(
+  pool: Pool,
+  storeId: string,
+): Promise<CustomerSegment[]> {
+  const { rows } = await pool.query<{ label: string; customer_count: string; avg_taps: string }>(
+    `with tap_counts as (
+       select ct.customer_id, sum(ct.tap_count) as total_taps
+       from customer_taps ct
+       join customers c on c.id = ct.customer_id
+       where ct.store_id = $1
+       group by ct.customer_id
+     ),
+     bucketed as (
+       select
+         case
+           when total_taps = 1 then 'One-time'
+           when total_taps between 2 and 5 then 'Casual'
+           else 'Engaged'
+         end as label,
+         total_taps
+       from tap_counts
+     )
+     select label,
+            count(*)    as customer_count,
+            avg(total_taps)  as avg_taps
+     from bucketed
+     group by label
+     order by
+       case label
+         when 'One-time' then 1
+         when 'Casual'   then 2
+         else 3
+       end`,
+    [storeId],
+  );
+  return rows.map((r) => ({
+    label:          r.label,
+    customer_count: Number(r.customer_count),
+    avg_taps:       Math.round(Number(r.avg_taps) * 10) / 10,
+  }));
+}
+
+export interface OfferStats {
+  total_delivered: number;
+  active_offers: number;
+  offers_expiring_soon: number;
+}
+
+export async function getOfferStats(
+  pool: Pool,
+  storeId: string,
+): Promise<OfferStats> {
+  const { rows: deliveredRows } = await pool.query<{ total: string }>(
+    `select count(*) as total
+     from customer_offers co
+     join customers c on c.id = co.customer_id
+     where c.store_id = $1`,
+    [storeId],
+  );
+  const { rows: offerRows } = await pool.query<{ active: string; expiring_soon: string }>(
+    `select
+       count(*) filter (where is_active = true)  as active,
+       count(*) filter (
+         where is_active = true
+           and expires_at is not null
+           and expires_at <= now() + interval '7 days'
+           and expires_at > now()
+       ) as expiring_soon
+     from store_offers
+     where store_id = $1`,
+    [storeId],
+  );
+  return {
+    total_delivered:      Number(deliveredRows[0]?.total       ?? 0),
+    active_offers:        Number(offerRows[0]?.active          ?? 0),
+    offers_expiring_soon: Number(offerRows[0]?.expiring_soon   ?? 0),
+  };
+}
+
 export async function getCustomerSummary(
   pool: Pool,
   storeId: string,
