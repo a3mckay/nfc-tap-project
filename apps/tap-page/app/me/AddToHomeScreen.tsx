@@ -25,18 +25,13 @@ export function AddToHomeScreen() {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // Don't show if already installed as PWA
     if (isStandalone()) return;
-
     const p = detectPlatform();
     if (!p) return;
-
-    // Check if user has already dismissed
     if (sessionStorage.getItem("aths-dismissed")) return;
-
     setPlatform(p);
 
-    // Android: capture the browser's native install prompt
+    // Android: capture the browser's native install prompt if available
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e);
@@ -60,6 +55,18 @@ export function AddToHomeScreen() {
 
   if (!platform || dismissed) return null;
 
+  // Instruction text per platform / prompt availability
+  let instructions: React.ReactNode;
+  if (platform === "ios") {
+    instructions = <>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong></>;
+  } else if (installPrompt) {
+    // Android with native prompt available — show Add button below
+    instructions = <>Add TapShelf to your home screen for quick access</>;
+  } else {
+    // Android without native prompt — give manual instructions
+    instructions = <>Tap <strong>⋮</strong> then <strong>Add to Home Screen</strong></>;
+  }
+
   return (
     <div style={{
       margin: "0 0 1.5rem",
@@ -74,9 +81,7 @@ export function AddToHomeScreen() {
       <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flex: 1, minWidth: 0 }}>
         <span style={{ fontSize: "1.2rem", flexShrink: 0 }}>📲</span>
         <p style={{ fontSize: "0.8rem", color: "#444", margin: 0, lineHeight: 1.4 }}>
-          {platform === "ios"
-            ? <>Add to your home screen — tap <strong>Share</strong> then <strong>Add to Home Screen</strong></>
-            : <>Add TapShelf to your home screen for quick access</>}
+          {instructions}
         </p>
       </div>
       <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
