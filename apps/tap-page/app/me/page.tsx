@@ -33,9 +33,9 @@ export default async function MePage() {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
 
   const [taps, offers, newProducts] = await Promise.all([
-    getCustomerTapHistory(pool, customer.id, 100),
-    getCustomerActiveOffers(pool, customer.id),
-    getNewProductsFromVisitedStores(pool, customer.id, 12),
+    getCustomerTapHistory(pool, customer.id, 100).catch(() => [] as Awaited<ReturnType<typeof getCustomerTapHistory>>),
+    getCustomerActiveOffers(pool, customer.id).catch(() => [] as Awaited<ReturnType<typeof getCustomerActiveOffers>>),
+    getNewProductsFromVisitedStores(pool, customer.id, 12).catch(() => [] as Awaited<ReturnType<typeof getNewProductsFromVisitedStores>>),
   ]);
 
   const loved = taps.filter((t) => t.reaction === "loved");
