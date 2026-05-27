@@ -12,8 +12,15 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       {
         src: "/icon",
-        sizes: "any",
+        sizes: "192x192",
         type: "image/png",
+      },
+      {
+        src: "/icon",
+        sizes: "512x512",
+        type: "image/png",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        purpose: "any maskable" as any,
       },
     ],
   };
