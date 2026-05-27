@@ -93,6 +93,14 @@ export default async function TapPage({ params }: Props) {
 
   return (
     <div style={cssVars as React.CSSProperties}>
+      {/* Back to collection — only shown to signed-in customers */}
+      {customer && (
+        <div style={{ padding: "0.75rem 1.25rem 0" }}>
+          <a href="/me" style={{ fontSize: "0.8rem", color: "#888", textDecoration: "none" }}>
+            ← Your Collection
+          </a>
+        </div>
+      )}
       {/* Extra bottom padding for both fixed bars (PicksBar + ReactionBar) */}
       <div style={{ paddingBottom: "9rem" }}>
         <ProductShell

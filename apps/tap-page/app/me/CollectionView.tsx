@@ -101,7 +101,7 @@ export function CollectionView({ taps, offers, newProducts }: Props) {
                       {store.taps.length} {store.taps.length === 1 ? "tap" : "taps"}
                     </span>
                   </div>
-                  <ProductGrid taps={store.taps} hasOfferBadge={hasOfferBadge} compact />
+                  <ProductGrid taps={store.taps} hasOfferBadge={hasOfferBadge} />
                 </div>
               ))}
             </div>
@@ -152,14 +152,12 @@ export function CollectionView({ taps, offers, newProducts }: Props) {
 function ProductGrid({
   taps,
   hasOfferBadge,
-  compact = false,
 }: {
   taps: CustomerTapRow[];
   hasOfferBadge: (t: CustomerTapRow) => boolean;
-  compact?: boolean;
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${compact ? "110px" : "130px"}, 1fr))`, gap: "0.75rem" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "0.75rem" }}>
       {taps.map((t) => (
         <a key={t.id} href={`/p/${t.tag_uuid}`} style={{ textDecoration: "none", color: "inherit" }}>
           <div style={{
