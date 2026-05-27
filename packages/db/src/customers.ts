@@ -181,7 +181,7 @@ export async function getCustomerActiveOffers(
     `select co.id, co.store_id, co.product_id, co.code, co.message,
             co.expires_at, co.created_at,
             s.shopify_shop_domain as store_domain,
-            s.name as store_name,
+            null::text as store_name,
             p.title as product_title,
             coalesce(p.images->0->>'url', p.images->0->>'src', e.extra_images->>0) as product_image_url
      from customer_offers co
@@ -217,7 +217,7 @@ export async function getNewProductsFromVisitedStores(
     `select p.id, p.title, p.vendor,
             coalesce(p.images->0->>'url', p.images->0->>'src', e.extra_images->>0) as product_image_url,
             s.shopify_shop_domain as store_domain,
-            s.name as store_name,
+            null::text as store_name,
             (select t.tag_uuid from tags t
               where t.product_id = p.id and t.status = 'deployed'
               limit 1) as tag_uuid
