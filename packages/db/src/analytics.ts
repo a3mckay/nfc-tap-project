@@ -234,15 +234,14 @@ export async function getOfferStats(
   const { rows: deliveredRows } = await pool.query<{ total: string }>(
     `select count(*) as total
      from customer_offers co
-     join customers c on c.id = co.customer_id
-     where c.store_id = $1`,
+     where co.store_id = $1`,
     [storeId],
   );
   const { rows: offerRows } = await pool.query<{ active: string; expiring_soon: string }>(
     `select
-       count(*) filter (where is_active = true)  as active,
+       count(*) filter (where enabled = true)  as active,
        count(*) filter (
-         where is_active = true
+         where enabled = true
            and expires_at is not null
            and expires_at <= now() + interval '7 days'
            and expires_at > now()
@@ -263,7 +262,7 @@ export async function getCustomerSummary(
   storeId: string,
 ): Promise<CustomerSummary> {
   const { rows: custRows } = await pool.query<{ total: string }>(
-    `select count(*) as total from customers where store_id = $1`,
+    `select count(distinct customer_id) as total from customer_taps where store_id = $1`,
     [storeId],
   );
   const { rows: activeRows } = await pool.query<{ active_7d: string }>(
