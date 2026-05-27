@@ -24,19 +24,24 @@ export async function POST(req: NextRequest) {
   const token = generateMagicToken();
   await createAuthToken(pool, token, email, 15);
 
-  // Railway (and most reverse proxies) forward the public-facing host via
-  // x-forwarded-host / x-forwarded-proto rather than exposing it in req.url,
-  // which contains the internal address (e.g. localhost:3001).
-  // BASE_URL env var is the escape hatch for local dev or non-standard proxies.
-  const baseUrl =
-    process.env.BASE_URL ??
-    (() => {
-      const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? "https";
-      const host  = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim()
-                 ?? req.headers.get("host")
-                 ?? "tapshelf.store";
+  // Determine the public-facing base URL for the magic link.
+  // Priority: BASE_URL env var → x-forwarded-host header → host header (if not localhost)
+  // Falls back to the hardcoded production domain so Railway's internal
+  // localhost:PORT address never leaks into emails.
+  const PRODUCTION_URL = "https://tapshelf.store";
+  const baseUrl = (() => {
+    if (process.env.BASE_URL) return process.env.BASE_URL;
+    const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? "https";
+    const fwdHost = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+    if (fwdHost && !fwdHost.startsWith("localhost") && !fwdHost.startsWith("127.")) {
+      return `${proto}://${fwdHost}`;
+    }
+    const host = req.headers.get("host");
+    if (host && !host.startsWith("localhost") && !host.startsWith("127.")) {
       return `${proto}://${host}`;
-    })();
+    }
+    return PRODUCTION_URL;
+  })();
   const redirectParam = redirect ? `&redirect=${encodeURIComponent(redirect)}` : "";
   const link = `${baseUrl}/auth/verify?token=${token}${redirectParam}`;
 
