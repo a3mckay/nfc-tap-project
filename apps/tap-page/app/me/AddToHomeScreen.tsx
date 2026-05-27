@@ -31,9 +31,20 @@ export function AddToHomeScreen() {
     if (sessionStorage.getItem("aths-dismissed")) return;
     setPlatform(p);
 
-    // Android: capture the browser's native install prompt if available
-    const handler = (e: Event) => {
+    // Check if the event was already captured by the inline script in <head>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const early = (window as any).__pwaPrompt;
+    if (early) {
+      setInstallPrompt(early);
+      return;
+    }
+
+    // Otherwise listen for it — fires after SW registration on subsequent visits
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handler = (e: any) => {
       e.preventDefault();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__pwaPrompt = e;
       setInstallPrompt(e);
     };
     window.addEventListener("beforeinstallprompt", handler);
@@ -46,24 +57,13 @@ export function AddToHomeScreen() {
   }
 
   async function install() {
-    if (installPrompt) {
-      await installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-      if (outcome === "accepted") setDismissed(true);
-    }
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") setDismissed(true);
   }
 
   if (!platform || dismissed) return null;
-
-  // How-to line varies by platform and prompt availability
-  let howTo: React.ReactNode;
-  if (platform === "ios") {
-    howTo = <>Tap <strong>Share ↑</strong> then <strong>"Add to Home Screen"</strong></>;
-  } else if (installPrompt) {
-    howTo = null; // replaced by the Add button
-  } else {
-    howTo = <>Tap <strong>⋮</strong> then <strong>"Add to Home Screen"</strong></>;
-  }
 
   return (
     <div style={{
@@ -82,20 +82,30 @@ export function AddToHomeScreen() {
           <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#111", margin: 0, lineHeight: 1.3 }}>
             Add TapShelf to your home screen
           </p>
-          {howTo && (
+          {platform === "ios" && (
             <p style={{ fontSize: "0.75rem", color: "#666", margin: "2px 0 0", lineHeight: 1.3 }}>
-              {howTo}
+              Tap <strong>Share ↑</strong> then <strong>&quot;Add to Home Screen&quot;</strong>
+            </p>
+          )}
+          {platform === "android" && !installPrompt && (
+            <p style={{ fontSize: "0.75rem", color: "#666", margin: "2px 0 0", lineHeight: 1.3 }}>
+              Tap <strong>⋮</strong> then <strong>&quot;Add to Home Screen&quot;</strong>
             </p>
           )}
         </div>
       </div>
-      <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0, alignItems: "center" }}>
         {platform === "android" && installPrompt && (
           <button
             onClick={install}
-            style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.35rem 0.75rem", background: "#111", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}
+            style={{
+              fontSize: "0.75rem", fontWeight: 600,
+              padding: "0.4rem 0.9rem",
+              background: "#111", color: "#fff",
+              border: "none", borderRadius: "6px", cursor: "pointer",
+            }}
           >
-            Add
+            Install
           </button>
         )}
         <button
