@@ -55,16 +55,14 @@ export function AddToHomeScreen() {
 
   if (!platform || dismissed) return null;
 
-  // Instruction text per platform / prompt availability
-  let instructions: React.ReactNode;
+  // How-to line varies by platform and prompt availability
+  let howTo: React.ReactNode;
   if (platform === "ios") {
-    instructions = <>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong></>;
+    howTo = <>Tap <strong>Share ↑</strong> then <strong>"Add to Home Screen"</strong></>;
   } else if (installPrompt) {
-    // Android with native prompt available — show Add button below
-    instructions = <>Add TapShelf to your home screen for quick access</>;
+    howTo = null; // replaced by the Add button
   } else {
-    // Android without native prompt — give manual instructions
-    instructions = <>Tap <strong>⋮</strong> then <strong>Add to Home Screen</strong></>;
+    howTo = <>Tap <strong>⋮</strong> then <strong>"Add to Home Screen"</strong></>;
   }
 
   return (
@@ -80,9 +78,16 @@ export function AddToHomeScreen() {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flex: 1, minWidth: 0 }}>
         <span style={{ fontSize: "1.2rem", flexShrink: 0 }}>📲</span>
-        <p style={{ fontSize: "0.8rem", color: "#444", margin: 0, lineHeight: 1.4 }}>
-          {instructions}
-        </p>
+        <div>
+          <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#111", margin: 0, lineHeight: 1.3 }}>
+            Add TapShelf to your home screen
+          </p>
+          {howTo && (
+            <p style={{ fontSize: "0.75rem", color: "#666", margin: "2px 0 0", lineHeight: 1.3 }}>
+              {howTo}
+            </p>
+          )}
+        </div>
       </div>
       <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
         {platform === "android" && installPrompt && (
