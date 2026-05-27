@@ -1,9 +1,9 @@
 import { ImageResponse } from "next/og";
 
-export const size = { width: 512, height: 512 };
+export const size = { width: 192, height: 192 };
 export const contentType = "image/png";
 
-export default function Icon() {
+export default function Icon192() {
   return new ImageResponse(
     (
       <div
@@ -14,15 +14,15 @@ export default function Icon() {
           alignItems: "center",
           justifyContent: "center",
           background: "#1a1614",
-          borderRadius: "11px",
+          borderRadius: "42px",
         }}
       >
         <span
           style={{
             color: "#faf7f2",
-            fontSize: 26,
+            fontSize: 100,
             fontWeight: 700,
-            letterSpacing: "-1px",
+            letterSpacing: "-4px",
             lineHeight: 1,
             fontFamily: "sans-serif",
           }}

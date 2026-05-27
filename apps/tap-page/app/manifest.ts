@@ -11,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#111111",
     icons: [
       {
-        src: "/icon",
+        src: "/icon192",
         sizes: "192x192",
         type: "image/png",
       },
@@ -19,8 +19,6 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icon",
         sizes: "512x512",
         type: "image/png",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        purpose: "any maskable" as any,
       },
     ],
   };
