@@ -3,12 +3,15 @@ import {
   getCustomerTapHistory,
   getCustomerActiveOffers,
   getNewProductsFromVisitedStores,
+  getOrCreateNotificationPrefs,
 } from "@nfc/db";
 import { getCurrentCustomer } from "@/lib/auth.js";
 import { SignInForm } from "./SignInForm.js";
 import { signOutAction } from "./actions.js";
 import { AddToHomeScreen } from "./AddToHomeScreen.js";
 import { CollectionView } from "./CollectionView.js";
+import { ProfileCard } from "./ProfileCard.js";
+import { NotificationPrefsCard } from "./NotificationPrefsCard.js";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +35,11 @@ export default async function MePage() {
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
 
-  const [taps, offers, newProducts] = await Promise.all([
+  const [taps, offers, newProducts, notifPrefs] = await Promise.all([
     getCustomerTapHistory(pool, customer.id, 100).catch(() => [] as Awaited<ReturnType<typeof getCustomerTapHistory>>),
     getCustomerActiveOffers(pool, customer.id).catch(() => [] as Awaited<ReturnType<typeof getCustomerActiveOffers>>),
     getNewProductsFromVisitedStores(pool, customer.id, 12).catch(() => [] as Awaited<ReturnType<typeof getNewProductsFromVisitedStores>>),
+    getOrCreateNotificationPrefs(pool, customer.id).catch(() => null),
   ]);
 
   const loved = taps.filter((t) => t.reaction === "loved");
@@ -64,6 +68,20 @@ export default async function MePage() {
       </div>
 
       <AddToHomeScreen />
+
+      <div style={{ height: "1px", background: "#f0f0f0", margin: "1.5rem 0" }} />
+
+      <ProfileCard
+        initialName={customer.display_name ?? ""}
+        initialPhone={customer.phone ?? ""}
+        initialChannel={customer.preferred_channel ?? "email"}
+      />
+
+      {notifPrefs && (
+        <NotificationPrefsCard initialPrefs={notifPrefs} />
+      )}
+
+      <div style={{ height: "1px", background: "#f0f0f0", margin: "0.5rem 0 1.5rem" }} />
 
       {taps.length === 0 ? (
         <p style={{ fontSize: "0.9rem", color: "#888", textAlign: "center", padding: "2rem 0" }}>

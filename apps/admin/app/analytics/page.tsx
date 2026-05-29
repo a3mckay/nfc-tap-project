@@ -10,6 +10,8 @@ import {
   getCustomerSummary,
   getCustomerSegments,
   getOfferStats,
+  getDeadZones,
+  getCuriosityGap,
 } from "@nfc/db";
 import {
   formatCount,
@@ -80,7 +82,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
     );
   }
 
-  const [summary, topProducts, deviceBreakdown, dailyRaw, reactions, topReacted, customers, customerSegments, offerStats] = await Promise.all([
+  const [summary, topProducts, deviceBreakdown, dailyRaw, reactions, topReacted, customers, customerSegments, offerStats, deadZones, curiosityGap] = await Promise.all([
     getTapSummary(pool, store.id),
     getTopProducts(pool, store.id, days),
     getDeviceBreakdown(pool, store.id, days),
@@ -90,6 +92,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
     getCustomerSummary(pool, store.id),
     getCustomerSegments(pool, store.id),
     getOfferStats(pool, store.id),
+    getDeadZones(pool, store.id),
+    getCuriosityGap(pool, store.id),
   ]);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -264,6 +268,51 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
           <StatCard label="Expiring within 7d" value={formatCount(offerStats.offers_expiring_soon)} />
         </div>
       </section>
+
+      {/* Curiosity gap */}
+      {curiosityGap.length > 0 && (
+        <section style={{ marginBottom: "2rem" }}>
+          <SectionHeader>High curiosity, not converting — 30d</SectionHeader>
+          <p style={{ fontSize: "0.8rem", color: "#888", marginBottom: "0.75rem", lineHeight: 1.4 }}>
+            Products getting significant attention but still in stock — something may be stopping the purchase. Price, missing info, or size availability.
+          </p>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+            <tbody>
+              {curiosityGap.map((p, i) => (
+                <tr key={p.product_id} style={{ borderBottom: "1px solid #f4f4f4" }}>
+                  <td style={{ padding: "0.5rem 0.75rem 0.5rem 0", color: "#bbb", width: "1.5rem" }}>{i + 1}</td>
+                  <td style={{ padding: "0.5rem 0.75rem 0.5rem 0" }}>{p.product_title ?? "Unknown"}</td>
+                  <td style={{ padding: "0.5rem 0", textAlign: "right", whiteSpace: "nowrap", fontSize: "0.8rem", color: "#888" }}>
+                    {p.tap_count_30d} taps · {p.inventory_quantity} in stock
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {/* Dead zones */}
+      {deadZones.length > 0 && (
+        <section style={{ marginBottom: "2rem" }}>
+          <SectionHeader>Dead zones — active tags with almost no engagement</SectionHeader>
+          <p style={{ fontSize: "0.8rem", color: "#888", marginBottom: "0.75rem", lineHeight: 1.4 }}>
+            These tags are active but customers aren't tapping them. The tag may be poorly placed, the product may not be getting foot traffic, or the label may not be visible.
+          </p>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+            <tbody>
+              {deadZones.map((p) => (
+                <tr key={p.product_id} style={{ borderBottom: "1px solid #f4f4f4" }}>
+                  <td style={{ padding: "0.5rem 0.75rem 0.5rem 0" }}>{p.product_title ?? "Unknown"}</td>
+                  <td style={{ padding: "0.5rem 0", textAlign: "right", whiteSpace: "nowrap", fontSize: "0.8rem", color: "#888" }}>
+                    {p.tap_count_30d === 0 ? "No taps in 30 days" : `${p.tap_count_30d} tap${p.tap_count_30d === 1 ? "" : "s"} in 30 days`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       {/* Device breakdown */}
       {deviceBreakdown.length > 0 && (

@@ -257,6 +257,97 @@ export async function getOfferStats(
   };
 }
 
+export interface DeadZoneProduct {
+  product_id: string;
+  product_title: string;
+  inventory_quantity: number;
+  tap_count_30d: number;
+}
+
+/** Active tags that have received fewer than 3 taps in the last 30 days — the tag is live but nobody is engaging. */
+export async function getDeadZones(
+  pool: Pool,
+  storeId: string,
+  limit = 15,
+): Promise<DeadZoneProduct[]> {
+  const { rows } = await pool.query<{
+    product_id: string;
+    product_title: string;
+    inventory_quantity: string;
+    tap_count_30d: string;
+  }>(
+    `select p.id          as product_id,
+            p.title       as product_title,
+            p.inventory_quantity,
+            count(te.id)  as tap_count_30d
+       from tags tg
+       left join products p on p.id = tg.product_id
+       left join tap_events te on te.tag_id = tg.id
+         and te.timestamp >= now() - interval '30 days'
+      where tg.store_id = $1
+        and tg.status   = 'active'
+        and tg.product_id is not null
+      group by p.id, p.title, p.inventory_quantity
+     having count(te.id) < 3
+      order by tap_count_30d asc, p.title asc
+      limit $2`,
+    [storeId, limit],
+  );
+  return rows.map((r) => ({
+    product_id:         r.product_id,
+    product_title:      r.product_title,
+    inventory_quantity: Number(r.inventory_quantity ?? 0),
+    tap_count_30d:      Number(r.tap_count_30d),
+  }));
+}
+
+export interface CuriosityGapProduct {
+  product_id: string;
+  product_title: string;
+  inventory_quantity: number;
+  tap_count_30d: number;
+}
+
+/**
+ * Products with high tap volume in the last 30 days that are still in stock —
+ * customers are looking but not buying. Price, availability, or information may be the blocker.
+ */
+export async function getCuriosityGap(
+  pool: Pool,
+  storeId: string,
+  minTaps = 4,
+  limit = 10,
+): Promise<CuriosityGapProduct[]> {
+  const { rows } = await pool.query<{
+    product_id: string;
+    product_title: string;
+    inventory_quantity: string;
+    tap_count_30d: string;
+  }>(
+    `select p.id          as product_id,
+            p.title       as product_title,
+            p.inventory_quantity,
+            count(te.id)  as tap_count_30d
+       from tap_events te
+       join products p on p.id = te.product_id
+      where te.store_id   = $1
+        and te.timestamp  >= now() - interval '30 days'
+        and te.product_id is not null
+        and p.inventory_quantity >= 1
+      group by p.id, p.title, p.inventory_quantity
+     having count(te.id) >= $2
+      order by tap_count_30d desc
+      limit $3`,
+    [storeId, minTaps, limit],
+  );
+  return rows.map((r) => ({
+    product_id:         r.product_id,
+    product_title:      r.product_title,
+    inventory_quantity: Number(r.inventory_quantity ?? 0),
+    tap_count_30d:      Number(r.tap_count_30d),
+  }));
+}
+
 export async function getCustomerSummary(
   pool: Pool,
   storeId: string,

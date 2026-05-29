@@ -92,6 +92,7 @@ async function Sidebar() {
             <Link href={`/reviews?shop=${s}`} style={linkStyle}>Reviews</Link>
             <Link href={`/offers?shop=${s}`} style={linkStyle}>Offers</Link>
             <Divider />
+            <Link href={`/notifications?shop=${s}`} style={linkStyle}>Notifications</Link>
             <Link href={`/analytics?shop=${s}`} style={linkStyle}>Analytics</Link>
             <Link href={`/theme?shop=${s}`} style={linkStyle}>Theme</Link>
             <Link href={`/canonical?shop=${s}`} style={linkStyle}>Product Matching</Link>

@@ -15,6 +15,8 @@ import { FallbackPage } from "./FallbackPage.js";
 import { ProductShell } from "./ProductShell.js";
 import { ReactionBar } from "./ReactionBar.js";
 import { PicksBar, type LocalTap } from "./PicksBar.js";
+import { AskUs } from "./AskUs.js";
+import { NotifyMe } from "./NotifyMe.js";
 
 interface Props {
   params: Promise<{ tag_uuid: string }>;
@@ -119,6 +121,21 @@ export default async function TapPage({ params }: Props) {
           brandCollector={brandCollector}
           categoryPattern={categoryPattern}
           sameBrand={sameBrand}
+        />
+        <AskUs
+          productTitle={product.title}
+          storeName={store?.shopify_shop_domain ?? ""}
+          whatsappNumber={store?.whatsapp_number ?? null}
+          smsNumber={store?.sms_number ?? null}
+        />
+        <NotifyMe
+          storeId={state.storeId}
+          productId={state.productId}
+          sessionId={sessionId}
+          customerId={customer?.id ?? null}
+          customerPhone={customer?.phone ?? null}
+          customerEmail={customer?.email ?? null}
+          primaryColor={primaryColor}
         />
       </div>
       <PicksBar currentTap={currentTap} primaryColor={primaryColor} />

@@ -5,6 +5,9 @@ export interface Customer {
   email: string;
   email_verified_at: Date | null;
   created_at: Date;
+  phone: string | null;
+  preferred_channel: "sms" | "whatsapp" | "email";
+  display_name: string | null;
 }
 
 export interface CustomerTapRow {
@@ -120,6 +123,39 @@ export async function getCustomerTapHistory(
     [customerId, limit],
   );
   return rows;
+}
+
+// Update a customer's profile (display name, phone, preferred channel).
+export async function updateCustomerProfile(
+  pool: Pool,
+  customerId: string,
+  opts: {
+    displayName?: string | null;
+    phone?: string | null;
+    preferredChannel?: "sms" | "whatsapp" | "email";
+  },
+): Promise<void> {
+  const fields: string[] = [];
+  const values: unknown[] = [customerId];
+
+  if ("displayName" in opts) {
+    values.push(opts.displayName ?? null);
+    fields.push(`display_name = $${values.length}`);
+  }
+  if ("phone" in opts) {
+    values.push(opts.phone ?? null);
+    fields.push(`phone = $${values.length}`);
+  }
+  if ("preferredChannel" in opts) {
+    values.push(opts.preferredChannel);
+    fields.push(`preferred_channel = $${values.length}`);
+  }
+  if (fields.length === 0) return;
+
+  await pool.query(
+    `update customers set ${fields.join(", ")} where id = $1`,
+    values,
+  );
 }
 
 // Migrate anonymous tap_events into customer_taps when a customer verifies their email.

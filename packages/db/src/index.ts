@@ -14,6 +14,7 @@ export * from "./reviews.js";
 export * from "./awards.js";
 export * from "./offers.js";
 export * from "./customer_insights.js";
+export * from "./notifications.js";
 import { Pool, type PoolConfig } from "pg";
 export type { Pool, PoolConfig } from "pg";
 

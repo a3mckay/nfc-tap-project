@@ -20,6 +20,10 @@ export interface Store {
   stripe_subscription_id: string | null;
   tier_expires_at: Date | null;
   platform: StorePlatform;
+  /** E.164 digits only, e.g. "14155551234". Used for wa.me deep links on tap pages. */
+  whatsapp_number: string | null;
+  /** E.164 digits only. Used for sms: deep links on tap pages. */
+  sms_number: string | null;
 }
 
 export async function upsertStore(
@@ -165,6 +169,18 @@ export async function clearPendingBrandSuggestion(
   await pool.query(
     `update stores set brand_pending_suggestion = null where id = $1`,
     [storeId],
+  );
+}
+
+export async function updateStoreContactInfo(
+  pool: Pool,
+  storeId: string,
+  whatsappNumber: string | null,
+  smsNumber: string | null,
+): Promise<void> {
+  await pool.query(
+    `update stores set whatsapp_number = $2, sms_number = $3 where id = $1`,
+    [storeId, whatsappNumber || null, smsNumber || null],
   );
 }
 

@@ -39,6 +39,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
         <form action={loginAction}>
           <input type="hidden" name="next" value={next ?? "/stores"} />
+          {welcome && <input type="hidden" name="welcome" value="1" />}
 
           {/* Email — leave blank for super-admin (password only) */}
           <div style={{ marginBottom: "1rem" }}>
