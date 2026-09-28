@@ -1,13 +1,12 @@
 # Staff Experience (Associate Training View)
 
 **Status:** Design only. Nothing in this doc is built yet.
-**Target:** V2
 
 ## Summary
 
 Associates tap the same NFC tags that customers tap. When the tapper is a signed-in
 staff member, the tap page shows a training view of the product in place of the
-customer page: product knowledge, how to sell it, and live store data.
+customer page: product knowledge and how to sell it.
 
 The main use case is **self-guided training during quiet periods**, not quick lookups
 in front of a customer. On a slow afternoon, an associate walks the floor, taps each
@@ -16,6 +15,23 @@ customer will also happen, so the top of the view must still work at a glance.
 
 Pitch to store owners: *your slow periods become training time, and your team
 is ready for the next customer.*
+
+## Scope
+
+**In scope (V1 of this feature)**
+1. A staff role under the store admin: the store admin approves staff email addresses
+2. Staff sign-in on the tap page
+3. A staff training view shown when a signed-in staff member taps a tag from their store
+4. A Staff section in the admin enrichment form for writing the training content
+5. Keeping staff taps out of customer analytics and features
+6. Training progress for owners ("12 of 40 products reviewed")
+
+**Deferred (low priority)**
+- **Tap-to-Edit** (an "Edit" link on the tap page for owners). Owners already edit
+  products in the admin dashboard.
+- **Live store data**: stock by size, "Notify me" sign-ups by size, restock dates,
+  tap trends in the staff view. Stock today is one `inventory_quantity` per product,
+  and "Notify me" sign-ups don't record a size. Revisit later.
 
 ## Why one URL, not two
 
@@ -27,75 +43,94 @@ experience based on who is signed in**:
 | Tapper | Experience |
 | --- | --- |
 | Anonymous or signed-in customer | Customer product page (today's behaviour) |
-| Signed-in staff | Staff training view, with a toggle to preview the customer page |
-| Signed-in store owner | Staff view plus an "Edit" link to the enrichment form in the admin |
-
-No separate tags and no extra work on the floor.
+| Signed-in staff member of the tag's store | Staff training view, with a toggle to preview the customer page |
+| Signed-in staff member of a different store | Customer product page |
 
 ## Current state of the codebase
 
-Not everything discussed earlier exists yet:
+- The tap page (`apps/tap-page/app/p/[tag_uuid]/page.tsx`) shows every visitor the
+  same page. It knows two cookies: the anonymous `nfc_session` and the signed
+  `nfc_customer` (customer magic-link sign-in, `apps/tap-page/src/lib/auth.ts`).
+- The admin (`apps/admin`) has its own `nfc_admin` cookie with roles `super` and
+  `store` (`apps/admin/src/admin-auth.ts`). Store admins sign in with email and password
+  against the `store_admins` table (migration `1700000000014`). There is no staff
+  role.
+- The `internal_staff_notes` column on `enrichments` is edited in the admin under
+  "Internal Notes", but nothing displays it.
 
-- **Tap-to-Edit is not built.** `apps/tap-page/app/p/[tag_uuid]/page.tsx` shows every
-  visitor the same page. The only identity checks are the anonymous `nfc_session`
-  cookie and the customer `nfc_customer` cookie (magic-link sign-in).
-- **Admin sign-in doesn't reach the tap page.** The admin (`apps/admin`) uses its own
-  `nfc_admin` cookie with roles `super` and `store` (`apps/admin/src/admin-auth.ts`),
-  and it's a separate app. Being signed in to the admin on a phone does not
-  change what a tap shows. There is no `staff` role.
-- **`internal_staff_notes` exists but nothing shows it.** It's a text column on
-  `enrichments`, edited in the admin under "Internal Notes"
-  (`apps/admin/app/enrichment/[product_id]/EnrichmentForm.tsx`). Nothing displays it.
-- **Stock is a single number per product.** `products.inventory_quantity` has no
-  per-size split. Per-size stock would have to come from the `variants` JSON (from
-  Shopify).
-- **"Notify me" sign-ups don't record a size**, so "8 people are waiting on size 9"
-  needs a size field added first.
-- **Tap counts exist.** `getProductTapCount` (`packages/db/src/tap_events.ts`) and the
-  analytics queries can supply "most-tapped this week".
+## 1. Staff role and approved emails
 
-## Proposed build
+The store admin owns the store account. Staff are a subordinate role: they can't
+sign up on their own. The store admin approves specific email addresses in the admin.
 
-### 1. Staff identity on the tap page
+**Data model**, a new migration:
 
-- Add a `staff` role scoped to a store (a new `staff_members` table, or an
-  extension of the store login in the admin).
-- Staff sign in on their phone once per shift (magic link or store PIN). The tap
-  page gets a signed `nfc_staff` cookie that it can verify on the server, the same
-  way `getCurrentCustomer()` works today.
-- The tap page only shows the staff view when the staff member's store matches the
-  tag's `store_id`.
+```sql
+CREATE TABLE store_staff (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id       uuid NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  email          text NOT NULL,            -- stored lower-cased
+  name           text,
+  added_by       uuid REFERENCES store_admins(id) ON DELETE SET NULL,
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  revoked_at     timestamptz,              -- soft-remove; revoked staff can't sign in
+  last_login_at  timestamptz,
+  UNIQUE (store_id, email)
+);
+CREATE INDEX store_staff_email_idx ON store_staff(email);
+```
 
-### 2. Keep staff out of customer analytics
+**Admin UI**: a new **Staff** page, shown to `store` and `super` roles:
+- Add a staff email (and optional name)
+- List staff with last sign-in and training progress (see §6)
+- Remove staff (sets `revoked_at`, which also blocks their existing sessions on the
+  next check)
 
-Staff taps shouldn't count toward what customers see or what owners measure. For
-staff sessions, skip or tag these:
+Staff don't get access to the admin dashboard. The `nfc_admin` roles stay
+`super` and `store`.
 
-- `insertTapEvent`, so tap counts, "X people tapped this" and the analytics
-  dashboard don't include staff
-- `upsertCustomerTap`, offer delivery (`getApplicableOffer`), reactions, and the
-  personalisation shown to customers
+## 2. Staff sign-in (tap page)
 
-Record staff taps in their own table (`staff_product_views`) to track training
-progress (see §5).
+Staff sign in **on the tap page app**, not the admin. The cookie has to exist on the
+domain the NFC tags open, and the admin's cookie is on a separate app.
 
-### 3. Staff view content
+Reuse the existing customer magic-link setup (`auth_tokens`, `/auth/verify`):
 
-The main case is someone learning with time to spare, so short paragraphs and a
-brand video are fine. The top section still has to be readable in about 10 seconds
-for quick lookups. Sections follow a learning order: **what it is → how to sell it →
-what's happening now**.
+1. Staff go to `/staff/login` once, bookmarked or linked from an invite email.
+2. They enter their email. If it matches a `store_staff` row that hasn't been
+   revoked, a magic link is emailed. If not, show the same neutral "check your
+   email" message so the page doesn't reveal which emails are approved.
+3. The link sets a signed `nfc_staff` cookie holding the `store_staff.id`, built like
+   `nfc_customer` (`httpOnly`, `sameSite=lax`). Use a shorter lifetime than the
+   customer cookie, for example 30 days.
+4. `getCurrentStaff()`, the staff counterpart of `getCurrentCustomer()`, verifies the
+   cookie and re-checks that the row exists and hasn't been revoked on each
+   request.
 
-**At a glance** (top, for quick lookups)
+When the store admin approves an email, send an invite email linking to
+`/staff/login`, so staff never have to type the URL.
+
+## 3. Staff view on tap
+
+In `page.tsx`, resolve `getCurrentStaff()` alongside `getCurrentCustomer()`. If a
+staff member is signed in **and** `staff.store_id === tag.store_id`, render
+`<StaffShell>` in place of `<ProductShell>`, with a "View as customer" toggle.
+Otherwise, show today's customer page unchanged.
+
+**Content**: the main case is someone learning with time to spare, so short
+paragraphs and a brand video are fine. The top section still has to be readable in
+about 10 seconds. Sections follow a learning order: **what it is → how to sell it →
+with a customer**.
+
+**At a glance** (top)
 - Fit and sizing, stated honestly ("Runs small — size up; wide feet go half up")
-- Stock by size right now
 - The owner's one-line pitch
 
 **Product knowledge**
 - Materials in plain language ("warm, not bulky, machine washable, won't pill")
 - 2–3 reasons it's worth the price
 - How it compares with the closest alternative in the store
-- Common customer questions with honest answers (can reuse the existing `faq`)
+- Common customer questions with honest answers (reuses the existing `faq`)
 - Brand or training video (optional)
 
 **Selling it**
@@ -111,25 +146,19 @@ what's happening now**.
 - If their size is sold out: a script for signing them up to "Notify me"
 - Display unit notes ("Display unit is a 10, not for sale")
 
-**Live store data**
-- Taps this week (customer taps only) and rank within the store
-- Pending "Notify me" sign-ups (by size once that's recorded)
-- Last restock date and next expected delivery (entered by the owner)
-
 **Owner's private notes**
 - `internal_staff_notes`
 - Supplier or brand rep contact
-- Priority or margin flags ("push this one")
 - Handling instructions for fragile or unusual items
 
-Leave out the customer-facing story copy. That belongs to the customer page, and
-staff can see it through the toggle.
+Leave out the customer-facing story copy. Staff can see it through the toggle.
 
-### 4. Admin authoring
+## 4. Admin authoring
 
-Add a **Staff** section to the enrichment form for each product, written like
-instructions left for the team rather than formal documentation. New fields on
-`enrichments` (or a separate `staff_enrichments` table):
+Add a **Staff Training** section to the enrichment form
+(`apps/admin/app/enrichment/[product_id]/EnrichmentForm.tsx`), written like
+instructions left for the team rather than formal documentation. It replaces the
+current "Internal Notes" block. New fields on `enrichments`:
 
 | Field | Type |
 | --- | --- |
@@ -143,29 +172,60 @@ instructions left for the team rather than formal documentation. New fields on
 | `staff_pairs_with` | uuid[] (product ids) |
 | `staff_demo_notes` | text |
 | `staff_display_unit_notes` | text |
-| `staff_priority` | enum/flag |
 | `staff_supplier_contact` | text |
-| `next_restock_at` | date |
+| `internal_staff_notes` | text (existing) |
 
 The existing "Generate with AI" enrichment action could draft these fields too,
 with the owner reviewing and editing the draft.
 
-### 5. Training progress
+## 5. Keep staff out of customer analytics
 
-Store staff taps in `staff_product_views (staff_id, product_id, store_id, viewed_at)`.
-In the admin, show owners:
+Staff taps shouldn't count toward what customers see or what owners measure. When
+a staff view is shown, skip:
 
-- "12 of 40 products reviewed by staff this week"
-- Coverage for each associate, and products that no one has reviewed
+- `insertTapEvent`, so tap counts, "X people tapped this" and the analytics
+  dashboard don't include staff
+- `upsertCustomerTap`, offer delivery (`getApplicableOffer` /
+  `recordOfferDelivery`), reactions, and the personalisation shown to customers
 
-This shows owners how engaged the team is without anyone having to report in.
+Also skip these when staff use "View as customer".
+
+## 6. Training progress
+
+Record staff taps in their own table:
+
+```sql
+CREATE TABLE staff_product_views (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  staff_id    uuid NOT NULL REFERENCES store_staff(id) ON DELETE CASCADE,
+  store_id    uuid NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  product_id  uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  viewed_at   timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX staff_product_views_staff_idx ON staff_product_views(staff_id, product_id);
+```
+
+On the admin Staff page, show:
+- For each associate: "31 of 40 products reviewed", plus the last time they reviewed
+  a product
+- For the store: products that no one on the team has reviewed yet
+
+## Suggested build order
+
+1. Migration: `store_staff`, `staff_product_views`, and the new staff columns on
+   `enrichments`
+2. Admin Staff page (add, list, remove) plus the invite email
+3. Tap-page staff magic-link sign-in and `getCurrentStaff()`
+4. `StaffShell`, plus the branch in `page.tsx` that skips customer analytics
+5. Staff Training section in the enrichment form
+6. Training progress on the admin Staff page
 
 ## Open questions
 
-- Staff sign-in: magic link to each associate's own email or phone, or one PIN for
-  the whole store?
-- Should the owner or super role get the staff view by default, or only through a
-  toggle?
-- Should priority and margin flags be visible to all staff, or only to managers?
-- Does per-size stock need a Shopify variant-inventory sync, or is the synced
-  `variants` JSON fresh enough?
+- Should approved emails be unique across stores? The schema above allows the same
+  email at two stores. Sign-in would then need a store picker, or the most recent
+  store could be used.
+- Should the store admin also be able to see the staff view by adding their own
+  email as staff, or should `store_admins` be accepted automatically?
+- Should staff get read-only access to anything in the admin (for example a list of
+  all products to review), or stay tap-page-only?
