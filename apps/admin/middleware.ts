@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession, COOKIE_NAME } from "./src/admin-auth.js";
+import { pinShopParam } from "./src/shop-param.js";
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|login).*)"],
@@ -32,8 +33,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Always use their own store — ignore any ?shop= param they might inject
+    // Always use their own store — pages read ?shop=, so redirect any other value
     const storeDomain = session.storeDomain;
+    const pinned = pinShopParam(request.nextUrl, storeDomain);
+    if (pinned) return NextResponse.redirect(pinned);
+
     requestHeaders.set("x-current-shop", storeDomain);
     requestHeaders.set("x-session-role", "store");
     requestHeaders.set("x-store-id", session.storeId);

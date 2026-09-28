@@ -520,7 +520,7 @@ These were built in May 2026. The migrations number them as expansion sections Â
 - **Tag lifecycle:** no UI for the tag lifecycle timestamps.
 - **Rate limiting:** none on the API. Add `@fastify/rate-limit` to the auth and webhook routes.
 - **Admin authentication:** listed as missing in `DEFERRED.md`, but per-store login now exists (`apps/admin/middleware.ts`, `store_admins`). Verify it covers every route, then close the item.
-- **Admin server actions trusted the client's `shop` (fixed 2026-09-28):** every `apps/admin/app/**/actions.ts` now resolves its store with `getActionStore` (`apps/admin/src/current-store.ts`), which pins store-role admins to their own store from the signed session. Still open: admin *pages* and `tags/export` read `?shop=` directly, so a store admin can view another store's pages; tag assign/status and review/award status updates are keyed by ID only, with no store check.
+- **Admin server actions trusted the client's `shop` (fixed 2026-09-28):** every `apps/admin/app/**/actions.ts` now resolves its store with `getActionStore` (`apps/admin/src/current-store.ts`), which pins store-role admins to their own store from the signed session. Admin pages and `tags/export` read `?shop=`, so `middleware.ts` now redirects a store-role admin's `?shop=` to their own store (`pinShopParam`, `apps/admin/src/shop-param.ts`). Still open: tag assign/status and review/award status updates are keyed by ID only, with no store check.
 
 **Human / account tasks (from `ACTION_ITEMS.md`):**
 - Anthropic API key
