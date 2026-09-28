@@ -32,11 +32,11 @@ Things we consciously deferred during the build, with enough context to pick the
 
 ## Database / Infrastructure
 
-### Connection pooling not production-ready
+### Connection pooling only matters if hosting goes serverless
 **Files:** `packages/db/src/index.ts` (singleton `Pool`)
-**What exists:** A module-level `pg.Pool` singleton. Works fine for long-lived Node processes.
-**Why deferred:** In serverless environments (Vercel) each function invocation may create a new pool, exhausting DB connections under load.
-**What's needed:** Use Neon's built-in connection pooler (the `?pgbouncer=true` connection string) or deploy a PgBouncer sidecar before going to production traffic.
+**What exists:** A module-level `pg.Pool` singleton. Correct for the long-lived Node servers the apps run as on Railway.
+**Why deferred:** Not a problem on Railway. It would be on serverless hosting, where each invocation may open a new pool.
+**What's needed:** Only if hosting moves to serverless: a pooled connection (PgBouncer or the provider's pooler).
 
 ---
 
@@ -46,7 +46,7 @@ Things we consciously deferred during the build, with enough context to pick the
 **Files:** `apps/admin/app/theme/actions.ts`, `apps/tap-page`
 **What exists:** `saveThemeAction` calls `revalidatePath("/theme")` (admin only). The tap page is a separate Next.js app and caches its own data.
 **Why deferred:** Two separate Next.js deployments can't share a revalidation call directly.
-**What's needed:** Either call Vercel's on-demand revalidation API from `saveThemeAction` (requires a shared secret), or set a short ISR `revalidate` interval on the tap page product route.
+**What's needed:** Either add an on-demand revalidation route to the tap page and call it from `saveThemeAction` (requires a shared secret), or set a short ISR `revalidate` interval on the tap page product route.
 
 ---
 

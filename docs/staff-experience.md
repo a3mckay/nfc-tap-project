@@ -58,7 +58,7 @@ experience based on who is signed in**:
   role.
 - The `internal_staff_notes` column on `enrichments` is edited in the admin under
   "Internal Notes", but nothing displays it.
-- The admin runs on `tapshelf.co` and the tap pages on `tapshelf.store`. These are
+- The admin runs on `admin.tapshelf.co` and the tap pages on `tapshelf.store`. These are
   different domains, so the two apps can never share a cookie.
 - Admin server actions resolve their store from the signed session
   (`getActionStore`), and ID-keyed writes are scoped to that store (see
@@ -125,7 +125,7 @@ separate apps, and the NFC tags open the tap page, which can't read the admin's
    `nfc_staff` and re-checks that the staff row exists and hasn't been revoked on
    each request. Removing someone in the admin takes effect on their next tap.
 
-The handoff is required because the admin (`tapshelf.co`) and the tap pages
+The handoff is required because the admin (`admin.tapshelf.co`) and the tap pages
 (`tapshelf.store`) are on different domains, so they can't share a cookie.
 
 **Staff home page** (the admin's landing page for `role: "staff"`)

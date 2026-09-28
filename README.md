@@ -8,7 +8,7 @@ V1 of an NFC-powered in-store product experience platform. See [`docs/PRD-v4.md`
 
 ```
 apps/
-  admin/       Next.js store admin (tapshelf.co)
+  admin/       Next.js store admin (admin.tapshelf.co)
   tap-page/    Next.js customer tap pages (tapshelf.store)
 services/
   api/         Fastify API: Shopify OAuth, webhooks, billing

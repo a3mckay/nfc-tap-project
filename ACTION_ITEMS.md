@@ -46,16 +46,23 @@ Set `SHOPIFY_APP_URL` to the tunnel URL it prints.
 ### Domain name
 The URL encoded into each NFC tag is permanent once the tag is deployed in a store. Choose a short, brandable domain before ordering production tags.
 The tap page URL format will be: `https://<your-domain>/p/<tag-uuid>`
-Using a Vercel preview URL (`*.vercel.app`) is fine during development and testing.
 
-### Cloud Postgres database
-Vercel hosts the tap page but needs a database to connect to.
-Recommended: **Neon** (https://neon.tech — free tier, serverless Postgres, works seamlessly with Vercel).
-Steps:
-1. Create a Neon project
-2. Copy the connection string
-3. Add `DATABASE_URL=<neon-connection-string>` to your Vercel environment variables
-4. Run `pnpm db:migrate` against the Neon DB once
+### Production hosting — done
+Everything runs on **Railway**, deployed from `main`: the admin (`admin.tapshelf.co`), the tap page (`tapshelf.store`) and Postgres.
+
+### Run migrations automatically on deploy
+One-time setting so database changes apply themselves on every deploy:
+1. In Railway, open the **admin** service (`admin.tapshelf.co`), then **Settings**.
+2. Under **Deploy**, set **Pre-deploy Command** to `pnpm db:migrate`.
+3. Save. The next deploy runs any new migrations first; if one fails, the deploy stops and the old version keeps running.
+4. If that deploy's logs show `pnpm: not found`, change the command to `corepack pnpm db:migrate`.
+
+Only set it on the admin service, not the tap page, so migrations run once per deploy.
+
+To run migrations by hand instead: copy `DATABASE_PUBLIC_URL` from the Railway Postgres service (the plain `DATABASE_URL` only works inside Railway), then from the repo run `DATABASE_URL="…" corepack pnpm db:migrate`.
+
+### Confirm what triggers the scheduled jobs
+The admin has two cron routes, `api/cron/brand-refresh` (every 2 weeks) and `api/cron/reviews-refresh` (daily). Something external has to call them, and the repo doesn't record what. Check for a Railway cron service or a cron-job.org account; if neither exists, these jobs aren't running.
 
 ---
 

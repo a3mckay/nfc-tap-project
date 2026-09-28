@@ -8,7 +8,8 @@
 | Canonical location | `docs/PRD-v4.md` in this repo. Edit this file; local copies are not authoritative. |
 | Updated | 2026-09-28 |
 | Repo | `github.com/a3mckay/nfc-tap-project` (pnpm monorepo) |
-| Domains | `tapshelf.co` (marketing + admin), `tapshelf.store` (customer tap pages) |
+| Domains | `tapshelf.co` (marketing), `admin.tapshelf.co` (admin), `tapshelf.store` (customer tap pages) |
+| Hosting | Railway: admin, tap page and Postgres, deployed from `main` |
 | Audience | Founder + Claude Code sessions (local and cloud) |
 
 ### What changed from v3
@@ -203,7 +204,7 @@ Positioned against a part-time associate (~$700–800/mo). TapShelf should be 5�
 ### 6.1 Components as built
 ```
 apps/
-  admin/      Next.js admin (tapshelf.co). Per-store email+password login (PBKDF2, edge-safe)
+  admin/      Next.js admin (admin.tapshelf.co). Per-store email+password login (PBKDF2, edge-safe)
   tap-page/   Next.js customer tap pages (tapshelf.store): /p/[tag_uuid], /me, /store/[domain], magic-link auth
 services/
   api/        Fastify: Shopify OAuth (auth.ts), webhooks, Stripe billing webhook, health
@@ -212,7 +213,7 @@ packages/
   db/         SQL migrations (0000–0017), typed query modules, seeds, schema-conformance test
 ```
 
-**Scheduled jobs:** the admin exposes Vercel cron routes `api/cron/brand-refresh` and `api/cron/reviews-refresh`.
+**Scheduled jobs:** the admin exposes cron routes `api/cron/brand-refresh` and `api/cron/reviews-refresh`. They need an external scheduler; what triggers them in production isn't recorded yet (see `ACTION_ITEMS.md`).
 
 **External services:**
 - Anthropic (AI copy)
@@ -220,7 +221,7 @@ packages/
 - Twilio (SMS and WhatsApp)
 - email for magic links and the notification fallback
 - Stripe
-- Postgres (Neon recommended)
+- Postgres (Railway)
 
 ### 6.2 Critical engineering constraints (non-negotiable)
 - The tap page loads in **under 2 s on 4G**.
@@ -416,7 +417,7 @@ Design: [`docs/staff-experience.md`](staff-experience.md). Associates tap the sa
 
 Decided:
 - The store admin approves staff email addresses in the admin; staff can't sign up on their own
-- Staff sign in on the admin (tapshelf.co) with an emailed link, and a one-time handoff carries the sign-in to the tap page (tapshelf.store)
+- Staff sign in on the admin (admin.tapshelf.co) with an emailed link, and a one-time handoff carries the sign-in to the tap page (tapshelf.store)
 - Signed-in staff see the training view by default, with a toggle to the customer page
 - Staff taps are kept out of customer analytics, offers and personalisation
 - Owners can see training progress ("31 of 40 products reviewed")
@@ -541,7 +542,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 - **Rollup tables:** `daily_product_taps` and `weekly_brand_taps` are never populated.
 - **Worker store discovery:** the worker reads `STORE_IDS` from env; it should `SELECT id FROM stores`.
 - **Worker reliability:** no job queue, retries or locking (consider pg-boss or BullMQ before running multiple workers).
-- **Connection pooling:** a `pg.Pool` singleton isn't serverless-safe. Use Neon's pooled connection string.
+- **Connection pooling (closed 2026-09-28):** the apps run on Railway as long-lived Node servers, where the `pg.Pool` singleton is correct. Revisit only if hosting moves to serverless.
 - **Stale tap pages after theme changes:** theme edits don't revalidate the tap page. Use on-demand revalidation with a shared secret, or short ISR.
 - **Webhook testing:** no end-to-end webhook test against a live store.
 - **Tag lifecycle:** no UI for the tag lifecycle timestamps.
@@ -555,7 +556,9 @@ These were built in May 2026. The migrations number them as expansion sections �
 - Anthropic API key
 - Shopify Partner account, dev store and custom app
 - Cloudflare tunnel for local OAuth testing
-- Neon Postgres
+- ✅ Postgres on Railway
+- Railway pre-deploy command on the admin service, so migrations run on every deploy
+- Confirm what triggers the two cron routes in production
 - Stripe products and price IDs (set `metadata.shop_domain` on subscriptions)
 - Twilio credentials
 - **Legal review** of the Privacy Policy and ToS (PIPEDA). **Don't launch without it.**
@@ -610,6 +613,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 - **Old section numbers in code:** comments and tests cite v3 numbering. v3 §7.2 + §13.6 (data model) → v4 §6.3. v3 §8 + §13.7 (build plan) → v4 §7. v3 §4.x (features) → v4 §5.x.
 - **Keep this PRD current:** update the build statuses in §7 and §10 when a step or feature lands.
 - **Keep the running docs current:** add new deferrals to `DEFERRED.md` and new human tasks to `ACTION_ITEMS.md`.
-- **Hosting:** Vercel; DNS via Namecheap. GitHub user `a3mckay`.
+- **Hosting:** Railway (admin, tap page, Postgres), deployed from `main`; DNS via Namecheap. GitHub user `a3mckay`.
+- **Migrations in production:** the admin service's Railway pre-deploy command runs `pnpm db:migrate` before each deploy. To run them by hand, use the Postgres service's `DATABASE_PUBLIC_URL` (the plain `DATABASE_URL` is only reachable inside Railway): `DATABASE_URL="…" corepack pnpm db:migrate`.
 
 *End of document · PRD v4 · TapShelf*
