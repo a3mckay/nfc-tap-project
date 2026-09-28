@@ -1,6 +1,7 @@
 # Staff Experience (Associate Training View)
 
-**Status:** Design only. Nothing in this doc is built yet.
+**Status:** Next priority: PRD v4 §7 Phase 5, Step 13. Design in progress; nothing is built yet.
+Decisions still needed are listed at the end, under "Decisions needed".
 
 ## Summary
 
@@ -57,6 +58,12 @@ experience based on who is signed in**:
   role.
 - The `internal_staff_notes` column on `enrichments` is edited in the admin under
   "Internal Notes", but nothing displays it.
+- The admin runs on `tapshelf.co` and the tap pages on `tapshelf.store`. These are
+  different domains, so the two apps can never share a cookie.
+- Admin server actions resolve their store from the signed session
+  (`getActionStore`), and ID-keyed writes are scoped to that store (see
+  [PR #2](https://github.com/a3mckay/nfc-tap-project/pull/2)). Staff features must
+  follow the same pattern.
 
 ## 1. Staff role and approved emails
 
@@ -118,10 +125,8 @@ separate apps, and the NFC tags open the tap page, which can't read the admin's
    `nfc_staff` and re-checks that the staff row exists and hasn't been revoked on
    each request. Removing someone in the admin takes effect on their next tap.
 
-This handoff works whatever domains the two apps end up on. If both apps are
-later served under one parent domain (for example `admin.tapshelf.store` and
-`tapshelf.store`), a shared cookie could replace it. The handoff doesn't depend
-on that.
+The handoff is required because the admin (`tapshelf.co`) and the tap pages
+(`tapshelf.store`) are on different domains, so they can't share a cookie.
 
 **Staff home page** (the admin's landing page for `role: "staff"`)
 - "You're signed in as a staff member of <Store>. Tap any product to see its
@@ -244,18 +249,22 @@ On the admin Staff page, show:
   a product
 - For the store: products that no one on the team has reviewed yet
 
-## Suggested build order
+## Build order
 
-1. Migration: `store_staff`, `staff_product_views`, and the new staff columns on
-   `enrichments`
-2. Admin Staff page (add, list, remove) plus the invite email
-3. Admin `staff` role, staff sign-in by emailed link, and the staff home page
-4. Handoff to the tap page (`/staff/handoff`, `nfc_staff` cookie,
+Matches PRD v4 §7, Step 13. Each slice adds only the tables it needs.
+
+1. **13a:** `store_staff` table and the admin Staff page (add, list, remove approved
+   emails)
+2. **13b:** `staff` admin role, staff sign-in by emailed link, staff home page, invite
+   email
+3. **13c:** handoff to the tap page (`/staff/handoff`, `nfc_staff` cookie,
    `getCurrentStaff()`)
-5. `StaffShell` as the default view for staff, the customer toggle, and the branch
-   in `page.tsx` that skips customer analytics
-6. Staff Training section in the enrichment form
-7. Training progress on the admin Staff page and the staff home page
+4. **13d:** `StaffShell` as the default view for staff, the customer toggle, and the
+   branch in `page.tsx` that skips customer analytics
+5. **13e:** Staff Training section in the enrichment form (new staff columns on
+   `enrichments`)
+6. **13f:** `staff_product_views` and training progress on the admin Staff page and
+   the staff home page
 
 ## Later: native iOS/Android staff app
 
@@ -277,10 +286,52 @@ existing web view), and a domain association file. The tap page and database
 would stay the same, since a native app would call the same staff-session
 endpoints. Revisit after staff are using the web version.
 
-## Open questions
+## Decisions needed
 
-- Should approved emails be unique across stores? The schema above allows the same
-  email at two stores. Sign-in would then need a store picker, or the most recent
-  store could be used.
-- Should the store admin also be able to see the staff view by adding their own
-  email as staff, or should `store_admins` be accepted automatically?
+Each question has a recommendation. Answers get folded into the sections above.
+
+### Access and sign-in
+1. **Can one email be staff at more than one store?** Recommended: yes. The schema
+   already allows it. If an email belongs to several stores, the sign-in email asks
+   which store to sign in to.
+2. **Do store admins see the training view when they tap?** Recommended: yes,
+   automatically, so owners can check what their team sees without adding
+   themselves as staff. This needs the owner signed in on the tap page too, through
+   the same handoff after their admin login.
+3. **How long does a staff sign-in last?** Recommended: 30 days, then sign in again.
+   Removing a staff member takes effect on their next tap either way.
+4. **What does the invite email say?** Recommended: store name, one "Sign in" button,
+   and a line saying to open it in Safari on iPhone.
+
+### Owner (admin) usability
+5. **Where does the Staff page live?** Recommended: a top-level "Staff" item in the
+   admin nav, next to Tags and Analytics.
+6. **How do owners write training content for 40+ products without it becoming a
+   chore?** Recommended: AI drafts every staff field from the product data and
+   existing enrichment; the owner edits. A "Staff content: 12 of 40 done" count on
+   the Staff page shows the gaps.
+7. **Which staff fields are in the first release?** Recommended: start with five —
+   fit notes, pitch, who it's for / not for, objections and answers, internal
+   notes. Add the rest (comparison, pairs-with, demo and display notes, supplier
+   contact) once owners are using it. Fewer fields means more of them get filled
+   in.
+8. **Should some fields be manager-only** (supplier contact, margin or priority
+   flags)? Recommended: leave priority/margin flags out of the first release, which
+   removes the need for a manager role.
+
+### Staff usability
+9. **What does a staff member see for a product with no staff content yet?**
+   Recommended: the customer page's fit notes, materials and FAQ, reframed for
+   staff, plus a note that the owner hasn't added training notes yet.
+10. **Should there be a "mark as reviewed" button, or does a tap count?**
+    Recommended: a tap counts. It's zero effort, and the goal is exposure, not a
+    test.
+11. **Does the staff home page need a product list?** Recommended: yes, grouped by
+    "Not reviewed yet" and "Reviewed", so associates know what to go tap next.
+12. **Quizzes or certifications?** Recommended: not in the first release.
+
+### Business
+13. **Which plan includes the staff view?** PRD §5.6 lists it under Pro ($199/mo),
+    but the tiers in the code differ (§11). Recommended: available on every plan
+    during early launch, and decide the tier gating when §11 is settled.
+14. **Is there a limit on staff per store?** Recommended: no limit for now.

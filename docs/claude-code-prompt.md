@@ -213,6 +213,19 @@ Reference `docs/PRD-v4.md` §7 for full step details and current status. This is
 
 ---
 
+### Phase 5 — Staff Experience (current priority, added 2026-09-28)
+
+**Step 13: Staff Logins & Training View**
+- Design: `docs/staff-experience.md`; status and sub-steps in PRD v4 §7 Phase 5
+- Store admin approves staff emails; staff sign in on the admin with an emailed link; a one-time handoff sets the staff cookie on the tap page
+- Signed-in staff of the tag's store see a training view by default, with a toggle to the customer page
+- Staff taps never count toward customer analytics, offers or personalisation
+- Training progress per associate, visible to the owner
+- Out of scope: Tap-to-Edit, live stock data in the staff view
+- Success criteria: an owner approves an email, the associate signs in on the admin, taps a tag in Safari and sees the training view; a customer tapping the same tag sees the normal page; the associate's taps don't appear in analytics
+
+---
+
 ## Forbidden Patterns
 
 Do not do any of the following at any point:
@@ -220,7 +233,7 @@ Do not do any of the following at any point:
 - Add features not required by the current step
 - Create abstractions with no immediate use case
 - Mix multiple responsibilities in one module, route, or function
-- Implement future requirements (staff view, PWA, multi-PIM) ahead of their step
+- Implement future requirements (V2 roadmap items such as the product passport, multi-PIM or custom tap-page domains) ahead of their step
 - Optimise before there is a measured performance problem
 - Skip writing a test before writing implementation code
 

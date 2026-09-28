@@ -89,3 +89,19 @@ Things we consciously deferred during the build, with enough context to pick the
 **What exists:** These update by row ID alone (`where id = $1`). The reviews/pending actions don't resolve a store at all, and the public-reviews search doesn't check the product belongs to the store.
 **Why deferred:** Out of scope for the `shop`-trust fix.
 **What's needed:** Add `and store_id = $n` (or a join to the owning store) and pass `store.id` from `getActionStore`, as `deleteStoreOffer` / `updateStoreOffer` already do.
+
+---
+
+## Staff Experience (PRD v4 §7 Step 13)
+
+### Tap-to-Edit for store owners
+**Files:** `apps/tap-page/app/p/[tag_uuid]/page.tsx`
+**What exists:** Nothing. Owners edit products in the admin (`/enrichment`).
+**Why deferred:** Low priority (founder, 2026-09-28); the admin already covers editing.
+**What's needed:** An "Edit" link on the tap page for a signed-in owner, linking to the product's enrichment page in the admin.
+
+### Live store data in the staff view
+**Files:** `packages/db/migrations/1700000000000_initial-schema.sql` (`products.inventory_quantity`), NotifyMe subscriptions
+**What exists:** One stock number per product; NotifyMe sign-ups have no size; tap counts exist (`getProductTapCount`).
+**Why deferred:** Low priority for the first staff release (founder, 2026-09-28).
+**What's needed:** Per-size stock from the Shopify `variants` data, a size on NotifyMe sign-ups, owner-entered restock dates, then a "Live" section in the staff view.
