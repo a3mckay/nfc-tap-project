@@ -2,6 +2,7 @@
 
 import { getPool, getStoreByDomain, setDataSharingConsent, setStorePlatform, updateStoreContactInfo, type StorePlatform } from "@nfc/db";
 import { revalidatePath } from "next/cache";
+import { normalizePhone } from "../../src/phone-utils.js";
 
 export async function setConsentAction(
   shop: string,
@@ -26,12 +27,6 @@ export async function setPlatformAction(
   revalidatePath("/settings");
   revalidatePath("/products");
   return {};
-}
-
-/** Strips all non-digit characters except a leading +. Returns null for empty/invalid. */
-function normalizePhone(raw: string): string | null {
-  const stripped = raw.replace(/[^0-9]/g, "");
-  return stripped.length >= 7 ? stripped : null;
 }
 
 export async function saveContactInfoAction(
