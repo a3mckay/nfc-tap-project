@@ -1,9 +1,12 @@
 "use server";
 
 import { getPool, createManualStore, type StorePlatform } from "@nfc/db";
+import { getAdminSession } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 
 export async function createStoreAction(formData: FormData): Promise<{ error?: string }> {
+  if ((await getAdminSession())?.role !== "super") return { error: "Not allowed" };
+
   const domain = String(formData.get("domain") ?? "").trim().toLowerCase();
   const platform = String(formData.get("platform") ?? "other") as StorePlatform;
 

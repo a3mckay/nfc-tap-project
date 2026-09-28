@@ -86,6 +86,16 @@ Things we consciously deferred during the build, with enough context to pick the
 
 ---
 
+## Email
+
+### Admin notifications have their own Resend call
+**Files:** `apps/admin/src/lib/notify.ts`
+**What exists:** A private `sendEmail` (plain-text body, hard-coded sender) alongside the shared `@nfc/email` package added for staff sign-in.
+**Why deferred:** Out of scope for Step 13b; notifications work as they are.
+**What's needed:** Move `notify.ts` onto `@nfc/email` (add a plain-text option) so there's one Resend wrapper.
+
+---
+
 ## Security / Production Hardening
 
 ### No rate limiting on the API

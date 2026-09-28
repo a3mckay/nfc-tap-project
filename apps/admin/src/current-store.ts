@@ -1,7 +1,8 @@
 // Resolves which store a server action may act on, from the verified admin
 // session — never from the client-supplied `shop` alone. Server actions can be
 // invoked with arbitrary arguments, so store-role admins are pinned to their
-// own store here; super admins may act on whichever shop they request.
+// own store here; super admins may act on whichever shop they request; staff
+// never get a store.
 
 import { cookies } from "next/headers";
 import { getStoreById, getStoreByDomain, type Store } from "@nfc/db";
@@ -19,15 +20,20 @@ export async function resolveStoreForSession(
   requestedShop: string,
   lookup: StoreLookup,
 ): Promise<Store | null> {
-  if (!session) return null;
+  if (!session || session.role === "staff") return null;
   if (session.role === "store") return lookup.byId(session.storeId);
   if (!requestedShop) return null;
   return lookup.byDomain(requestedShop);
 }
 
-export async function getActionStore(pool: Pool, requestedShop: string): Promise<Store | null> {
+// The verified admin session for the current request, or null.
+export async function getAdminSession(): Promise<AdminSession | null> {
   const jar = await cookies();
-  const session = await verifySession(jar.get(COOKIE_NAME)?.value);
+  return verifySession(jar.get(COOKIE_NAME)?.value);
+}
+
+export async function getActionStore(pool: Pool, requestedShop: string): Promise<Store | null> {
+  const session = await getAdminSession();
   return resolveStoreForSession(session, requestedShop, {
     byId: (id) => getStoreById(pool, id),
     byDomain: (domain) => getStoreByDomain(pool, domain),

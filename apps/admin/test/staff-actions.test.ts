@@ -7,10 +7,13 @@ const db = vi.hoisted(() => ({
   revokeStaff: vi.fn(async () => true),
 }));
 const getActionStore = vi.hoisted(() => vi.fn());
+const sendEmail = vi.hoisted(() => vi.fn(async (_email: { to: string; subject: string; html: string }) => {}));
 
 vi.mock("@nfc/db", () => db);
 vi.mock("@/current-store.js", () => ({ getActionStore }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@nfc/email", () => ({ sendEmail }));
+vi.mock("next/headers", () => ({ headers: async () => ({ get: (k: string) => (k === "x-forwarded-host" ? "admin.tapshelf.co" : null) }) }));
 
 const { approveStaffAction, removeStaffAction } = await import("../app/staff/actions.js");
 
@@ -18,7 +21,7 @@ const SHOP = "own.myshopify.com";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getActionStore.mockResolvedValue({ id: "store-own", shopify_shop_domain: SHOP });
+  getActionStore.mockResolvedValue({ id: "store-own", shopify_shop_domain: SHOP, name: "Own Boutique" });
   db.revokeStaff.mockResolvedValue(true);
 });
 
@@ -27,6 +30,21 @@ describe("approveStaffAction", () => {
     expect(await approveStaffAction(SHOP, " Sam@Example.com ", " Sam ")).toEqual({});
     expect(getActionStore).toHaveBeenCalledWith(expect.anything(), SHOP);
     expect(db.approveStaffEmail).toHaveBeenCalledWith(expect.anything(), "store-own", "sam@example.com", "Sam");
+  });
+
+  it("emails the new staff member an invite to the staff sign-in page", async () => {
+    await approveStaffAction(SHOP, "Sam@Example.com", "Sam");
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    const { to, subject, html } = sendEmail.mock.calls[0]![0];
+    expect(to).toBe("sam@example.com");
+    expect(subject).toContain("Own Boutique");
+    expect(html).toContain("https://admin.tapshelf.co/login/staff?email=sam%40example.com");
+  });
+
+  it("still approves the email if the invite fails to send", async () => {
+    sendEmail.mockRejectedValueOnce(new Error("Resend down"));
+    expect(await approveStaffAction(SHOP, "sam@example.com", "")).toEqual({ warning: "Added, but the invite email couldn't be sent" });
+    expect(db.approveStaffEmail).toHaveBeenCalled();
   });
 
   it("stores a blank name as null", async () => {
@@ -43,6 +61,7 @@ describe("approveStaffAction", () => {
     getActionStore.mockResolvedValue(null);
     expect(await approveStaffAction(SHOP, "sam@example.com", "")).toEqual({ error: "Store not found" });
     expect(db.approveStaffEmail).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 });
 

@@ -41,6 +41,15 @@ describe("resolveStoreForSession", () => {
     expect(await resolveStoreForSession({ role: "super" }, "other.myshopify.com", lookup)).toBe(other);
   });
 
+  it("gives a staff member no store, whatever shop is requested", async () => {
+    const lookup = fakeLookup();
+    const staff = { role: "staff", staffId: "st-1", storeId: own.id, storeDomain: own.shopify_shop_domain, exp: Date.now() + 60_000 } as const;
+    expect(await resolveStoreForSession(staff, "own.myshopify.com", lookup)).toBeNull();
+    expect(await resolveStoreForSession(staff, "other.myshopify.com", lookup)).toBeNull();
+    expect(lookup.byId).not.toHaveBeenCalled();
+    expect(lookup.byDomain).not.toHaveBeenCalled();
+  });
+
   it("returns null for a super admin with no requested shop", async () => {
     const lookup = fakeLookup();
     expect(await resolveStoreForSession({ role: "super" }, "", lookup)).toBeNull();

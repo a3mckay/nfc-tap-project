@@ -105,14 +105,17 @@ The sign-in then has to carry over to the tap page. The admin and tap page are
 separate apps, and the NFC tags open the tap page, which can't read the admin's
 `nfc_admin` cookie.
 
-**Sign-in**
-1. The admin login page (`apps/admin/app/login`) gets a "Staff sign-in" option:
-   email only, no password.
-2. If the email matches a `store_staff` row that hasn't been revoked, email a
-   one-time sign-in link (valid for 15 minutes). If not, show the same neutral
-   "check your email" message so the page doesn't reveal which emails are
-   approved. Staff never have to create or remember a password.
-3. The link signs them in to the admin as `role: "staff"`.
+**Sign-in (built in 13b)**
+1. The admin login page links to `/login/staff`: email only, no password.
+2. If the email is on one or more stores' staff lists, one email is sent with a
+   single-use link per store (15 minutes; only a SHA-256 hash is stored in
+   `staff_auth_tokens`). If not, the same "check your email" page shows, so it
+   doesn't reveal who's on a team.
+3. The link (`/login/staff/verify`) starts a 30-day `role: "staff"` admin session.
+   Staff can only open `/training` (the staff home page); every other admin page
+   redirects there, and staff sessions never resolve a store in server actions.
+4. `/training` re-checks the staff row on every visit; removed staff are sent back
+   to sign-in.
 
 **Carrying the sign-in to the tap page**
 4. Right after sign-in, the admin creates a single-use handoff token (valid for 60
@@ -291,17 +294,15 @@ endpoints. Revisit after staff are using the web version.
 Each question has a recommendation. Answers get folded into the sections above.
 
 ### Access and sign-in
-1. **Can one email be staff at more than one store?** Recommended: yes. The schema
-   already allows it. If an email belongs to several stores, the sign-in email asks
-   which store to sign in to.
-2. **Do store admins see the training view when they tap?** Recommended: yes,
-   automatically, so owners can check what their team sees without adding
-   themselves as staff. This needs the owner signed in on the tap page too, through
-   the same handoff after their admin login.
-3. **How long does a staff sign-in last?** Recommended: 30 days, then sign in again.
-   Removing a staff member takes effect on their next tap either way.
-4. **What does the invite email say?** Recommended: store name, one "Sign in" button,
-   and a line saying to open it in Safari on iPhone.
+1. **Can one email be staff at more than one store?** ✅ Yes (built in 13b): the
+   sign-in email has one link per store.
+2. **Do store admins see the training view when they tap?** ✅ Yes, decided
+   2026-09-28. Owners get the tap-page sign-in through the same handoff after their
+   admin login (13c).
+3. **How long does a staff sign-in last?** ✅ 30 days, decided 2026-09-28 (built
+   in 13b).
+4. **What does the invite email say?** ✅ Store name, one "Sign in" button, and a
+   line saying to open it in Safari on iPhone (built in 13b).
 
 ### Owner (admin) usability
 5. **Where does the Staff page live?** Recommended: a top-level "Staff" item in the

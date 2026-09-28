@@ -19,8 +19,8 @@ export default async function StaffPage({ searchParams }: PageProps) {
     <main>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Staff</h1>
       <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-        Add the email addresses of your team. Only these emails can sign in as staff and see
-        the training view when they tap a product.
+        Add the email addresses of your team. We email each person an invite; only these
+        emails can sign in as staff and see the training view when they tap a product.
       </p>
       <StaffManager
         shop={shop}

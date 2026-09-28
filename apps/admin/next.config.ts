@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   poweredByHeader: false,
-  transpilePackages: ["@nfc/db"],
+  transpilePackages: ["@nfc/db", "@nfc/email"],
   serverExternalPackages: ["pg"],
   webpack(webpackConfig) {
     webpackConfig.resolve.extensionAlias = {
