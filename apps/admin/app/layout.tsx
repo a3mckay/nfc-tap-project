@@ -88,6 +88,7 @@ async function Sidebar() {
             <Link href={`/products?shop=${s}`} style={linkStyle}>Products</Link>
             <Link href={`/enrichment?shop=${s}`} style={linkStyle}>Content</Link>
             <Link href={`/tags?shop=${s}`} style={linkStyle}>Tags</Link>
+            <Link href={`/staff?shop=${s}`} style={linkStyle}>Staff</Link>
             <Divider />
             <Link href={`/reviews?shop=${s}`} style={linkStyle}>Reviews</Link>
             <Link href={`/offers?shop=${s}`} style={linkStyle}>Offers</Link>

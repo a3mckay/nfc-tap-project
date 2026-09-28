@@ -1,5 +1,6 @@
 export * from "./stores.js";
 export * from "./store-admins.js";
+export * from "./store-staff.js";
 export * from "./reactions.js";
 export * from "./products.js";
 export * from "./tags.js";

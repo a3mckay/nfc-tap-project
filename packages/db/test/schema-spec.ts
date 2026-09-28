@@ -200,6 +200,18 @@ export const SCHEMA_SPEC: TableSpec[] = [
       { name: "accessed_at", type: "timestamp" },
     ],
   },
+  // PRD v4 §7 Step 13a: staff emails approved by the store admin
+  {
+    name: "store_staff",
+    columns: [
+      { name: "id", type: "uuid" },
+      { name: "store_id", type: "uuid" },
+      { name: "email", type: "text" },
+      { name: "name", type: "text", nullable: true },
+      { name: "created_at", type: "timestamp" },
+      { name: "revoked_at", type: "timestamp", nullable: true },
+    ],
+  },
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {
