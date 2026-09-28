@@ -78,6 +78,9 @@ export default async function LoginPage({ searchParams }: PageProps) {
         <p style={{ marginTop: "1.5rem", fontSize: "0.8rem", color: "#bbb", textAlign: "center" }}>
           New store? <a href="https://tapshelf.co/stores/new" style={{ color: "#555" }}>Create an account →</a>
         </p>
+        <p style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "#bbb", textAlign: "center" }}>
+          Store staff? <a href="/login/staff" style={{ color: "#555" }}>Sign in with your email →</a>
+        </p>
       </div>
     </div>
   );

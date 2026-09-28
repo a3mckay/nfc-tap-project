@@ -212,6 +212,17 @@ export const SCHEMA_SPEC: TableSpec[] = [
       { name: "revoked_at", type: "timestamp", nullable: true },
     ],
   },
+  // PRD v4 §7 Step 13b: single-use staff sign-in links (hash only)
+  {
+    name: "staff_auth_tokens",
+    columns: [
+      { name: "token_hash", type: "text" },
+      { name: "staff_id", type: "uuid" },
+      { name: "expires_at", type: "timestamp" },
+      { name: "used_at", type: "timestamp", nullable: true },
+      { name: "created_at", type: "timestamp" },
+    ],
+  },
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {

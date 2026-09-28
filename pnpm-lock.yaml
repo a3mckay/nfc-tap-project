@@ -20,6 +20,9 @@ importers:
       '@nfc/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@nfc/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       next:
         specifier: ^15.5.16
         version: 15.5.19(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -54,6 +57,9 @@ importers:
       '@nfc/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@nfc/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       next:
         specifier: ^15.5.16
         version: 15.5.19(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -113,6 +119,15 @@ importers:
       vitest:
         specifier: ^2.1.5
         version: 2.1.9(@types/node@22.19.17)
+
+  packages/email:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.19.17
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
 
   services/api:
     dependencies:

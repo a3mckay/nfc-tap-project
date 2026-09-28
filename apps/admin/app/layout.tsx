@@ -31,6 +31,9 @@ async function Sidebar() {
   const session = await verifySession(jar.get(COOKIE_NAME)?.value);
   if (!session) return null;
 
+  // Staff only see their home page, without the owner navigation.
+  if (session.role === "staff") return null;
+
   const headersList = await headers();
   const role = headersList.get("x-session-role") ?? "super";
   let currentShop = headersList.get("x-current-shop") ?? "";

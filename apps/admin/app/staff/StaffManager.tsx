@@ -19,13 +19,16 @@ export function StaffManager({ shop, staff }: Props) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   function add(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     startTransition(async () => {
       const r = await approveStaffAction(shop, email, name);
       if (r.error) { setError(r.error); return; }
+      setNotice(r.warning ?? `Added. We've emailed ${email.trim()} an invite to sign in.`);
       setEmail("");
       setName("");
       router.refresh();
@@ -55,6 +58,7 @@ export function StaffManager({ shop, staff }: Props) {
         </button>
       </form>
       {error && <p style={{ color: "#c00", fontSize: "0.85rem", marginBottom: "0.5rem" }}>{error}</p>}
+      {notice && <p style={{ color: "#166534", fontSize: "0.85rem", marginBottom: "0.5rem" }}>{notice}</p>}
 
       <div style={{ marginTop: "1.5rem", opacity: pending ? 0.6 : 1 }}>
         {staff.length === 0 ? (

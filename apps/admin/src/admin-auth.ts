@@ -7,7 +7,28 @@ export const COOKIE_NAME = "nfc_admin";
 
 export type AdminSession =
   | { role: "super" }
-  | { role: "store"; storeId: string; storeDomain: string };
+  | { role: "store"; storeId: string; storeDomain: string }
+  | StaffSession;
+
+// Staff (PRD v4 §7 Step 13) can only reach the staff home page. Their sessions
+// carry an expiry (ms since epoch) that verifySession enforces.
+export interface StaffSession {
+  role: "staff";
+  staffId: string;
+  storeId: string;
+  storeDomain: string;
+  exp: number;
+}
+
+export const STAFF_SESSION_DAYS = 30;
+export const STAFF_SESSION_MAX_AGE_SECONDS = STAFF_SESSION_DAYS * 24 * 60 * 60;
+
+export function staffSession(
+  who: { staffId: string; storeId: string; storeDomain: string },
+  now = Date.now(),
+): StaffSession {
+  return { role: "staff", ...who, exp: now + STAFF_SESSION_MAX_AGE_SECONDS * 1000 };
+}
 
 function secret(): string {
   return process.env.ADMIN_COOKIE_SECRET ?? "dev-admin-secret-change-in-prod";
@@ -52,11 +73,14 @@ export async function verifySession(value: string | undefined): Promise<AdminSes
   // Legacy super-admin cookie: literal "authenticated" payload
   if (payload === "authenticated") return { role: "super" };
 
+  let session: AdminSession;
   try {
-    return JSON.parse(atob(payload)) as AdminSession;
+    session = JSON.parse(atob(payload)) as AdminSession;
   } catch {
     return null;
   }
+  if (session.role === "staff" && !(session.exp > Date.now())) return null;
+  return session;
 }
 
 // Convenience wrappers used by existing code

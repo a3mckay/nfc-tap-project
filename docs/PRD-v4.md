@@ -210,7 +210,8 @@ services/
   api/        Fastify: Shopify OAuth (auth.ts), webhooks, Stripe billing webhook, health
   worker/     Polling worker: generate-copy, match-canonical, enrich-events
 packages/
-  db/         SQL migrations (0000–0017), typed query modules, seeds, schema-conformance test
+  db/         SQL migrations (0000–0018), typed query modules, seeds, schema-conformance test
+  email/      Resend wrapper shared by the admin and the tap page
 ```
 
 **Scheduled jobs:** the admin exposes cron routes `api/cron/brand-refresh` and `api/cron/reviews-refresh`. They need an external scheduler; what triggers them in production isn't recorded yet (see `ACTION_ITEMS.md`).
@@ -273,6 +274,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0015 | Store contact numbers (WhatsApp / SMS) |
 | 0016 | Notifications: `customers.phone`, `preferred_channel`, `display_name`; `notification_preferences` (3×3 grid of event × engagement), `notification_subscriptions`, `notification_log` |
 | 0017 | Staff: `store_staff` (emails approved by the store admin; soft-removed via `revoked_at`) |
+| 0018 | Staff sign-in: `staff_auth_tokens` (single-use emailed links; SHA-256 hash only, 15 min) |
 
 ---
 
@@ -424,7 +426,7 @@ Decided:
 
 Sub-steps:
 - ✅ 13a: `store_staff` table and the admin Staff page (`/staff`: add, list, remove approved emails)
-- ⬜ 13b: `staff` admin role, staff sign-in by emailed link, staff home page
+- ✅ 13b: `staff` admin role (30-day session, confined to `/training`), staff sign-in by emailed link at `/login/staff` (one link per store), staff home page, invite email when an owner adds staff
 - ⬜ 13c: handoff to the tap page (`nfc_staff` cookie, `getCurrentStaff()`)
 - ⬜ 13d: staff training view on tap, customer toggle, staff taps excluded from customer analytics
 - ⬜ 13e: Staff Training section in the enrichment form (new staff content fields)
@@ -557,7 +559,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 - Shopify Partner account, dev store and custom app
 - Cloudflare tunnel for local OAuth testing
 - ✅ Postgres on Railway
-- Railway pre-deploy command on the admin service, so migrations run on every deploy
+- ✅ Railway pre-deploy command on the admin service, so migrations run on every deploy
 - Confirm what triggers the two cron routes in production
 - Stripe products and price IDs (set `metadata.shop_domain` on subscriptions)
 - Twilio credentials
@@ -614,6 +616,6 @@ These were built in May 2026. The migrations number them as expansion sections �
 - **Keep this PRD current:** update the build statuses in §7 and §10 when a step or feature lands.
 - **Keep the running docs current:** add new deferrals to `DEFERRED.md` and new human tasks to `ACTION_ITEMS.md`.
 - **Hosting:** Railway (admin, tap page, Postgres), deployed from `main`; DNS via Namecheap. GitHub user `a3mckay`.
-- **Migrations in production:** the admin service's Railway pre-deploy command runs `pnpm db:migrate` before each deploy. To run them by hand, use the Postgres service's `DATABASE_PUBLIC_URL` (the plain `DATABASE_URL` is only reachable inside Railway): `DATABASE_URL="…" corepack pnpm db:migrate`.
+- **Migrations in production:** the admin service's Railway pre-deploy command runs `pnpm --filter @nfc/db migrate:up` before each deploy. To run them by hand, use the Postgres service's `DATABASE_PUBLIC_URL` (the plain `DATABASE_URL` is only reachable inside Railway): `DATABASE_URL="…" corepack pnpm db:migrate`.
 
 *End of document · PRD v4 · TapShelf*
