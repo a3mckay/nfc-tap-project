@@ -83,9 +83,3 @@ Things we consciously deferred during the build, with enough context to pick the
 **What exists:** The admin app is accessible to anyone who knows the URL.
 **Why deferred:** Running locally or behind a private URL for V1.
 **What's needed:** Add authentication (e.g. NextAuth with a magic-link email provider, or Shopify session tokens) before exposing the admin publicly.
-
-### Some ID-keyed admin writes aren't store-scoped
-**Files:** `packages/db/src/tags.ts` (`assignTagToProduct`, `setTagStatus`), `reviews.ts` (`setReviewStatus`), `awards.ts` (`setAwardStatus`); callers in `apps/admin/app/tags/[tag_id]/actions.ts`, `apps/admin/app/reviews/pending/actions.ts`, `apps/admin/app/reviews/public/actions.ts`
-**What exists:** These update by row ID alone (`where id = $1`). The reviews/pending actions don't resolve a store at all, and the public-reviews search doesn't check the product belongs to the store.
-**Why deferred:** Out of scope for the `shop`-trust fix.
-**What's needed:** Add `and store_id = $n` (or a join to the owning store) and pass `store.id` from `getActionStore`, as `deleteStoreOffer` / `updateStoreOffer` already do.

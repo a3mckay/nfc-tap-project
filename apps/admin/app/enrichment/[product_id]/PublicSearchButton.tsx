@@ -46,7 +46,7 @@ export function PublicSearchButton({ shop, productId, publicReviewsEnabled }: Pr
         return;
       }
       // Load pending items for just this product
-      const { items } = await getPendingItemsForProductAction(productId);
+      const { items } = await getPendingItemsForProductAction(shop, productId);
       if (items.length === 0) {
         setError("Nothing relevant found for this product.");
         setPageStatus("idle");
@@ -60,7 +60,7 @@ export function PublicSearchButton({ shop, productId, publicReviewsEnabled }: Pr
 
   function handleApprove(id: string, kind: "review" | "award") {
     startTransition(async () => {
-      await approveItemAction(id, kind);
+      await approveItemAction(shop, id, kind);
       setPendingItems((prev) => prev.filter((item) => item.id !== id));
       setApprovedCount((c) => c + 1);
     });
@@ -68,7 +68,7 @@ export function PublicSearchButton({ shop, productId, publicReviewsEnabled }: Pr
 
   function handleReject(id: string, kind: "review" | "award") {
     startTransition(async () => {
-      await rejectItemAction(id, kind);
+      await rejectItemAction(shop, id, kind);
       setPendingItems((prev) => prev.filter((item) => item.id !== id));
     });
   }

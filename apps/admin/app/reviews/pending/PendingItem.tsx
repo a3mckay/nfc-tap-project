@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { setReviewStatusAction, setAwardStatusAction } from "./actions.js";
 
 interface BaseProps {
+  shop: string;
   id: string;
   productTitle: string | null;
   sourceLabel: string | null;
@@ -30,14 +31,14 @@ export function PendingItem(props: Props) {
 
   function approve() {
     startTransition(async () => {
-      if (props.kind === "review") await setReviewStatusAction(props.id, "approved");
-      else await setAwardStatusAction(props.id, "approved");
+      if (props.kind === "review") await setReviewStatusAction(props.shop, props.id, "approved");
+      else await setAwardStatusAction(props.shop, props.id, "approved");
     });
   }
   function reject() {
     startTransition(async () => {
-      if (props.kind === "review") await setReviewStatusAction(props.id, "rejected");
-      else await setAwardStatusAction(props.id, "rejected");
+      if (props.kind === "review") await setReviewStatusAction(props.shop, props.id, "rejected");
+      else await setAwardStatusAction(props.shop, props.id, "rejected");
     });
   }
 

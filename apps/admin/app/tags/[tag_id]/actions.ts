@@ -18,7 +18,8 @@ export async function assignTagAction(
   const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
-  await assignTagToProduct(pool, tagId, productId || null);
+  const updated = await assignTagToProduct(pool, tagId, store.id, productId || null);
+  if (!updated) return { error: "Tag or product not found" };
   revalidatePath("/tags");
   return {};
 }
@@ -32,7 +33,8 @@ export async function setTagStatusAction(
   const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
-  await setTagStatus(pool, tagId, status);
+  const updated = await setTagStatus(pool, tagId, store.id, status);
+  if (!updated) return { error: "Tag not found" };
   revalidatePath("/tags");
   return {};
 }
