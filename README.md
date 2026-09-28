@@ -1,6 +1,6 @@
 # NFC Tap Project
 
-V1 of an NFC-powered in-store product experience platform. See `~/Downloads/nfc-product-prd-v3.docx` for the full PRD.
+V1 of an NFC-powered in-store product experience platform. See [`docs/PRD-v4.md`](docs/PRD-v4.md) for the full PRD, build order, and current build status.
 
 ## What's here right now (Phase 1, Step 1)
 
