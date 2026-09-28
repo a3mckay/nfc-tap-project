@@ -9,8 +9,8 @@
   "scripts": {
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "db:migrate": "pnpm --filter @nfc/db migrate:up",
-    "db:reset": "docker compose down -v && docker compose up -d postgres && sleep 2 && pnpm db:migrate",
+    "db:migrate": "corepack pnpm --filter @nfc/db migrate:up",
+    "db:reset": "docker compose down -v && docker compose up -d postgres && sleep 2 && corepack pnpm db:migrate",
     "test": "pnpm -r run test",
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint",
