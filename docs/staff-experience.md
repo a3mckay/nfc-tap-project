@@ -20,7 +20,7 @@ is ready for the next customer.*
 
 **In scope (V1 of this feature)**
 1. A staff role under the store admin: the store admin approves staff email addresses
-2. Staff sign-in on the tap page
+2. Staff sign in through the admin, and the sign-in carries over to the tap page
 3. A staff training view shown when a signed-in staff member taps a tag from their store
 4. A Staff section in the admin enrichment form for writing the training content
 5. Keeping staff taps out of customer analytics and features
@@ -43,7 +43,7 @@ experience based on who is signed in**:
 | Tapper | Experience |
 | --- | --- |
 | Anonymous or signed-in customer | Customer product page (today's behaviour) |
-| Signed-in staff member of the tag's store | Staff training view, with a toggle to preview the customer page |
+| Signed-in staff member of the tag's store | **Staff training view by default**, with a toggle to switch to the customer page |
 | Signed-in staff member of a different store | Customer product page |
 
 ## Current state of the codebase
@@ -86,36 +86,70 @@ CREATE INDEX store_staff_email_idx ON store_staff(email);
 - Remove staff (sets `revoked_at`, which also blocks their existing sessions on the
   next check)
 
-Staff don't get access to the admin dashboard. The `nfc_admin` roles stay
-`super` and `store`.
+Add a third admin role, `staff`, next to `super` and `store`:
+`{ role: "staff"; staffId; storeId }` in `apps/admin/src/admin-auth.ts`. Staff can't
+reach the store's settings, products, tags or analytics. The middleware only lets
+them into a small staff home page (see §2).
 
-## 2. Staff sign-in (tap page)
+## 2. Staff sign-in (through the admin, carried over to the tap page)
 
-Staff sign in **on the tap page app**, not the admin. The cookie has to exist on the
-domain the NFC tags open, and the admin's cookie is on a separate app.
+Staff sign in on the **admin login page**, so there's one obvious place to sign in.
+The sign-in then has to carry over to the tap page. The admin and tap page are
+separate apps, and the NFC tags open the tap page, which can't read the admin's
+`nfc_admin` cookie.
 
-Reuse the existing customer magic-link setup (`auth_tokens`, `/auth/verify`):
+**Sign-in**
+1. The admin login page (`apps/admin/app/login`) gets a "Staff sign-in" option:
+   email only, no password.
+2. If the email matches a `store_staff` row that hasn't been revoked, email a
+   one-time sign-in link (valid for 15 minutes). If not, show the same neutral
+   "check your email" message so the page doesn't reveal which emails are
+   approved. Staff never have to create or remember a password.
+3. The link signs them in to the admin as `role: "staff"`.
 
-1. Staff go to `/staff/login` once, bookmarked or linked from an invite email.
-2. They enter their email. If it matches a `store_staff` row that hasn't been
-   revoked, a magic link is emailed. If not, show the same neutral "check your
-   email" message so the page doesn't reveal which emails are approved.
-3. The link sets a signed `nfc_staff` cookie holding the `store_staff.id`, built like
-   `nfc_customer` (`httpOnly`, `sameSite=lax`). Use a shorter lifetime than the
-   customer cookie, for example 30 days.
-4. `getCurrentStaff()`, the staff counterpart of `getCurrentCustomer()`, verifies the
-   cookie and re-checks that the row exists and hasn't been revoked on each
-   request.
+**Carrying the sign-in to the tap page**
+4. Right after sign-in, the admin creates a single-use handoff token (valid for 60
+   seconds, stored in the database) and redirects the browser to the tap page at
+   `/staff/handoff?token=…`.
+5. The tap page checks and uses up the token, sets a signed `nfc_staff` cookie on
+   the tap page's domain, and redirects back to the admin's staff home page. To
+   the associate, this is one quick redirect.
+6. `getCurrentStaff()`, the staff counterpart of `getCurrentCustomer()`, verifies
+   `nfc_staff` and re-checks that the staff row exists and hasn't been revoked on
+   each request. Removing someone in the admin takes effect on their next tap.
 
-When the store admin approves an email, send an invite email linking to
-`/staff/login`, so staff never have to type the URL.
+This handoff works whatever domains the two apps end up on. If both apps are
+later served under one parent domain (for example `admin.tapshelf.store` and
+`tapshelf.store`), a shared cookie could replace it. The handoff doesn't depend
+on that.
+
+**Staff home page** (the admin's landing page for `role: "staff"`)
+- "You're signed in as a staff member of <Store>. Tap any product to see its
+  training view."
+- The store's products, each marked reviewed or not yet reviewed (from §6), so
+  associates can see what's left to learn
+- Sign out, which clears both the admin and tap-page staff cookies
+
+**Must be done in Safari (or the phone's default browser).** On iOS, tapping a tag
+opens the phone's default browser. If staff sign in through the admin saved to the
+home screen as an app, iOS keeps that login in a separate cookie store, so taps
+won't see it. The invite email and the staff home page should say "open this in
+Safari". Android Chrome shares cookies between its home-screen apps and the
+browser, so this isn't an issue there.
+
+When the store admin approves an email, send an invite email with a sign-in link.
+The emailing code in `apps/tap-page/src/lib/email.ts` can move to a shared package
+so the admin can send it.
 
 ## 3. Staff view on tap
 
 In `page.tsx`, resolve `getCurrentStaff()` alongside `getCurrentCustomer()`. If a
 staff member is signed in **and** `staff.store_id === tag.store_id`, render
-`<StaffShell>` in place of `<ProductShell>`, with a "View as customer" toggle.
-Otherwise, show today's customer page unchanged.
+`<StaffShell>` **by default** in place of `<ProductShell>`, with a "View as
+customer" toggle at the top. The toggle switches to the normal customer page, with
+a matching "Back to training view" toggle. Keep the toggle choice for the current
+visit only (for example `?view=customer`), so every new tap opens in the training
+view. Otherwise, show today's customer page unchanged.
 
 **Content**: the main case is someone learning with time to spare, so short
 paragraphs and a brand video are fine. The top section still has to be readable in
@@ -215,10 +249,33 @@ On the admin Staff page, show:
 1. Migration: `store_staff`, `staff_product_views`, and the new staff columns on
    `enrichments`
 2. Admin Staff page (add, list, remove) plus the invite email
-3. Tap-page staff magic-link sign-in and `getCurrentStaff()`
-4. `StaffShell`, plus the branch in `page.tsx` that skips customer analytics
-5. Staff Training section in the enrichment form
-6. Training progress on the admin Staff page
+3. Admin `staff` role, staff sign-in by emailed link, and the staff home page
+4. Handoff to the tap page (`/staff/handoff`, `nfc_staff` cookie,
+   `getCurrentStaff()`)
+5. `StaffShell` as the default view for staff, the customer toggle, and the branch
+   in `page.tsx` that skips customer analytics
+6. Staff Training section in the enrichment form
+7. Training progress on the admin Staff page and the staff home page
+
+## Later: native iOS/Android staff app
+
+Not needed for this feature. The web approach works on both platforms as long as
+staff sign in through the phone's default browser (see §2). A native app becomes
+worth it if we want:
+
+- **Taps that open straight in the app.** With iOS Universal Links and Android App
+  Links, taps on `/p/...` open the staff app when it's installed. Customers, who
+  won't have it, still get the web page. This also removes the Safari sign-in
+  caveat.
+- **Push notifications for training**, like "3 new products arrived — review them
+  before your shift".
+- **Offline reading and a proper app-store listing**, which some stores' IT
+  policies prefer.
+
+Cost: app-store review, a second codebase to maintain (or a wrapper around the
+existing web view), and a domain association file. The tap page and database
+would stay the same, since a native app would call the same staff-session
+endpoints. Revisit after staff are using the web version.
 
 ## Open questions
 
@@ -227,5 +284,3 @@ On the admin Staff page, show:
   store could be used.
 - Should the store admin also be able to see the staff view by adding their own
   email as staff, or should `store_admins` be accepted automatically?
-- Should staff get read-only access to anything in the admin (for example a list of
-  all products to review), or stay tap-page-only?
