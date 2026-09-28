@@ -22,6 +22,8 @@ Code comments and tests cite **v3** section numbers. The v4 equivalents:
 
 ## Working rules
 
+**The full development protocol is [`docs/claude-code-prompt.md`](docs/claude-code-prompt.md). Read it at session start alongside the PRD.** The list below is only a summary.
+
 - **State the scope:** open each session by naming the Phase / Step (or §10 area) you're working on. Don't build ahead of it.
 - **Engineering bar:** TDD, SOLID, KISS, YAGNI.
 - **Keep the PRD current:** when a step or feature lands, update its status in `docs/PRD-v4.md`.

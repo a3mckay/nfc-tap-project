@@ -568,7 +568,7 @@ These were built in May 2026. The migrations number them as expansion sections Â
 ## 15. Working Protocol for Claude Sessions
 
 - **State the scope:** open each session with the Phase / Step (or Section 10 area) being worked on. Don't build ahead of it.
-- **Engineering bar:** TDD, SOLID, KISS, YAGNI. Push back on anything premature or over-engineered.
+- **Engineering bar:** TDD, SOLID, KISS, YAGNI. Push back on anything premature or over-engineered. The full protocol is in `docs/claude-code-prompt.md`.
 - **Setup:**
   ```
   corepack pnpm install
