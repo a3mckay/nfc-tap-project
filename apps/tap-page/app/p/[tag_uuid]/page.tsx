@@ -65,7 +65,9 @@ export default async function TapPage({ params }: Props) {
   // Check for any applicable discount offer for this product/customer/session.
   const offer = await getApplicableOffer(pool, state.storeId, state.productId, sessionId, customer?.id ?? null);
   if (offer) {
-    void recordOfferDelivery(pool, offer, customer?.id ?? null, sessionId).catch(() => {});
+    void recordOfferDelivery(pool, offer, customer?.id ?? null, sessionId).catch((err) => {
+      console.error("[tap] recordOfferDelivery failed:", err);
+    });
   }
 
   // Unity / Collector — only run for identified customers.
@@ -83,7 +85,8 @@ export default async function TapPage({ params }: Props) {
   }
 
   // Shopify REST API uses "src"; Storefront API and manual entries use "url"
-  const productImages = product.images as Array<{ url?: string; src?: string; altText: string | null }>;
+  type ProductImage = { url?: string; src?: string; altText: string | null };
+  const productImages: ProductImage[] = Array.isArray(product.images) ? product.images as ProductImage[] : [];
   const primaryImageUrl =
     productImages[0]?.url ?? productImages[0]?.src ?? enrichment?.extra_images?.[0] ?? null;
   const currentTap: LocalTap = {
@@ -157,8 +160,8 @@ async function recordTapEvent(
     const ua = headerStore.get("user-agent") ?? null;
     const deviceType = ua ? classifyDevice(ua) : null;
     await insertTapEvent(pool, { tag_id: tagId, product_id: productId, store_id: storeId, session_id: sessionId, device_type: deviceType });
-  } catch {
-    // Never let analytics failures surface to the customer
+  } catch (err) {
+    console.error("[tap] recordTapEvent failed:", err);
   }
 }
 
