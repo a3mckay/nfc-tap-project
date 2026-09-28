@@ -101,21 +101,34 @@ export async function provisionTags(
   storeId: string,
   count: number,
 ): Promise<Tag[]> {
-  // Insert one tag at a time so each gets the next sequential tag_number for this store.
-  // Using a subquery inside the INSERT avoids race conditions better than a pre-fetched MAX.
-  const results: Tag[] = [];
-  for (let i = 0; i < count; i++) {
-    const tagUuid = randomUUID();
-    const { rows } = await pool.query<Tag>(
-      `insert into tags (store_id, tag_uuid, status, tag_number)
-       values ($1, $2::uuid, 'unassigned',
-               coalesce((select max(tag_number) from tags where store_id = $1), 0) + 1)
-       returning id, store_id, tag_uuid, tag_number, product_id, status,
-                 encoded_at, shipped_at, deployed_at`,
-      [storeId, tagUuid],
-    );
-    if (!rows[0]) throw new Error(`provisionTags: insert returned no row for uuid ${tagUuid}`);
-    results.push(rows[0]);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    // Serialize concurrent provisions for the same store using a transaction-level advisory lock.
+    // hashtext() maps the store UUID to a stable int32 which pg_advisory_xact_lock accepts as int64.
+    await client.query(`select pg_advisory_xact_lock(hashtext($1)::bigint)`, [storeId]);
+
+    const results: Tag[] = [];
+    for (let i = 0; i < count; i++) {
+      const tagUuid = randomUUID();
+      const { rows } = await client.query<Tag>(
+        `insert into tags (store_id, tag_uuid, status, tag_number)
+         values ($1, $2::uuid, 'unassigned',
+                 coalesce((select max(tag_number) from tags where store_id = $1), 0) + 1)
+         returning id, store_id, tag_uuid, tag_number, product_id, status,
+                   encoded_at, shipped_at, deployed_at`,
+        [storeId, tagUuid],
+      );
+      if (!rows[0]) throw new Error(`provisionTags: insert returned no row for uuid ${tagUuid}`);
+      results.push(rows[0]);
+    }
+
+    await client.query("COMMIT");
+    return results;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
   }
-  return results;
 }
