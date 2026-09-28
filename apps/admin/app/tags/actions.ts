@@ -1,6 +1,7 @@
 "use server";
 
-import { getPool, getStoreByDomain, provisionTags } from "@nfc/db";
+import { getPool, provisionTags } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import { parseProvisionCount } from "../../src/tag-utils.js";
 
@@ -9,7 +10,7 @@ export async function provisionTagsAction(
   countRaw: string,
 ): Promise<{ error?: string; created?: number }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
   const count = parseProvisionCount(countRaw);

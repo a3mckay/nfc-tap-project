@@ -1,6 +1,7 @@
 "use server";
 
-import { getPool, updateThemeSettings, getStoreByDomain, saveBrandDetectUrl, clearPendingBrandSuggestion } from "@nfc/db";
+import { getPool, updateThemeSettings, saveBrandDetectUrl, clearPendingBrandSuggestion } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 
 export interface ThemeFormData {
@@ -18,7 +19,7 @@ export interface ThemeFormData {
 export async function saveThemeAction(data: ThemeFormData): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
 
-  const store = await getStoreByDomain(pool, data.shop);
+  const store = await getActionStore(pool, data.shop);
   if (!store) return { error: "Store not found" };
 
   await updateThemeSettings(pool, store.id, {

@@ -1,6 +1,7 @@
 "use server";
 
-import { getPool, upsertFullEnrichment, getStoreByDomain, getProductById, updateManualProduct, type Review, type FaqItem } from "@nfc/db";
+import { getPool, upsertFullEnrichment, getProductById, updateManualProduct, type Review, type FaqItem } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import {
   parseReasonsInput,
@@ -37,7 +38,7 @@ export async function saveEnrichmentAction(
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
 
-  const store = await getStoreByDomain(pool, data.shop);
+  const store = await getActionStore(pool, data.shop);
   if (!store) return { error: "Store not found" };
 
   const product = await getProductById(pool, data.product_id);
@@ -89,7 +90,7 @@ export async function generateEnrichmentAction(
   productId: string,
 ): Promise<{ draft?: GeneratedDraft; error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
   const product = await getProductById(pool, productId);

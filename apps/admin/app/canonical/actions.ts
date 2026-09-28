@@ -1,11 +1,12 @@
 "use server";
 
-import { getPool, getStoreByDomain, reviewCanonicalMatch } from "@nfc/db";
+import { getPool, reviewCanonicalMatch } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 
 export async function reviewMatchAction(shop: string, mapId: string): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
   // Verify the map entry's product belongs to this store before confirming
