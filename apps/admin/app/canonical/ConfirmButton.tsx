@@ -3,13 +3,13 @@
 import { useTransition } from "react";
 import { reviewMatchAction } from "./actions.js";
 
-export function ConfirmButton({ mapId }: { mapId: string }) {
+export function ConfirmButton({ shop, mapId }: { shop: string; mapId: string }) {
   const [isPending, startTransition] = useTransition();
 
   return (
     <button
       disabled={isPending}
-      onClick={() => startTransition(async () => { await reviewMatchAction(mapId); })}
+      onClick={() => startTransition(async () => { await reviewMatchAction(shop, mapId); })}
       style={{
         padding: "2px 10px",
         fontSize: "0.78rem",

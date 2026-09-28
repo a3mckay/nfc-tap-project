@@ -48,13 +48,13 @@ export async function updateStoreOffer(pool: Pool, id: string, input: StoreOffer
        trigger_n    = $6,
        enabled      = $7,
        expires_at   = $8
-     where id = $1`,
-    [id, input.product_id, input.code, input.message, input.trigger_kind, input.trigger_n, input.enabled, input.expires_at],
+     where id = $1 and store_id = $9`,
+    [id, input.product_id, input.code, input.message, input.trigger_kind, input.trigger_n, input.enabled, input.expires_at, input.store_id],
   );
 }
 
-export async function deleteStoreOffer(pool: Pool, id: string): Promise<void> {
-  await pool.query(`delete from store_offers where id = $1`, [id]);
+export async function deleteStoreOffer(pool: Pool, id: string, storeId: string): Promise<void> {
+  await pool.query(`delete from store_offers where id = $1 and store_id = $2`, [id, storeId]);
 }
 
 export async function getStoreOffersByStore(pool: Pool, storeId: string): Promise<StoreOffer[]> {
@@ -137,6 +137,6 @@ export async function recordOfferDelivery(
     `insert into customer_offers
        (customer_id, session_id, store_id, product_id, code, message, expires_at)
      values ($1, $2, $3, $4, $5, $6, $7)`,
-    [customerId, customerId ? null : sessionId, offer.store_id, offer.product_id, offer.code, offer.message, offer.expires_at],
+    [customerId, sessionId, offer.store_id, offer.product_id, offer.code, offer.message, offer.expires_at],
   );
 }

@@ -66,7 +66,7 @@ export default async function CanonicalPage({ searchParams }: PageProps) {
                   <td style={{ ...td, fontFamily: "monospace", fontSize: "0.8rem", color: "#555" }}>{p.canonical_name}</td>
                   <td style={td}>{p.brand_name}</td>
                   <td style={{ ...td, paddingLeft: "0.75rem" }}>
-                    <ConfirmButton mapId={p.map_id!} />
+                    <ConfirmButton shop={shop} mapId={p.map_id!} />
                   </td>
                 </tr>
               ))}

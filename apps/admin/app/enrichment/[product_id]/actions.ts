@@ -40,6 +40,9 @@ export async function saveEnrichmentAction(
   const store = await getStoreByDomain(pool, data.shop);
   if (!store) return { error: "Store not found" };
 
+  const product = await getProductById(pool, data.product_id);
+  if (!product || product.store_id !== store.id) return { error: "Product not found" };
+
   // Update mutable product fields (title + primary image) for manual products
   await updateManualProduct(pool, data.product_id, {
     ...(data.is_manual && data.product_title.trim() ? { title: data.product_title.trim() } : {}),
