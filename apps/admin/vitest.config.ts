@@ -1,6 +1,11 @@
 import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
+  resolve: {
+    // Mirrors the "@/*" path in tsconfig.json so tests can import server actions.
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+  },
   test: {
     globals: false,
     environment: "node",

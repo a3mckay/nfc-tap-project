@@ -43,6 +43,7 @@ export default async function PendingPage({ searchParams }: PageProps) {
               {reviews.map((r) => (
                 <PendingItem
                   key={r.id}
+                  shop={shop}
                   kind="review"
                   id={r.id}
                   productTitle={r.product_title}
@@ -63,6 +64,7 @@ export default async function PendingPage({ searchParams }: PageProps) {
               {awards.map((a) => (
                 <PendingItem
                   key={a.id}
+                  shop={shop}
                   kind="award"
                   id={a.id}
                   productTitle={a.product_title}

@@ -76,24 +76,37 @@ export async function getTagsByStore(
   return rows;
 }
 
+// Returns false when no row was updated: the tag isn't the store's, or the
+// product isn't the store's.
 export async function assignTagToProduct(
   pool: Pool,
   tagId: string,
+  storeId: string,
   productId: string | null,
-): Promise<void> {
+): Promise<boolean> {
   const newStatus = productId ? "active" : "unassigned";
-  await pool.query(
-    `update tags set product_id = $2, status = $3 where id = $1`,
-    [tagId, productId, newStatus],
+  const { rowCount } = await pool.query(
+    `update tags set product_id = $2, status = $3
+      where id = $1 and store_id = $4
+        and ($2::uuid is null
+             or exists (select 1 from products where id = $2 and store_id = $4))`,
+    [tagId, productId, newStatus, storeId],
   );
+  return (rowCount ?? 0) > 0;
 }
 
+// Returns false when the tag isn't the store's.
 export async function setTagStatus(
   pool: Pool,
   tagId: string,
+  storeId: string,
   status: TagStatus,
-): Promise<void> {
-  await pool.query(`update tags set status = $2 where id = $1`, [tagId, status]);
+): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    `update tags set status = $2 where id = $1 and store_id = $3`,
+    [tagId, status, storeId],
+  );
+  return (rowCount ?? 0) > 0;
 }
 
 export async function provisionTags(

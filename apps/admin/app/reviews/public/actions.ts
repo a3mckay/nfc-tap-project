@@ -20,7 +20,7 @@ export async function runPublicSearchForProductAction(
   if (!store) return { items_found: 0, items_stored: 0, error: "Store not found" };
 
   const product = await getProductById(pool, productId);
-  if (!product) return { items_found: 0, items_stored: 0, error: "Product not found" };
+  if (!product || product.store_id !== store.id) return { items_found: 0, items_stored: 0, error: "Product not found" };
 
   const result = await runPublicReviewsForProduct(
     pool, store.id, product.id, product.title, product.vendor,

@@ -177,7 +177,11 @@ export async function getPendingReviewsByProduct(
 export async function setReviewStatus(
   pool: Pool,
   id: string,
+  storeId: string,
   status: ReviewStatus,
 ): Promise<void> {
-  await pool.query(`update external_reviews set status = $2 where id = $1`, [id, status]);
+  await pool.query(
+    `update external_reviews set status = $2 where id = $1 and store_id = $3`,
+    [id, status, storeId],
+  );
 }

@@ -84,7 +84,11 @@ export async function getPendingAwardsByProduct(
 export async function setAwardStatus(
   pool: Pool,
   id: string,
+  storeId: string,
   status: ReviewStatus,
 ): Promise<void> {
-  await pool.query(`update awards set status = $2 where id = $1`, [id, status]);
+  await pool.query(
+    `update awards set status = $2 where id = $1 and store_id = $3`,
+    [id, status, storeId],
+  );
 }
