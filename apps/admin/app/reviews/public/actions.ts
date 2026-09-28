@@ -1,6 +1,7 @@
 "use server";
 
-import { getPool, getStoreByDomain, getProductById } from "@nfc/db";
+import { getPool, getProductById } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import { runPublicReviewsForProduct } from "../../../lib/public-reviews/run.js";
 
@@ -15,7 +16,7 @@ export async function runPublicSearchForProductAction(
   productId: string,
 ): Promise<RunPublicSearchResult> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { items_found: 0, items_stored: 0, error: "Store not found" };
 
   const product = await getProductById(pool, productId);
@@ -38,7 +39,7 @@ export async function setPublicReviewsEnabledAction(
   enabled: boolean,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
   await pool.query(

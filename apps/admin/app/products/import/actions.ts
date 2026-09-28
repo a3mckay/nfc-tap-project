@@ -1,6 +1,7 @@
 "use server";
 
-import { getPool, getStoreByDomain, insertManualProduct } from "@nfc/db";
+import { getPool, insertManualProduct } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 
 export interface CsvImportResult {
@@ -17,7 +18,7 @@ export async function importProductsCsvAction(
   csv: string,
 ): Promise<CsvImportResult> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { added: 0, skipped: 0, errors: ["Store not found"] };
 
   const lines = csv.split(/\r?\n/).filter((l) => l.trim().length > 0);

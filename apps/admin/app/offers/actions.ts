@@ -1,9 +1,10 @@
 "use server";
 
 import {
-  getPool, getStoreByDomain, createStoreOffer, updateStoreOffer, deleteStoreOffer,
+  getPool, createStoreOffer, updateStoreOffer, deleteStoreOffer,
   type OfferTrigger,
 } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 
 export interface OfferFormInput {
@@ -28,7 +29,7 @@ export async function saveOfferAction(input: OfferFormInput): Promise<{ error?: 
   }
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, input.shop);
+  const store = await getActionStore(pool, input.shop);
   if (!store) return { error: "Store not found" };
 
   const data = {
@@ -55,7 +56,7 @@ export async function saveOfferAction(input: OfferFormInput): Promise<{ error?: 
 
 export async function deleteOfferAction(shop: string, id: string): Promise<void> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return;
   await deleteStoreOffer(pool, id, store.id);
   revalidatePath("/offers");

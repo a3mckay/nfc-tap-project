@@ -2,10 +2,10 @@
 
 import {
   getPool,
-  getStoreByDomain,
   assignTagToProduct,
   setTagStatus,
 } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import type { TagStatus } from "@nfc/db";
 
@@ -15,7 +15,7 @@ export async function assignTagAction(
   productId: string | null,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
   await assignTagToProduct(pool, tagId, productId || null);
@@ -29,7 +29,7 @@ export async function setTagStatusAction(
   status: TagStatus,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  const store = await getActionStore(pool, shop);
   if (!store) return { error: "Store not found" };
 
   await setTagStatus(pool, tagId, status);
