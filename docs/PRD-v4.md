@@ -18,6 +18,7 @@
 3. **Section 10** adds the features built *after* v3 that the v3 PRD never specified: customer accounts, reactions, reviews, offers, Ask Us, notifications, PWA, multi-store admin, and others.
 4. **Section 12** brings in the known gaps from `DEFERRED.md` and the human to-dos from `ACTION_ITEMS.md`.
 5. **Section 11** lists places where the code and the spec disagree (for example, pricing tiers).
+6. **Staff logins and the staff training view** moved from the V2 roadmap into the build order as the **next priority** (§7 Phase 5, Step 13). Decided 2026-09-28. The design is in [`docs/staff-experience.md`](staff-experience.md).
 
 ### Status legend
 
@@ -277,6 +278,8 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 
 Steps are ordered by dependency. Steps 8a–8c run alongside Phase 3.
 
+> **Current priority: Phase 5, Step 13 (staff logins & training view).** The founder moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Those gaps stay open and are picked up after Step 13.
+
 ### Phase 1: Foundation
 
 **Step 1: Scaffolding & database 🟡**
@@ -404,6 +407,29 @@ Covered by Steps 5–7 above.
 - Prepare the leave-behind
 - Offer: "I'll set up your first 10 products free"
 
+### Phase 5: Staff experience (current priority)
+
+**Step 13: Staff logins & training view ⬜**
+
+Design: [`docs/staff-experience.md`](staff-experience.md). Associates tap the same tags as customers. A signed-in staff member of the tag's store sees a training view by default, with a toggle to the customer page. The main use case is self-guided product training during quiet periods.
+
+Decided:
+- The store admin approves staff email addresses in the admin; staff can't sign up on their own
+- Staff sign in on the admin (tapshelf.co) with an emailed link, and a one-time handoff carries the sign-in to the tap page (tapshelf.store)
+- Signed-in staff see the training view by default, with a toggle to the customer page
+- Staff taps are kept out of customer analytics, offers and personalisation
+- Owners can see training progress ("31 of 40 products reviewed")
+
+Sub-steps:
+- ⬜ 13a: `store_staff` table and the admin Staff page (add, list, remove approved emails)
+- ⬜ 13b: `staff` admin role, staff sign-in by emailed link, staff home page
+- ⬜ 13c: handoff to the tap page (`nfc_staff` cookie, `getCurrentStaff()`)
+- ⬜ 13d: staff training view on tap, customer toggle, staff taps excluded from customer analytics
+- ⬜ 13e: Staff Training section in the enrichment form (new staff content fields)
+- ⬜ 13f: training progress (`staff_product_views`), shown to owners and staff
+
+Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
+
 ---
 
 ## 8. Data Intelligence Layer (v3 §13, summarized)
@@ -445,7 +471,7 @@ The SaaS tool is how TapShelf gets to market. The dataset is the long-term defen
 
 | Feature | Status |
 |---|---|
-| Staff view layer (same tap; staff see inventory, notes, talking points) | ⬜ `internal_staff_notes` field exists |
+| Staff view layer (same tap; staff see inventory, notes, talking points) | ➡️ **Moved into V1** as §7 Phase 5, Step 13 (current priority). Live inventory in the staff view stays deferred. |
 | Post-purchase "product passport" | ⬜ |
 | Email capture on OOS | ✅ **Pulled into V1.** Done via NotifyMe subscriptions and restock notifications |
 | PWA / add to home screen | ✅ **Pulled into V1.** Hand-rolled service worker, manifest, 192/512 icons, install prompt with manual fallback |
@@ -519,6 +545,8 @@ These were built in May 2026. The migrations number them as expansion sections �
 - **Webhook testing:** no end-to-end webhook test against a live store.
 - **Tag lifecycle:** no UI for the tag lifecycle timestamps.
 - **Rate limiting:** none on the API. Add `@fastify/rate-limit` to the auth and webhook routes.
+- **Tap-to-Edit (deferred 2026-09-28):** an "Edit" link on the tap page for owners. Low priority; owners edit in the admin.
+- **Live store data in the staff view (deferred 2026-09-28):** stock by size, "Notify me" sign-ups by size, restock dates, tap trends. Stock is a single `inventory_quantity` per product and NotifyMe doesn't record a size.
 - **Admin authentication:** listed as missing in `DEFERRED.md`, but per-store login now exists (`apps/admin/middleware.ts`, `store_admins`). Verify it covers every route, then close the item.
 - **Admin server actions trusted the client's `shop` (fixed 2026-09-28):** every `apps/admin/app/**/actions.ts` now resolves its store with `getActionStore` (`apps/admin/src/current-store.ts`), which pins store-role admins to their own store from the signed session. Admin pages and `tags/export` read `?shop=`, so `middleware.ts` now redirects a store-role admin's `?shop=` to their own store (`pinShopParam`, `apps/admin/src/shop-param.ts`). ID-keyed writes are store-scoped too (fixed 2026-09-28): tag assign/status and review/award status updates filter on `store_id` (tag assignment also checks the product belongs to the store), the review-approval actions resolve their store with `getActionStore`, and the public-review search and per-product pending list check `product.store_id`. Covered by `packages/db/test/store-scoping.test.ts` and `apps/admin/test/store-scoped-actions.test.ts`.
 

@@ -10,6 +10,8 @@
 - known gaps (§12)
 - the working protocol (§15)
 
+**Current priority:** Phase 5, Step 13, staff logins & training view. Design: [`docs/staff-experience.md`](docs/staff-experience.md).
+
 Don't use `~/Downloads/nfc-product-prd-v3.docx` or any other local copy. They are superseded. If a local file disagrees with `docs/PRD-v4.md`, the repo file wins.
 
 Code comments and tests cite **v3** section numbers. The v4 equivalents:

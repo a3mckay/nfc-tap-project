@@ -2,19 +2,19 @@
 
 V1 of an NFC-powered in-store product experience platform. See [`docs/PRD-v4.md`](docs/PRD-v4.md) for the full PRD, build order, and current build status.
 
-## What's here right now (Phase 1, Step 1)
+**Current priority:** staff logins & training view (PRD v4 §7, Step 13). Design: [`docs/staff-experience.md`](docs/staff-experience.md).
 
-A monorepo skeleton, a PostgreSQL schema covering all PRD §7.2 + §13.6 tables, a schema-conformance test, and a CI pipeline. **No application code yet** — that starts in Step 2.
+## Layout
 
 ```
 apps/
-  admin/       Next.js admin (placeholder)
-  tap-page/    Next.js public tap page (placeholder)
+  admin/       Next.js store admin (tapshelf.co)
+  tap-page/    Next.js customer tap pages (tapshelf.store)
 services/
-  api/         Fastify API (placeholder)
-  worker/      Background worker (placeholder)
+  api/         Fastify API: Shopify OAuth, webhooks, billing
+  worker/      Background jobs: AI copy, canonical matching, event enrichment
 packages/
-  db/          SQL migrations + DB client + schema test
+  db/          SQL migrations, DB client, tests
 docker-compose.yml   Local Postgres 16
 ```
 
