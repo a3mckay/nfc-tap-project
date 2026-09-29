@@ -223,6 +223,24 @@ export const SCHEMA_SPEC: TableSpec[] = [
       { name: "created_at", type: "timestamp" },
     ],
   },
+  // PRD v4 §7 Step 13e: staff training notes per product (all optional)
+  {
+    name: "product_training",
+    columns: [
+      { name: "product_id", type: "uuid" },
+      { name: "store_id", type: "uuid" },
+      { name: "one_line_sell", type: "text", nullable: true },
+      { name: "who_its_for", type: "text", nullable: true },
+      { name: "who_its_not_for", type: "text", nullable: true },
+      { name: "fit_and_sizing", type: "text", nullable: true },
+      { name: "closest_alternative", type: "text", nullable: true },
+      { name: "companion_products", type: "text", nullable: true },
+      { name: "brand_context", type: "text", nullable: true },
+      { name: "stock_note", type: "text", nullable: true },
+      { name: "stock_note_updated_at", type: "timestamp", nullable: true },
+      { name: "updated_at", type: "timestamp" },
+    ],
+  },
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {

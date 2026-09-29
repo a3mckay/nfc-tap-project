@@ -4,8 +4,10 @@ import {
   getStoreByDomain,
   getProductById,
   getEnrichmentByProductId,
+  getProductTraining,
 } from "@nfc/db";
 import { EnrichmentPageClient } from "./EnrichmentPageClient.js";
+import { TrainingForm } from "./TrainingForm.js";
 import type { EnrichmentFormData } from "./actions.js";
 import {
   formatReasonsForEdit,
@@ -40,9 +42,10 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     );
   }
 
-  const [product, enrichment] = await Promise.all([
+  const [product, enrichment, training] = await Promise.all([
     getProductById(pool, product_id),
     getEnrichmentByProductId(pool, product_id),
+    getProductTraining(pool, product_id, store.id),
   ]);
 
   if (!product || product.store_id !== store.id) {
@@ -85,9 +88,12 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
           ← All products
         </Link>
       </p>
-      <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1rem" }}>
-        Edit details
-      </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1rem" }}>
+        <h1 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>
+          Edit details
+        </h1>
+        <a href="#staff-training" style={{ fontSize: "0.85rem", color: "#555" }}>Staff training ↓</a>
+      </div>
 
       <EnrichmentPageClient
         shop={shop}
@@ -96,6 +102,25 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         productTitle={product.title}
         isAiGenerated={enrichment?.ai_generated ?? false}
         publicReviewsEnabled={(store as unknown as { public_reviews_enabled?: boolean })?.public_reviews_enabled ?? false}
+      />
+
+      <TrainingForm
+        shop={shop}
+        productId={product_id}
+        aiAvailable={!!process.env.ANTHROPIC_API_KEY}
+        stockNoteUpdatedAt={training?.stock_note_updated_at?.toISOString() ?? null}
+        initial={{
+          one_line_sell: training?.one_line_sell ?? "",
+          who_its_for: training?.who_its_for ?? "",
+          who_its_not_for: training?.who_its_not_for ?? "",
+          fit_and_sizing: training?.fit_and_sizing ?? "",
+          worth_the_price: [...(training?.worth_the_price ?? []), "", "", ""].slice(0, 3),
+          closest_alternative: training?.closest_alternative ?? "",
+          common_questions: training?.common_questions ?? [],
+          companion_products: training?.companion_products ?? "",
+          brand_context: training?.brand_context ?? "",
+          stock_note: training?.stock_note ?? "",
+        }}
       />
     </main>
   );
