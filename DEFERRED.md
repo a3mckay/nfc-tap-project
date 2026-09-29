@@ -96,6 +96,22 @@ Things we consciously deferred during the build, with enough context to pick the
 
 ---
 
+## Manager roles
+
+### No "forgot password" for owners, managers or co-managers
+**Files:** `apps/admin/app/login/`
+**What exists:** Managers set a password from an emailed link when promoted. Owners' passwords come from signup.
+**Why deferred:** Out of scope for Step 14.
+**What's needed:** A "Forgot password?" link that emails a single-use reset link (the `staff_auth_tokens` set_password purpose can be reused for managers; owners need their own).
+
+### An email on several stores' lists signs in to the first matching store
+**Files:** `apps/admin/app/login/actions.ts` (`signInManager`)
+**What exists:** If the same email is a manager at two stores, sign-in goes to the first store whose password matches.
+**Why deferred:** Rare for now.
+**What's needed:** A store picker after sign-in when more than one store matches.
+
+---
+
 ## Security / Production Hardening
 
 ### No rate limiting on the API

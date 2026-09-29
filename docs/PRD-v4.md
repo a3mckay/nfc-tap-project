@@ -210,7 +210,7 @@ services/
   api/        Fastify: Shopify OAuth (auth.ts), webhooks, Stripe billing webhook, health
   worker/     Polling worker: generate-copy, match-canonical, enrich-events
 packages/
-  db/         SQL migrations (0000–0021), typed query modules, seeds, schema-conformance test
+  db/         SQL migrations (0000–0023), typed query modules, seeds, schema-conformance test
   email/      Resend wrapper shared by the admin and the tap page
 ```
 
@@ -278,6 +278,8 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0019 | Staff training notes: `product_training` (ten optional owner-written fields per product; store-scoped) |
 | 0020 | Admin → tap page sign-in handoff: `tap_handoff_tokens` (single-use, 60 s, hash only; staff member or store owner) |
 | 0021 | Training progress: `staff_product_views` (a staff member opening a product's training view) |
+| 0022 | Manager roles: `store_staff.role` (staff / co_manager / manager), `store_staff.password_hash` |
+| 0023 | `staff_auth_tokens.purpose` (sign_in / set_password) |
 
 ---
 
@@ -285,7 +287,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 
 Steps are ordered by dependency. Steps 8a–8c run alongside Phase 3.
 
-> **Phase 5, Step 13 (staff logins & training view) is complete (2026-09-29).** The founder had moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Those gaps are still open; the next priority hasn't been chosen yet.
+> **Phase 5 (staff experience) is complete: Step 13 (staff logins & training view, 2026-09-29) and Step 14 (manager and co-manager roles, 2026-09-29).** The founder had moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Next planned feature (founder, 2026-09-29): weekly training quizzes for staff — not started; see `docs/staff-experience.md`, "Later: weekly quizzes".
 
 ### Phase 1: Foundation
 
@@ -414,7 +416,7 @@ Covered by Steps 5–7 above.
 - Prepare the leave-behind
 - Offer: "I'll set up your first 10 products free"
 
-### Phase 5: Staff experience
+### Phase 5: Staff experience ✅
 
 **Step 13: Staff logins & training view ✅**
 
@@ -436,6 +438,25 @@ Sub-steps:
 - ✅ 13f: training progress — each staff member's training-view taps are recorded in `staff_product_views` (not owners', not the customer preview); owners' Staff page shows "12 of 40 products reviewed · last active …" per person, notes coverage and products nobody has reviewed; the staff home page lists what's left to tap. Only products with an active tag count.
 
 Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
+
+**Step 14: Manager and co-manager roles ✅** (founder, 2026-09-29)
+- The owner can make anyone on the Staff list a **manager** or **co-manager**; a manager can make someone a co-manager (or back to staff) but can't make or change managers.
+- Managers and co-managers get an emailed "Set your password" link (single-use, 3 days) and then sign in on the normal admin login with their own password; demoting someone to staff removes their password.
+- One permission table (`apps/admin/src/permissions.ts`) is enforced by the middleware (pages), `getActionStore(pool, shop, permission)` (every server action, with the manager's role re-read from the database) and the layout (live role re-check; the sidebar shows only allowed areas):
+
+| Area | Owner | Manager | Co-manager |
+|---|---|---|---|
+| Staff training notes | ✅ | ✅ | ✅ |
+| Customer product content, reviews | ✅ | ✅ | ✅ |
+| Training progress (Staff page) | ✅ | ✅ | view only |
+| Add / remove staff (not managers) | ✅ | ✅ | ❌ |
+| Make someone a co-manager | ✅ | ✅ | ❌ |
+| Make, change or remove a manager | ✅ | ❌ | ❌ |
+| Products and tags | ✅ | ✅ | ❌ |
+| Offers and customer notifications | ✅ | ✅ | ❌ |
+| Analytics | ✅ | ✅ | ❌ |
+| Theme, settings, product matching, getting started | ✅ | ❌ | ❌ |
+| Plan and billing | ✅ | ❌ | ❌ |
 
 ---
 

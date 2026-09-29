@@ -71,3 +71,34 @@ export function adminHomePath(session: Extract<AdminSession, { storeDomain: stri
   const shop = encodeURIComponent(session.storeDomain);
   return can(session, "catalog") ? `/tags?shop=${shop}` : `/enrichment?shop=${shop}`;
 }
+
+// The layout re-checks a manager's live role on every page (the middleware only
+// sees the cookie). `cookie` is the signed session; `live` the same session with
+// the role now in the database (null if they're no longer a manager or
+// co-manager). Returns where to send them, or null to carry on.
+export function accessRedirect(
+  cookie: AdminSession | null,
+  live: AdminSession | null,
+  pathname: string,
+): string | null {
+  if (cookie?.role !== "manager") return null;
+  if (!live || live.role !== "manager") return "/login?error=role";
+  const needed = permissionForPath(pathname);
+  return needed && !can(live, needed) ? adminHomePath(live) : null;
+}
+
+type StaffRoleName = "staff" | "co_manager" | "manager";
+
+// What a viewer may do to one row on the Staff page: which roles they can pick
+// (empty = no role control) and whether they can remove the person.
+export function staffRowControls(
+  viewer: AdminSession | null,
+  rowRole: StaffRoleName,
+): { roles: StaffRoleName[]; canRemove: boolean } {
+  const assignManager = can(viewer, "assign_manager");
+  if (rowRole === "manager" && !assignManager) return { roles: [], canRemove: false };
+  const roles: StaffRoleName[] = assignManager
+    ? ["staff", "co_manager", "manager"]
+    : can(viewer, "assign_co_manager") ? ["staff", "co_manager"] : [];
+  return { roles, canRemove: can(viewer, "staff") };
+}

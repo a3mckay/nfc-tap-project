@@ -7,8 +7,7 @@ import { signSession, managerSession, COOKIE_NAME, STAFF_SESSION_MAX_AGE_SECONDS
 import { hashSignInToken } from "@/sign-in-token.js";
 import { adminHomePath } from "@/permissions.js";
 import { startTapHandoff } from "@/tap-handoff.js";
-
-export const MIN_PASSWORD_LENGTH = 10;
+import { MIN_PASSWORD_LENGTH } from "@/staff-utils.js";
 
 // A new manager or co-manager sets their password from the emailed link, and is
 // signed in straight away.

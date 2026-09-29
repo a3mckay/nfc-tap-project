@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { setPasswordAction, MIN_PASSWORD_LENGTH } from "./actions.js";
+import { setPasswordAction } from "./actions.js";
+import { MIN_PASSWORD_LENGTH } from "@/staff-utils.js";
 
 interface PageProps {
   searchParams: Promise<{ token?: string; error?: string }>;

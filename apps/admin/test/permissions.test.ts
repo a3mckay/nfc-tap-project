@@ -74,3 +74,46 @@ describe("adminHomePath", () => {
     expect(adminHomePath(coManager)).toBe("/enrichment?shop=d");
   });
 });
+
+describe("accessRedirect (layout re-check with the live role)", async () => {
+  const { accessRedirect } = await import("../src/permissions.js");
+
+  it("lets a manager whose role is unchanged through", () => {
+    expect(accessRedirect(manager, manager, "/tags")).toBeNull();
+  });
+
+  it("signs out a manager who's been removed or made plain staff", () => {
+    expect(accessRedirect(manager, null, "/tags")).toBe("/login?error=role");
+  });
+
+  it("sends a manager demoted to co-manager away from pages they can't use any more", () => {
+    const demoted = { ...manager, level: "co_manager" } as const;
+    expect(accessRedirect(manager, demoted, "/tags")).toBe("/enrichment?shop=d");
+    expect(accessRedirect(manager, demoted, "/enrichment/p-1/training")).toBeNull();
+  });
+
+  it("leaves owners, super admins and pages open to everyone alone", () => {
+    expect(accessRedirect(owner, owner, "/theme")).toBeNull();
+    expect(accessRedirect(superAdmin, superAdmin, "/stores")).toBeNull();
+    expect(accessRedirect(coManager, coManager, "/")).toBeNull();
+  });
+});
+
+describe("staffRowControls (Staff page)", async () => {
+  const { staffRowControls } = await import("../src/permissions.js");
+
+  it("gives owners every role and Remove on everyone", () => {
+    expect(staffRowControls(owner, "manager")).toEqual({ roles: ["staff", "co_manager", "manager"], canRemove: true });
+    expect(staffRowControls(owner, "staff")).toEqual({ roles: ["staff", "co_manager", "manager"], canRemove: true });
+  });
+
+  it("lets managers switch staff and co-managers, but not touch managers", () => {
+    expect(staffRowControls(manager, "staff")).toEqual({ roles: ["staff", "co_manager"], canRemove: true });
+    expect(staffRowControls(manager, "co_manager")).toEqual({ roles: ["staff", "co_manager"], canRemove: true });
+    expect(staffRowControls(manager, "manager")).toEqual({ roles: [], canRemove: false });
+  });
+
+  it("gives co-managers a view only", () => {
+    expect(staffRowControls(coManager, "staff")).toEqual({ roles: [], canRemove: false });
+  });
+});

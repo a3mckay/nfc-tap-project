@@ -1,5 +1,7 @@
 import { getPool, getStoreByDomain, getActiveStaffByStore, getStaffTrainingProgress } from "@nfc/db";
 import { reviewedLabel, lastActiveLabel } from "@/progress-utils.js";
+import { getCurrentAdminSession } from "@/current-store.js";
+import { can, staffRowControls } from "@/permissions.js";
 import { StaffManager } from "./StaffManager.js";
 
 interface PageProps {
@@ -14,9 +16,10 @@ export default async function StaffPage({ searchParams }: PageProps) {
   const store = await getStoreByDomain(pool, shop);
   if (!store) return <main><p style={{ color: "#c00" }}>Store not found.</p></main>;
 
-  const [staff, progress] = await Promise.all([
+  const [staff, progress, viewer] = await Promise.all([
     getActiveStaffByStore(pool, store.id),
     getStaffTrainingProgress(pool, store.id),
+    getCurrentAdminSession(pool),
   ]);
   const byStaff = new Map(progress.staff.map((p) => [p.staff_id, p]));
 
@@ -24,15 +27,18 @@ export default async function StaffPage({ searchParams }: PageProps) {
     <main>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Staff</h1>
       <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-        Add the email addresses of your team. We email each person an invite; only these
-        emails can sign in as staff and see the training view when they tap a product.
+        {can(viewer, "staff")
+          ? "Add the email addresses of your team. We email each person an invite; only these emails can sign in as staff and see the training view when they tap a product."
+          : "Your team and their training progress."}
       </p>
       <StaffManager
         shop={shop}
+        canAdd={can(viewer, "staff")}
         staff={staff.map((s) => {
           const p = byStaff.get(s.id);
           return {
             id: s.id, email: s.email, name: s.name, added: s.created_at.toISOString(),
+            role: s.role, ...staffRowControls(viewer, s.role),
             progress: `${reviewedLabel(p?.reviewed ?? 0, progress.tagged_products)} · ${lastActiveLabel(p?.last_viewed_at ?? null)}`,
           };
         })}
