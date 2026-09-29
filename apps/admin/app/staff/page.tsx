@@ -54,7 +54,7 @@ export default async function StaffPage({ searchParams }: PageProps) {
               <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.9rem", lineHeight: 1.7 }}>
                 {progress.unreviewed.map((p) => (
                   <li key={p.id}>
-                    <a href={`/enrichment/${p.id}?shop=${encodeURIComponent(shop)}#staff-training`} style={{ color: "#333" }}>{p.title}</a>
+                    <a href={`/enrichment/${p.id}/training?shop=${encodeURIComponent(shop)}`} style={{ color: "#333" }}>{p.title}</a>
                   </li>
                 ))}
               </ul>

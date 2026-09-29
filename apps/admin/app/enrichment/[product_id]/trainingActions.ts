@@ -20,7 +20,7 @@ export async function saveTrainingAction(
 
   const saved = await saveProductTraining(pool, store.id, productId, normalizeTrainingForm(form));
   if (!saved) return { error: "Product not found" };
-  revalidatePath(`/enrichment/${productId}`);
+  revalidatePath(`/enrichment/${productId}/training`);
   return {};
 }
 

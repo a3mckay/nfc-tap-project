@@ -78,14 +78,11 @@ export function TrainingForm({ shop, productId, initial, stockNoteUpdatedAt, aiA
   );
 
   return (
-    <section id="staff-training" style={{ borderTop: "2px solid #111", paddingTop: "1.5rem", marginTop: "2.5rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-        <div>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>Staff training</h2>
-          <p style={{ ...hintStyle, fontSize: "0.85rem", marginTop: "0.25rem" }}>
-            Only your staff see this, when they tap the product. Every field is optional.
-          </p>
-        </div>
+    <section>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+        <p style={{ ...hintStyle, fontSize: "0.9rem", margin: 0, color: "#555" }}>
+          Only your staff see this, when they tap the product. Every field is optional.
+        </p>
         {aiAvailable && (
           <button type="button" onClick={draft} disabled={pending} style={{ ...smallBtn, padding: "0.45rem 0.9rem" }}>
             {drafting ? "Drafting…" : "Draft with AI (optional)"}
