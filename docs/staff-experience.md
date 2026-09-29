@@ -189,9 +189,10 @@ toggle.
 
 ## 4. Admin authoring (built in 13e)
 
-Each product's edit page (`/enrichment/[product_id]`) has a **Staff training**
-section below the customer content, with its own Save button and a "Staff training ↓"
-link at the top of the page. Every field is optional. Fields, as chosen by the
+Each product has a **Staff training** page (`/enrichment/[product_id]/training`),
+reached from the **Customer page | Staff training** tabs at the top of the product's
+edit pages or the "Staff training →" link on the Content list, with its own Save
+button. Every field is optional. Fields, as chosen by the
 founder on 2026-09-29:
 
 1. **The one-line sell:** the sentence an associate says when a customer picks it up

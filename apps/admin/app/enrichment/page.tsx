@@ -98,6 +98,12 @@ export default async function EnrichmentPage({ searchParams }: PageProps) {
                   >
                     {p.enrichment_id ? "Edit" : "Add"} copy →
                   </Link>
+                  <Link
+                    href={`/enrichment/${p.id}/training?shop=${shop}`}
+                    style={{ fontSize: "0.85rem", color: "#555", marginLeft: "1rem" }}
+                  >
+                    Staff training →
+                  </Link>
                 </td>
               </tr>
             );
