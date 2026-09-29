@@ -7,6 +7,7 @@ const db = vi.hoisted(() => ({
   getActiveStaffByEmail: vi.fn(),
   createStaffSignInToken: vi.fn(async (_pool: unknown, _staffId: string, _hash: string, _ttl: number) => {}),
   consumeStaffSignInToken: vi.fn(),
+  createTapHandoffToken: vi.fn(async () => {}),
 }));
 const sendEmail = vi.hoisted(() => vi.fn(async (_email: { to: string; subject: string; html: string }) => {}));
 const redirect = vi.hoisted(() => vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`); }));
@@ -19,7 +20,7 @@ vi.mock("next/headers", () => ({ headers: async () => ({ get: (k: string) => hea
 
 const { requestStaffSignInAction } = await import("../app/login/staff/actions.js");
 const { GET: verify } = await import("../app/login/staff/verify/route.js");
-const { hashStaffSignInToken } = await import("../src/staff-token.js");
+const { hashSignInToken } = await import("../src/sign-in-token.js");
 const { verifySession, COOKIE_NAME } = await import("../src/admin-auth.js");
 
 function form(email: string) {
@@ -60,7 +61,7 @@ describe("requestStaffSignInAction", () => {
     const tokens = [...html.matchAll(/https:\/\/admin\.tapshelf\.co\/login\/staff\/verify\?token=([A-Za-z0-9_-]+)/g)].map((m) => m[1]!);
     expect(new Set(tokens).size).toBe(2);
     const stored = db.createStaffSignInToken.mock.calls.map((c) => [c[1], c[2]]);
-    for (const t of tokens) expect(stored.map(([, h]) => h)).toContain(await hashStaffSignInToken(t));
+    for (const t of tokens) expect(stored.map(([, h]) => h)).toContain(await hashSignInToken(t));
     expect(stored.map(([id]) => id).sort()).toEqual(["st-a", "st-b"]);
   });
 
@@ -93,8 +94,15 @@ describe("GET /login/staff/verify", () => {
     db.consumeStaffSignInToken.mockResolvedValue({ staff_id: "st-a", store_id: "store-a", store_domain: "alpha.myshopify.com" });
     const res = await verify(req("tok123"));
 
-    expect(db.consumeStaffSignInToken).toHaveBeenCalledWith(expect.anything(), await hashStaffSignInToken("tok123"));
-    expect(new URL(res.headers.get("location")!).pathname).toBe("/training");
+    expect(db.consumeStaffSignInToken).toHaveBeenCalledWith(expect.anything(), await hashSignInToken("tok123"));
+    // Straight on to the tap page to carry the sign-in over, then back to /training.
+    const loc = new URL(res.headers.get("location")!);
+    expect(loc.origin + loc.pathname).toBe("https://tapshelf.store/staff/handoff");
+    expect(db.createTapHandoffToken).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      tokenHash: await hashSignInToken(loc.searchParams.get("token")!),
+      principal: { kind: "staff", staffId: "st-a", storeId: "store-a" },
+      returnPath: "/training",
+    }));
     const cookie = res.cookies.get(COOKIE_NAME)!;
     expect(cookie.maxAge).toBe(30 * 24 * 60 * 60);
     expect(cookie.httpOnly).toBe(true);

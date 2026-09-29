@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getPool, getActiveStaffByEmail, createStaffSignInToken } from "@nfc/db";
 import { sendEmail } from "@nfc/email";
 import { normalizeStaffEmail } from "@/staff-utils.js";
-import { newStaffSignInToken, STAFF_SIGN_IN_TTL_MINUTES } from "@/staff-token.js";
+import { newSignInToken, STAFF_SIGN_IN_TTL_MINUTES } from "@/sign-in-token.js";
 import { adminBaseUrl } from "@/public-url.js";
 import { staffSignInEmailHtml } from "@/staff-emails.js";
 
@@ -24,7 +24,7 @@ export async function requestStaffSignInAction(formData: FormData): Promise<void
     const base = adminBaseUrl((name) => h.get(name));
     const links = [];
     for (const s of staff) {
-      const { token, hash } = await newStaffSignInToken();
+      const { token, hash } = await newSignInToken();
       await createStaffSignInToken(pool, s.id, hash, STAFF_SIGN_IN_TTL_MINUTES);
       links.push({ storeName: s.store_name, url: `${base}/login/staff/verify?token=${token}` });
     }

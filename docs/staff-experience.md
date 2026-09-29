@@ -117,19 +117,25 @@ separate apps, and the NFC tags open the tap page, which can't read the admin's
 4. `/training` re-checks the staff row on every visit; removed staff are sent back
    to sign-in.
 
-**Carrying the sign-in to the tap page**
-4. Right after sign-in, the admin creates a single-use handoff token (valid for 60
-   seconds, stored in the database) and redirects the browser to the tap page at
-   `/staff/handoff?token=…`.
-5. The tap page checks and uses up the token, sets a signed `nfc_staff` cookie on
-   the tap page's domain, and redirects back to the admin's staff home page. To
-   the associate, this is one quick redirect.
-6. `getCurrentStaff()`, the staff counterpart of `getCurrentCustomer()`, verifies
-   `nfc_staff` and re-checks that the staff row exists and hasn't been revoked on
-   each request. Removing someone in the admin takes effect on their next tap.
+**Carrying the sign-in to the tap page (built in 13c)**
+5. Right after a staff member opens their emailed link, or a store owner signs in
+   with their password, the admin creates a single-use handoff token (60 seconds;
+   only its hash is stored, in `tap_handoff_tokens`) and redirects the browser to
+   `tapshelf.store/staff/handoff?token=…`.
+6. The tap page uses up the token, sets a signed, 30-day `nfc_staff` cookie
+   (staff member or owner, plus their store), and sends the browser straight back
+   to where it was going in the admin (`/training`, or the owner's Tags page). The
+   return path is checked so it can only point at the admin.
+7. `getCurrentStaff()` on the tap page verifies `nfc_staff` and re-checks the
+   database on every request: the staff member must not be removed, and the
+   owner's login must still exist for that store.
+8. Admin sign-out goes through `tapshelf.store/staff/signout`, which clears the tap
+   page's cookie, then back to the admin login page.
 
 The handoff is required because the admin (`admin.tapshelf.co`) and the tap pages
-(`tapshelf.store`) are on different domains, so they can't share a cookie.
+(`tapshelf.store`) are on different domains, so they can't share a cookie. Owners
+who were already signed in before this shipped get the tap-page cookie the next
+time they sign in.
 
 **Staff home page** (the admin's landing page for `role: "staff"`)
 - "You're signed in as a staff member of <Store>. Tap any product to see its

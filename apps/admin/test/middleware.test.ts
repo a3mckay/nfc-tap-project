@@ -27,6 +27,13 @@ describe("middleware for staff sessions", () => {
     }
   });
 
+  it("lets staff sign out", async () => {
+    const req = new NextRequest(new URL("/api/logout", "https://admin.test"), { method: "POST" });
+    req.cookies.set(COOKIE_NAME, await staffCookie());
+    const res = await middleware(req);
+    expect(res.headers.get("location")).toBeNull();
+  });
+
   it("still sends a request with no session to login", async () => {
     const res = await requestAs("/training");
     expect(new URL(res.headers.get("location")!).pathname).toBe("/login");
