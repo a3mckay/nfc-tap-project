@@ -210,7 +210,7 @@ services/
   api/        Fastify: Shopify OAuth (auth.ts), webhooks, Stripe billing webhook, health
   worker/     Polling worker: generate-copy, match-canonical, enrich-events
 packages/
-  db/         SQL migrations (0000–0020), typed query modules, seeds, schema-conformance test
+  db/         SQL migrations (0000–0021), typed query modules, seeds, schema-conformance test
   email/      Resend wrapper shared by the admin and the tap page
 ```
 
@@ -277,6 +277,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0018 | Staff sign-in: `staff_auth_tokens` (single-use emailed links; SHA-256 hash only, 15 min) |
 | 0019 | Staff training notes: `product_training` (ten optional owner-written fields per product; store-scoped) |
 | 0020 | Admin → tap page sign-in handoff: `tap_handoff_tokens` (single-use, 60 s, hash only; staff member or store owner) |
+| 0021 | Training progress: `staff_product_views` (a staff member opening a product's training view) |
 
 ---
 
@@ -284,7 +285,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 
 Steps are ordered by dependency. Steps 8a–8c run alongside Phase 3.
 
-> **Current priority: Phase 5, Step 13 (staff logins & training view).** The founder moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Those gaps stay open and are picked up after Step 13.
+> **Phase 5, Step 13 (staff logins & training view) is complete (2026-09-29).** The founder had moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Those gaps are still open; the next priority hasn't been chosen yet.
 
 ### Phase 1: Foundation
 
@@ -413,9 +414,9 @@ Covered by Steps 5–7 above.
 - Prepare the leave-behind
 - Offer: "I'll set up your first 10 products free"
 
-### Phase 5: Staff experience (current priority)
+### Phase 5: Staff experience
 
-**Step 13: Staff logins & training view 🟡**
+**Step 13: Staff logins & training view ✅**
 
 Design: [`docs/staff-experience.md`](staff-experience.md). Associates tap the same tags as customers. A signed-in staff member of the tag's store sees a training view by default, with a toggle to the customer page. The main use case is self-guided product training during quiet periods.
 
@@ -432,7 +433,7 @@ Sub-steps:
 - ✅ 13c: handoff to the tap page — staff (after their emailed link) and store owners (after login) get a 30-day `nfc_staff` cookie on tapshelf.store via a single-use token; `getCurrentStaff()` re-checks them on every request; admin sign-out clears it too
 - ✅ 13d: staff and owners of the tag's store see the training view on tap by default (owner's notes, or the product page's fit, materials and FAQ when there are none yet); "View as customer" shows a preview with reactions, sign-ups, offers and personalisation off; their taps never count as customer taps
 - ✅ 13e (built before 13c/13d): Staff training section on each product's edit page — ten optional fields (one-line sell, who it's for / not for, fit and sizing, worth the price, closest alternative, common Q&A, companions, brand context, stock note) in `product_training`, with an optional "Draft with AI" that fills only empty fields
-- ⬜ 13f: training progress (`staff_product_views`), shown to owners and staff
+- ✅ 13f: training progress — each staff member's training-view taps are recorded in `staff_product_views` (not owners', not the customer preview); owners' Staff page shows "12 of 40 products reviewed · last active …" per person, notes coverage and products nobody has reviewed; the staff home page lists what's left to tap. Only products with an active tag count.
 
 Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
 

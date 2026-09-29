@@ -255,6 +255,17 @@ export const SCHEMA_SPEC: TableSpec[] = [
       { name: "created_at", type: "timestamp" },
     ],
   },
+  // PRD v4 §7 Step 13f: which products each staff member has opened in the training view
+  {
+    name: "staff_product_views",
+    columns: [
+      { name: "id", type: "uuid" },
+      { name: "staff_id", type: "uuid" },
+      { name: "store_id", type: "uuid" },
+      { name: "product_id", type: "uuid" },
+      { name: "viewed_at", type: "timestamp" },
+    ],
+  },
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {

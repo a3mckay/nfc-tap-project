@@ -1,7 +1,7 @@
 # Staff Experience (Associate Training View)
 
-**Status:** Next priority: PRD v4 §7 Phase 5, Step 13. Design in progress; nothing is built yet.
-Decisions still needed are listed at the end, under "Decisions needed".
+**Status:** Built (PRD v4 §7 Phase 5, Step 13, slices 13a–13f, 2026-09-28/29).
+Remaining open questions are listed at the end, under "Decisions needed".
 
 ## Summary
 
@@ -231,25 +231,19 @@ a staff view is shown, skip:
 
 Also skip these when staff use "View as customer".
 
-## 6. Training progress
+## 6. Training progress (built in 13f)
 
-Record staff taps in their own table:
+Each time a **staff member** opens a product's training view, the tap page records
+it in `staff_product_views` (migration 0021). Owners' own taps and the customer
+preview aren't recorded. Only products with an active tag count, since those are the
+only ones staff can tap.
 
-```sql
-CREATE TABLE staff_product_views (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  staff_id    uuid NOT NULL REFERENCES store_staff(id) ON DELETE CASCADE,
-  store_id    uuid NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
-  product_id  uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  viewed_at   timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX staff_product_views_staff_idx ON staff_product_views(staff_id, product_id);
-```
-
-On the admin Staff page, show:
-- For each associate: "31 of 40 products reviewed", plus the last time they reviewed
-  a product
-- For the store: products that no one on the team has reviewed yet
+- **Owner's Staff page:** each person shows "12 of 40 products reviewed · last
+  active 2 days ago". A Training coverage section shows how many tagged products
+  have notes written and lists the products nobody on the team has reviewed yet
+  (each links to its Staff training section).
+- **Staff home page (`/training`):** "1 of 2 products reviewed", then "Not reviewed
+  yet — go tap these" and "Reviewed".
 
 ## Build order
 
@@ -308,8 +302,8 @@ Each question has a recommendation. Answers get folded into the sections above.
    admin nav, next to Tags and Analytics.
 6. **How do owners write training content for 40+ products without it becoming a
    chore?** ✅ An optional "Draft with AI" button fills empty fields for the owner
-   to edit (built in 13e). Still open: a "Staff content: 12 of 40 done" count on
-   the Staff page.
+   to edit (built in 13e), and the Staff page shows "Training notes written for 12
+   of 40 tagged products" (built in 13f).
 7. **Which staff fields are in the first release?** ✅ The ten fields in §4,
    decided 2026-09-29.
 8. **Should managers be able to edit training notes?** The founder wants owners
@@ -321,11 +315,10 @@ Each question has a recommendation. Answers get folded into the sections above.
 9. **What does a staff member see for a product with no staff content yet?**
    ✅ The customer page's fit notes, materials and FAQ (and internal notes), under
    a note that the owner hasn't added training notes yet (built in 13d).
-10. **Should there be a "mark as reviewed" button, or does a tap count?**
-    Recommended: a tap counts. It's zero effort, and the goal is exposure, not a
-    test.
-11. **Does the staff home page need a product list?** Recommended: yes, grouped by
-    "Not reviewed yet" and "Reviewed", so associates know what to go tap next.
+10. **Should there be a "mark as reviewed" button, or does a tap count?** ✅ A tap
+    on the training view counts (built in 13f).
+11. **Does the staff home page need a product list?** ✅ Yes: "Not reviewed yet"
+    and "Reviewed", with "1 of 2 products reviewed" (built in 13f).
 12. **Quizzes or certifications?** Recommended: not in the first release.
 
 ### Business

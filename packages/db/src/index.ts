@@ -4,6 +4,7 @@ export * from "./store-staff.js";
 export * from "./staff-auth.js";
 export * from "./product-training.js";
 export * from "./tap-handoff.js";
+export * from "./staff-progress.js";
 export * from "./reactions.js";
 export * from "./products.js";
 export * from "./tags.js";

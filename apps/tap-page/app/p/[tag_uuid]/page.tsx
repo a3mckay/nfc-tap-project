@@ -6,14 +6,14 @@ import {
   upsertCustomerTap, getApprovedReviewsByProduct, getReviewAggregateByProduct,
   getApprovedAwardsByProduct, getApplicableOffer, recordOfferDelivery,
   getBrandCollectorForCustomer, getCategoryPatternForCustomer, getUntappedSameBrandProducts,
-  getProductTraining,
+  getProductTraining, recordStaffProductView,
   type BrandCollectorInsight, type CategoryPatternInsight, type SimilarProductSuggestion,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
 import { buildThemeVars, type ThemeSettings } from "@/theme.js";
 import { getCurrentCustomer } from "@/lib/auth.js";
 import { getCurrentStaff } from "@/lib/staff-auth.js";
-import { decideTapView, trainingSections, stockNoteAge } from "@/staff-view.js";
+import { decideTapView, trainingSections, stockNoteAge, staffViewToRecord } from "@/staff-view.js";
 import { StaffShell } from "./StaffShell.js";
 import { StaffViewToggle } from "./StaffViewToggle.js";
 import { FallbackPage } from "./FallbackPage.js";
@@ -56,6 +56,10 @@ export default async function TapPage({ params, searchParams }: Props) {
   const view = decideTapView(staff, state.storeId, viewParam);
 
   if (view === "training") {
+    const viewed = staffViewToRecord(view, staff, state.productId);
+    if (viewed) {
+      void recordStaffProductView(pool, viewed).catch((err) => console.error("[tap] recordStaffProductView failed:", err));
+    }
     const [product, store, enrichment, training] = await Promise.all([
       getProductById(pool, state.productId),
       getStoreById(pool, state.storeId),
