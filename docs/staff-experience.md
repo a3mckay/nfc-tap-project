@@ -160,65 +160,56 @@ visit only (for example `?view=customer`), so every new tap opens in the trainin
 view. Otherwise, show today's customer page unchanged.
 
 **Content**: the main case is someone learning with time to spare, so short
-paragraphs and a brand video are fine. The top section still has to be readable in
-about 10 seconds. Sections follow a learning order: **what it is → how to sell it →
-with a customer**.
+paragraphs are fine. The top section still has to be readable in about 10 seconds.
+The view shows the owner's training notes (§4), in the order they're written:
 
-**At a glance** (top)
-- Fit and sizing, stated honestly ("Runs small — size up; wide feet go half up")
-- The owner's one-line pitch
+1. **The one-line sell:** the sentence an associate says when a customer picks it up
+2. **Who it's for:** 2–3 customer profiles it genuinely suits
+3. **Who it's not for:** honest limitations
+4. **Fit and sizing truth:** the honest version, not the tag version
+5. **Why it's worth the price:** 2–3 specific reasons
+6. **Closest alternative in the store:** the in-store comparison
+7. **Common questions and answers:** 3–5 questions with the owner's answers
+8. **Upsell and companion products:** what pairs naturally with it
+9. **Brand context:** why the store carries the brand and what sets it apart
+10. **Current stock note:** sizes running low, what's coming in, what's display-only
+    (shows the date it was last changed)
 
-**Product knowledge**
-- Materials in plain language ("warm, not bulky, machine washable, won't pill")
-- 2–3 reasons it's worth the price
-- How it compares with the closest alternative in the store
-- Common customer questions with honest answers (reuses the existing `faq`)
-- Brand or training video (optional)
+The existing `internal_staff_notes` ("Internal Notes" on the customer form) is
+shown too. Leave out the customer-facing story copy; staff can see it through the
+toggle.
 
-**Selling it**
-- The owner's recommended pitch (2–3 sentences)
-- Who it's for, and who it's *not* for
-- Answers to objections: "It's expensive" / "I need to think about it" / "I saw it
-  cheaper online"
-- Products it pairs with ("We usually sell these together")
+## 4. Admin authoring (built in 13e)
 
-**With a customer**
-- If they're undecided: what to offer (try-on, another size, the return policy)
-- How to present or demonstrate it
-- If their size is sold out: a script for signing them up to "Notify me"
-- Display unit notes ("Display unit is a 10, not for sale")
+Each product's edit page (`/enrichment/[product_id]`) has a **Staff training**
+section below the customer content, with its own Save button and a "Staff training ↓"
+link at the top of the page. Every field is optional. Fields, as chosen by the
+founder on 2026-09-29:
 
-**Owner's private notes**
-- `internal_staff_notes`
-- Supplier or brand rep contact
-- Handling instructions for fragile or unusual items
+1. **The one-line sell:** the sentence an associate says when a customer picks it up
+2. **Who it's for:** 2–3 customer profiles it genuinely suits
+3. **Who it's not for:** honest limitations
+4. **Fit and sizing truth:** the honest version, not the tag version
+5. **Why it's worth the price:** 2–3 specific reasons
+6. **Closest alternative in the store:** the in-store comparison
+7. **Common questions and answers:** 3–5 questions with the owner's answers
+8. **Upsell and companion products:** what pairs naturally with it
+9. **Brand context:** why the store carries the brand and what sets it apart
+10. **Current stock note:** sizes running low, what's coming in, what's display-only
+    (shows the date it was last changed)
 
-Leave out the customer-facing story copy. Staff can see it through the toggle.
+Stored in their own table, `product_training` (migration 0019), one row per product,
+separate from the customer-facing `enrichments`. Writes are store-scoped.
 
-## 4. Admin authoring
+**Draft with AI (optional):** fills only the fields the owner left empty, from the
+product data, its customer copy and the store's other product titles (for the
+comparison and companions). Nothing is saved until the owner clicks Save. It never
+drafts the stock note. Uses `claude-opus-5-5` with structured output
+(`apps/admin/src/lib/training-draft.ts`); the button only appears when
+`ANTHROPIC_API_KEY` is set.
 
-Add a **Staff Training** section to the enrichment form
-(`apps/admin/app/enrichment/[product_id]/EnrichmentForm.tsx`), written like
-instructions left for the team rather than formal documentation. It replaces the
-current "Internal Notes" block. New fields on `enrichments`:
-
-| Field | Type |
-| --- | --- |
-| `staff_fit_notes` | text |
-| `staff_materials_plain` | text |
-| `staff_value_reasons` | text[] |
-| `staff_comparison` | text |
-| `staff_pitch` | text |
-| `staff_for_whom` / `staff_not_for_whom` | text |
-| `staff_objections` | jsonb (`[{objection, response}]`) |
-| `staff_pairs_with` | uuid[] (product ids) |
-| `staff_demo_notes` | text |
-| `staff_display_unit_notes` | text |
-| `staff_supplier_contact` | text |
-| `internal_staff_notes` | text (existing) |
-
-The existing "Generate with AI" enrichment action could draft these fields too,
-with the owner reviewing and editing the draft.
+**Who can edit:** store owners (and super admins). The founder asked for owners *or
+managers*; there's no manager role yet (see Decisions needed, question 8).
 
 ## 5. Keep staff out of customer analytics
 
@@ -264,8 +255,8 @@ Matches PRD v4 §7, Step 13. Each slice adds only the tables it needs.
    `getCurrentStaff()`)
 4. **13d:** `StaffShell` as the default view for staff, the customer toggle, and the
    branch in `page.tsx` that skips customer analytics
-5. **13e:** Staff Training section in the enrichment form (new staff columns on
-   `enrichments`)
+5. **13e (built before 13c/13d):** Staff training section on the product edit page
+   (`product_training` table), with an optional AI draft
 6. **13f:** `staff_product_views` and training progress on the admin Staff page and
    the staff home page
 
@@ -308,17 +299,15 @@ Each question has a recommendation. Answers get folded into the sections above.
 5. **Where does the Staff page live?** Recommended: a top-level "Staff" item in the
    admin nav, next to Tags and Analytics.
 6. **How do owners write training content for 40+ products without it becoming a
-   chore?** Recommended: AI drafts every staff field from the product data and
-   existing enrichment; the owner edits. A "Staff content: 12 of 40 done" count on
-   the Staff page shows the gaps.
-7. **Which staff fields are in the first release?** Recommended: start with five —
-   fit notes, pitch, who it's for / not for, objections and answers, internal
-   notes. Add the rest (comparison, pairs-with, demo and display notes, supplier
-   contact) once owners are using it. Fewer fields means more of them get filled
-   in.
-8. **Should some fields be manager-only** (supplier contact, margin or priority
-   flags)? Recommended: leave priority/margin flags out of the first release, which
-   removes the need for a manager role.
+   chore?** ✅ An optional "Draft with AI" button fills empty fields for the owner
+   to edit (built in 13e). Still open: a "Staff content: 12 of 40 done" count on
+   the Staff page.
+7. **Which staff fields are in the first release?** ✅ The ten fields in §4,
+   decided 2026-09-29.
+8. **Should managers be able to edit training notes?** The founder wants owners
+   *or managers* to write them. There's no manager role yet: owners (store admins)
+   can edit today. Open: add a manager role (edit training notes and staff, but not
+   billing or settings), or let the owner mark a staff member as able to edit.
 
 ### Staff usability
 9. **What does a staff member see for a product with no staff content yet?**
