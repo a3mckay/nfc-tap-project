@@ -220,6 +220,7 @@ export const SCHEMA_SPEC: TableSpec[] = [
     columns: [
       { name: "token_hash", type: "text" },
       { name: "staff_id", type: "uuid" },
+      { name: "purpose", type: "text" },
       { name: "expires_at", type: "timestamp" },
       { name: "used_at", type: "timestamp", nullable: true },
       { name: "created_at", type: "timestamp" },

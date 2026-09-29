@@ -39,3 +39,14 @@ export function staffInviteEmailHtml(storeName: string, signInUrl: string): stri
     ${SAFARI_NOTE}
   `);
 }
+
+export function setPasswordEmailHtml(storeName: string, roleLabel: string, url: string): string {
+  return wrap(`
+    <h1 style="font-size: 18px; font-weight: 600; color: #111; margin-bottom: 16px;">You're now a ${esc(roleLabel)} at ${esc(storeName)}</h1>
+    <p style="font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+      Set a password to sign in to the TapShelf admin, where you can manage training notes and your team.
+    </p>
+    <p style="margin-bottom: 20px;">${button(url, "Set your password")}</p>
+    <p style="font-size: 12px; color: #999; margin-top: 24px;">This link works once and expires in 3 days.</p>
+  `);
+}

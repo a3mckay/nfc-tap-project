@@ -36,6 +36,13 @@ export interface StaffSession {
 export const STAFF_SESSION_DAYS = 30;
 export const STAFF_SESSION_MAX_AGE_SECONDS = STAFF_SESSION_DAYS * 24 * 60 * 60;
 
+export function managerSession(
+  who: { staffId: string; storeId: string; storeDomain: string; level: "manager" | "co_manager" },
+  now = Date.now(),
+): ManagerSession {
+  return { role: "manager", ...who, exp: now + STAFF_SESSION_MAX_AGE_SECONDS * 1000 };
+}
+
 export function staffSession(
   who: { staffId: string; storeId: string; storeDomain: string },
   now = Date.now(),

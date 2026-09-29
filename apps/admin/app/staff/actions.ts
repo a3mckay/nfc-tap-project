@@ -1,12 +1,13 @@
 "use server";
 
-import { getPool, approveStaffEmail, revokeStaff, getStaffMember, setStaffRole, type StaffRole } from "@nfc/db";
+import { getPool, approveStaffEmail, revokeStaff, getStaffMember, setStaffRole, createSetPasswordToken, type StaffRole } from "@nfc/db";
+import { newSignInToken } from "@/sign-in-token.js";
 import { getActionStore } from "@/current-store.js";
 import { normalizeStaffEmail } from "@/staff-utils.js";
 import { sendEmail } from "@nfc/email";
 import { headers } from "next/headers";
 import { adminBaseUrl } from "@/public-url.js";
-import { staffInviteEmailHtml } from "@/staff-emails.js";
+import { staffInviteEmailHtml, setPasswordEmailHtml } from "@/staff-emails.js";
 import { revalidatePath } from "next/cache";
 
 export async function approveStaffAction(
@@ -59,10 +60,15 @@ export async function removeStaffAction(shop: string, id: string): Promise<{ err
 }
 
 const ROLES: StaffRole[] = ["staff", "co_manager", "manager"];
+const SET_PASSWORD_TTL_MINUTES = 72 * 60;
 
 // Owners can set any role. Managers can move people between staff and
 // co-manager, but can't make a manager or change one (themselves included).
-export async function setStaffRoleAction(shop: string, id: string, role: StaffRole): Promise<{ error?: string }> {
+export async function setStaffRoleAction(
+  shop: string,
+  id: string,
+  role: StaffRole,
+): Promise<{ error?: string; warning?: string }> {
   if (!ROLES.includes(role)) return { error: "Unknown role" };
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
@@ -77,5 +83,25 @@ export async function setStaffRoleAction(shop: string, id: string, role: StaffRo
 
   if (!(await setStaffRole(pool, id, store.id, role))) return { error: "Staff member not found" };
   revalidatePath("/staff");
+
+  // Newly promoted from staff: they need a password to sign in to the admin.
+  if (member.role === "staff" && role !== "staff") {
+    try {
+      const { token, hash } = await newSignInToken();
+      await createSetPasswordToken(pool, id, hash, SET_PASSWORD_TTL_MINUTES);
+      const h = await headers();
+      const url = `${adminBaseUrl((n) => h.get(n))}/login/set-password?token=${token}`;
+      const storeName = store.name ?? store.shopify_shop_domain;
+      const roleLabel = role === "manager" ? "manager" : "co-manager";
+      await sendEmail({
+        to: member.email,
+        subject: `You're now a ${roleLabel} at ${storeName} on TapShelf`,
+        html: setPasswordEmailHtml(storeName, roleLabel, url),
+      });
+    } catch (err) {
+      console.error("[staff] set-password email failed:", err);
+      return { warning: "Role changed, but the password email couldn't be sent" };
+    }
+  }
   return {};
 }
