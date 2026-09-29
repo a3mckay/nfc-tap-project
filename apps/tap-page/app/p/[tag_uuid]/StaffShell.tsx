@@ -1,5 +1,6 @@
 import type { Product } from "@nfc/db";
 import type { TrainingSection } from "@/staff-view.js";
+import { StaffViewToggle } from "./StaffViewToggle.js";
 
 // PRD v4 §7 Step 13d: the training view staff and owners see when they tap.
 
@@ -10,7 +11,7 @@ interface Props {
   sections: TrainingSection[];
   hasOwnerNotes: boolean;
   stockNoteAge: string | null;
-  customerViewHref: string;
+  tagUuid: string;
 }
 
 const label: React.CSSProperties = {
@@ -18,17 +19,14 @@ const label: React.CSSProperties = {
 };
 const body: React.CSSProperties = { fontSize: "0.95rem", color: "#222", lineHeight: 1.55, margin: 0, whiteSpace: "pre-line" };
 
-export function StaffShell({ product, storeName, primaryColor, sections, hasOwnerNotes, stockNoteAge, customerViewHref }: Props) {
+export function StaffShell({ product, storeName, primaryColor, sections, hasOwnerNotes, stockNoteAge, tagUuid }: Props) {
   const image = (product.images as Array<{ url?: string; src?: string; altText?: string | null }>)[0];
   const imageUrl = image?.url ?? image?.src ?? null;
   const price = (product.variants as Array<{ price?: string }>)[0]?.price ?? null;
 
   return (
     <main style={{ maxWidth: "32rem", margin: "0 auto", paddingBottom: "3rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", padding: "0.7rem 1rem", background: "#111", color: "#fff" }}>
-        <span style={{ fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.04em" }}>STAFF VIEW · {storeName}</span>
-        <a href={customerViewHref} style={{ fontSize: "0.8rem", color: "#fff", textDecoration: "underline", whiteSpace: "nowrap" }}>View as customer →</a>
-      </div>
+      <StaffViewToggle current="training" tagUuid={tagUuid} storeName={storeName} />
 
       <div style={{ display: "flex", gap: "0.9rem", alignItems: "center", padding: "1rem" }}>
         {imageUrl && (

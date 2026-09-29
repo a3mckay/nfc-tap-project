@@ -15,6 +15,7 @@ import { getCurrentCustomer } from "@/lib/auth.js";
 import { getCurrentStaff } from "@/lib/staff-auth.js";
 import { decideTapView, trainingSections, stockNoteAge } from "@/staff-view.js";
 import { StaffShell } from "./StaffShell.js";
+import { StaffViewToggle } from "./StaffViewToggle.js";
 import { FallbackPage } from "./FallbackPage.js";
 import { ProductShell } from "./ProductShell.js";
 import { ReactionBar } from "./ReactionBar.js";
@@ -72,7 +73,7 @@ export default async function TapPage({ params, searchParams }: Props) {
         sections={sections}
         hasOwnerNotes={hasOwnerNotes}
         stockNoteAge={stockNoteAge(training?.stock_note_updated_at ?? null)}
-        customerViewHref={`/p/${tag_uuid}?view=customer`}
+        tagUuid={tag_uuid}
       />
     );
   }
@@ -135,10 +136,7 @@ export default async function TapPage({ params, searchParams }: Props) {
   return (
     <div style={cssVars as React.CSSProperties}>
       {isPreview && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", padding: "0.7rem 1rem", background: "#111", color: "#fff" }}>
-          <span style={{ fontSize: "0.75rem" }}>Customer preview · reactions and sign-ups are off</span>
-          <a href={`/p/${tag_uuid}`} style={{ fontSize: "0.8rem", color: "#fff", textDecoration: "underline", whiteSpace: "nowrap" }}>← Training view</a>
-        </div>
+        <StaffViewToggle current="preview" tagUuid={tag_uuid} storeName={store?.name ?? store?.shopify_shop_domain ?? ""} />
       )}
       {/* Back to collection — only shown to signed-in customers */}
       {customer && !isPreview && (

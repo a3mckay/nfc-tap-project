@@ -159,9 +159,9 @@ so the admin can send it.
 
 In `page.tsx`, resolve `getCurrentStaff()` alongside `getCurrentCustomer()`. If a
 staff member is signed in **and** `staff.store_id === tag.store_id`, render
-`<StaffShell>` **by default** in place of `<ProductShell>`, with a "View as
-customer" toggle at the top. The toggle switches to the normal customer page, with
-a matching "Back to training view" toggle. The choice lasts for the current visit
+`<StaffShell>` **by default** in place of `<ProductShell>`. A sticky
+**Training | Customer** switch is pinned to the top of both views
+(`StaffViewToggle`), so staff can switch at any point while scrolling. The choice lasts for the current visit
 only (`?view=customer`), so every new tap opens in the training view. Otherwise,
 show today's customer page unchanged. Store owners signed in through the handoff
 see it too. The customer preview hides reactions, "Notify me", the picks bar,
