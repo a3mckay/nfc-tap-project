@@ -85,3 +85,53 @@ describe("revokeStaff", () => {
     expect(await getActiveStaffByStore(pool, other)).toHaveLength(1);
   });
 });
+
+describe("staff roles (manager / co-manager)", () => {
+  it("starts everyone as staff", async () => {
+    const s = await approveStaffEmail(pool, own, "sam@example.com", null);
+    expect(s.role).toBe("staff");
+  });
+
+  it("changes a staff member's role within the store", async () => {
+    const { setStaffRole, getStaffMember } = await import("../src/store-staff.js");
+    const s = await approveStaffEmail(pool, own, "sam@example.com", null);
+    expect(await setStaffRole(pool, s.id, own, "manager")).toBe(true);
+    expect((await getStaffMember(pool, s.id, own))?.role).toBe("manager");
+    expect((await getActiveStaffByStore(pool, own))[0]?.role).toBe("manager");
+  });
+
+  it("won't change another store's staff member", async () => {
+    const { setStaffRole, getStaffMember } = await import("../src/store-staff.js");
+    const s = await approveStaffEmail(pool, other, "sam@example.com", null);
+    expect(await setStaffRole(pool, s.id, own, "manager")).toBe(false);
+    expect(await getStaffMember(pool, s.id, own)).toBeNull();
+    expect((await getStaffMember(pool, s.id, other))?.role).toBe("staff");
+  });
+
+  it("clears the password when someone goes back to staff", async () => {
+    const { setStaffRole } = await import("../src/store-staff.js");
+    const s = await approveStaffEmail(pool, own, "sam@example.com", null);
+    await setStaffRole(pool, s.id, own, "manager");
+    await pool.query(`update store_staff set password_hash = 'x' where id = $1`, [s.id]);
+    await setStaffRole(pool, s.id, own, "staff");
+    const { rows } = await pool.query(`select password_hash from store_staff where id = $1`, [s.id]);
+    expect(rows[0].password_hash).toBeNull();
+  });
+
+  it("brings a removed person back as staff, not their old role", async () => {
+    const { setStaffRole } = await import("../src/store-staff.js");
+    const s = await approveStaffEmail(pool, own, "sam@example.com", null);
+    await setStaffRole(pool, s.id, own, "manager");
+    await revokeStaff(pool, s.id, own);
+    expect((await approveStaffEmail(pool, own, "sam@example.com", null)).role).toBe("staff");
+  });
+});
+
+describe("re-approving an active manager", () => {
+  it("doesn't demote them", async () => {
+    const { setStaffRole } = await import("../src/store-staff.js");
+    const s = await approveStaffEmail(pool, own, "sam@example.com", null);
+    await setStaffRole(pool, s.id, own, "manager");
+    expect((await approveStaffEmail(pool, own, "sam@example.com", "Sam")).role).toBe("manager");
+  });
+});

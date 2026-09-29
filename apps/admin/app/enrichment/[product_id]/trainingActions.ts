@@ -15,7 +15,7 @@ export async function saveTrainingAction(
   form: TrainingFormData,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "training");
   if (!store) return { error: "Store not found" };
 
   const saved = await saveProductTraining(pool, store.id, productId, normalizeTrainingForm(form));
@@ -30,7 +30,7 @@ export async function draftTrainingAction(
   productId: string,
 ): Promise<{ draft?: TrainingDraft; error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "training");
   if (!store) return { error: "Store not found" };
 
   const product = await getProductById(pool, productId);

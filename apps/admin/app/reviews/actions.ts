@@ -13,7 +13,7 @@ export interface DetectResult {
 
 export async function detectReviewAppsAction(shop: string): Promise<DetectResult> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return { detected: [], error: "Store not found" };
   if (!store.shopify_access_token) return { detected: [], error: "No Shopify access token" };
 
@@ -33,7 +33,7 @@ export async function configureReviewSourceAction(
   config: Record<string, unknown>,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return { error: "Store not found" };
 
   await upsertReviewSource(pool, store.id, provider, config);
@@ -43,7 +43,7 @@ export async function configureReviewSourceAction(
 
 export async function syncReviewsAction(shop: string): Promise<SyncReviewsResult & { error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return { provider_results: [], error: "Store not found" };
 
   const result = await syncReviewsForStore(pool, store.id, store.shopify_shop_domain);

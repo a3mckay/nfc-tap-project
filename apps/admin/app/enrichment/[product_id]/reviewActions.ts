@@ -28,7 +28,7 @@ export async function getPendingItemsForProductAction(
   productId: string,
 ): Promise<{ items: PendingProductItem[] }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return { items: [] };
   const product = await getProductById(pool, productId);
   if (!product || product.store_id !== store.id) return { items: [] };
@@ -70,7 +70,7 @@ export async function approveItemAction(
   kind: "review" | "award",
 ): Promise<void> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return;
 
   if (kind === "review") {
@@ -87,7 +87,7 @@ export async function rejectItemAction(
   kind: "review" | "award",
 ): Promise<void> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return;
 
   if (kind === "review") {

@@ -38,7 +38,7 @@ export async function saveEnrichmentAction(
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
 
-  const store = await getActionStore(pool, data.shop);
+  const store = await getActionStore(pool, data.shop, "content");
   if (!store) return { error: "Store not found" };
 
   const product = await getProductById(pool, data.product_id);
@@ -90,7 +90,7 @@ export async function generateEnrichmentAction(
   productId: string,
 ): Promise<{ draft?: GeneratedDraft; error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return { error: "Store not found" };
 
   const product = await getProductById(pool, productId);

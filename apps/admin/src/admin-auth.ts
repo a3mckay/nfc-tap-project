@@ -8,7 +8,20 @@ export const COOKIE_NAME = "nfc_admin";
 export type AdminSession =
   | { role: "super" }
   | { role: "store"; storeId: string; storeDomain: string }
+  | ManagerSession
   | StaffSession;
+
+// A manager or co-manager: someone on the Staff list promoted by the owner (or,
+// for co-managers, by a manager), signed in with their own password. What they
+// can do is in src/permissions.ts. Expires like a staff session.
+export interface ManagerSession {
+  role: "manager";
+  level: "manager" | "co_manager";
+  staffId: string;
+  storeId: string;
+  storeDomain: string;
+  exp: number;
+}
 
 // Staff (PRD v4 §7 Step 13) can only reach the staff home page. Their sessions
 // carry an expiry (ms since epoch) that verifySession enforces.
@@ -79,7 +92,7 @@ export async function verifySession(value: string | undefined): Promise<AdminSes
   } catch {
     return null;
   }
-  if (session.role === "staff" && !(session.exp > Date.now())) return null;
+  if ((session.role === "staff" || session.role === "manager") && !(session.exp > Date.now())) return null;
   return session;
 }
 

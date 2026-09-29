@@ -15,7 +15,11 @@ beforeEach(() => {
 
 describe("detectBrandAction", () => {
   it("refuses staff and anonymous callers before calling any external service", async () => {
-    for (const session of [{ role: "staff", staffId: "st", storeId: "s", storeDomain: "d", exp: Date.now() + 1000 }, null]) {
+    for (const session of [
+      { role: "staff", staffId: "st", storeId: "s", storeDomain: "d", exp: Date.now() + 1000 },
+      { role: "manager", level: "manager", staffId: "m", storeId: "s", storeDomain: "d", exp: Date.now() + 1000 },
+      null,
+    ]) {
       getAdminSession.mockResolvedValue(session);
       expect(await detectBrandAction("https://example.com")).toEqual({ error: "Not allowed" });
     }

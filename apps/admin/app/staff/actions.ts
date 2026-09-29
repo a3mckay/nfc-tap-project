@@ -1,6 +1,6 @@
 "use server";
 
-import { getPool, approveStaffEmail, revokeStaff } from "@nfc/db";
+import { getPool, approveStaffEmail, revokeStaff, getStaffMember, setStaffRole, type StaffRole } from "@nfc/db";
 import { getActionStore } from "@/current-store.js";
 import { normalizeStaffEmail } from "@/staff-utils.js";
 import { sendEmail } from "@nfc/email";
@@ -18,8 +18,8 @@ export async function approveStaffAction(
   if (!normalized) return { error: "Enter a valid email address" };
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
-  if (!store) return { error: "Store not found" };
+  const store = await getActionStore(pool, shop, "staff");
+  if (!store) return { error: "Not allowed" };
 
   await approveStaffEmail(pool, store.id, normalized, name.trim() || null);
   revalidatePath("/staff");
@@ -40,13 +40,42 @@ export async function approveStaffAction(
   return {};
 }
 
+// Managers can remove staff and co-managers; only the owner can remove a manager.
 export async function removeStaffAction(shop: string, id: string): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
-  if (!store) return { error: "Store not found" };
+  const store = await getActionStore(pool, shop, "staff");
+  if (!store) return { error: "Not allowed" };
+
+  const member = await getStaffMember(pool, id, store.id);
+  if (!member) return { error: "Staff member not found" };
+  if (member.role === "manager" && !(await getActionStore(pool, shop, "assign_manager"))) {
+    return { error: "Only the owner can do that" };
+  }
 
   const removed = await revokeStaff(pool, id, store.id);
   if (!removed) return { error: "Staff member not found" };
+  revalidatePath("/staff");
+  return {};
+}
+
+const ROLES: StaffRole[] = ["staff", "co_manager", "manager"];
+
+// Owners can set any role. Managers can move people between staff and
+// co-manager, but can't make a manager or change one (themselves included).
+export async function setStaffRoleAction(shop: string, id: string, role: StaffRole): Promise<{ error?: string }> {
+  if (!ROLES.includes(role)) return { error: "Unknown role" };
+
+  const pool = getPool({ connectionString: process.env.DATABASE_URL });
+  const store = await getActionStore(pool, shop, "assign_co_manager");
+  if (!store) return { error: "Not allowed" };
+
+  const member = await getStaffMember(pool, id, store.id);
+  if (!member) return { error: "Staff member not found" };
+  if ((member.role === "manager" || role === "manager") && !(await getActionStore(pool, shop, "assign_manager"))) {
+    return { error: "Only the owner can do that" };
+  }
+
+  if (!(await setStaffRole(pool, id, store.id, role))) return { error: "Staff member not found" };
   revalidatePath("/staff");
   return {};
 }
