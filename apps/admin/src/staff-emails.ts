@@ -33,7 +33,7 @@ export function staffInviteEmailHtml(storeName: string, signInUrl: string): stri
   return wrap(`
     <h1 style="font-size: 18px; font-weight: 600; color: #111; margin-bottom: 16px;">You've been added to the team at ${esc(storeName)}</h1>
     <p style="font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 20px;">
-      Sign in on your phone so you're ready: tapping a product in the store will soon show its staff training notes.
+      Sign in on your phone, then tap any product in the store to see its staff training notes.
     </p>
     <p style="margin-bottom: 20px;">${button(signInUrl, "Sign in")}</p>
     ${SAFARI_NOTE}

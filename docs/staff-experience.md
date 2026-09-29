@@ -155,15 +155,17 @@ When the store admin approves an email, send an invite email with a sign-in link
 The emailing code in `apps/tap-page/src/lib/email.ts` can move to a shared package
 so the admin can send it.
 
-## 3. Staff view on tap
+## 3. Staff view on tap (built in 13d)
 
 In `page.tsx`, resolve `getCurrentStaff()` alongside `getCurrentCustomer()`. If a
 staff member is signed in **and** `staff.store_id === tag.store_id`, render
-`<StaffShell>` **by default** in place of `<ProductShell>`, with a "View as
-customer" toggle at the top. The toggle switches to the normal customer page, with
-a matching "Back to training view" toggle. Keep the toggle choice for the current
-visit only (for example `?view=customer`), so every new tap opens in the training
-view. Otherwise, show today's customer page unchanged.
+`<StaffShell>` **by default** in place of `<ProductShell>`. A sticky
+**Training | Customer** switch is pinned to the top of both views
+(`StaffViewToggle`), so staff can switch at any point while scrolling. The choice lasts for the current visit
+only (`?view=customer`), so every new tap opens in the training view. Otherwise,
+show today's customer page unchanged. Store owners signed in through the handoff
+see it too. The customer preview hides reactions, "Notify me", the picks bar,
+offers and personalisation, so staff don't add to customer data.
 
 **Content**: the main case is someone learning with time to spare, so short
 paragraphs are fine. The top section still has to be readable in about 10 seconds.
@@ -317,8 +319,8 @@ Each question has a recommendation. Answers get folded into the sections above.
 
 ### Staff usability
 9. **What does a staff member see for a product with no staff content yet?**
-   Recommended: the customer page's fit notes, materials and FAQ, reframed for
-   staff, plus a note that the owner hasn't added training notes yet.
+   ✅ The customer page's fit notes, materials and FAQ (and internal notes), under
+   a note that the owner hasn't added training notes yet (built in 13d).
 10. **Should there be a "mark as reviewed" button, or does a tap count?**
     Recommended: a tap counts. It's zero effort, and the goal is exposure, not a
     test.

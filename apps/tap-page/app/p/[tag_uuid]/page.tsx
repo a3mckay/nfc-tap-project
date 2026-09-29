@@ -6,11 +6,16 @@ import {
   upsertCustomerTap, getApprovedReviewsByProduct, getReviewAggregateByProduct,
   getApprovedAwardsByProduct, getApplicableOffer, recordOfferDelivery,
   getBrandCollectorForCustomer, getCategoryPatternForCustomer, getUntappedSameBrandProducts,
+  getProductTraining,
   type BrandCollectorInsight, type CategoryPatternInsight, type SimilarProductSuggestion,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
 import { buildThemeVars, type ThemeSettings } from "@/theme.js";
 import { getCurrentCustomer } from "@/lib/auth.js";
+import { getCurrentStaff } from "@/lib/staff-auth.js";
+import { decideTapView, trainingSections, stockNoteAge } from "@/staff-view.js";
+import { StaffShell } from "./StaffShell.js";
+import { StaffViewToggle } from "./StaffViewToggle.js";
 import { FallbackPage } from "./FallbackPage.js";
 import { ProductShell } from "./ProductShell.js";
 import { ReactionBar } from "./ReactionBar.js";
@@ -20,19 +25,24 @@ import { NotifyMe } from "./NotifyMe.js";
 
 interface Props {
   params: Promise<{ tag_uuid: string }>;
+  searchParams: Promise<{ view?: string }>;
 }
 
-export default async function TapPage({ params }: Props) {
-  const { tag_uuid } = await params;
+export default async function TapPage({ params, searchParams }: Props) {
+  const [{ tag_uuid }, { view: viewParam }] = await Promise.all([params, searchParams]);
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
 
-  const [tag, customer] = await Promise.all([
+  const [tag, customer, staff] = await Promise.all([
     getTagByUuid(pool, tag_uuid),
     getCurrentCustomer(),
+    getCurrentStaff(),
   ]);
   const state = resolveTagState(tag);
 
-  if (tag) {
+  // Staff and owners of this store never count as customer taps (PRD v4 §7 Step 13d).
+  const isTeam = !!staff && !!tag && staff.storeId === tag.store_id;
+
+  if (tag && !isTeam) {
     void recordTapEvent(pool, tag.id, tag.product_id, tag.store_id);
     if (customer && tag.product_id) {
       void upsertCustomerTap(pool, customer.id, tag.id, tag.product_id, tag.store_id, null);
@@ -42,6 +52,32 @@ export default async function TapPage({ params }: Props) {
   if (state.kind !== "active") {
     return <FallbackPage kind={state.kind} />;
   }
+
+  const view = decideTapView(staff, state.storeId, viewParam);
+
+  if (view === "training") {
+    const [product, store, enrichment, training] = await Promise.all([
+      getProductById(pool, state.productId),
+      getStoreById(pool, state.storeId),
+      getEnrichmentByProductId(pool, state.productId),
+      getProductTraining(pool, state.productId, state.storeId),
+    ]);
+    if (!product) notFound();
+    const { sections, hasOwnerNotes } = trainingSections(training, enrichment);
+    const theme = (store?.theme_settings ?? {}) as { primaryColor?: string };
+    return (
+      <StaffShell
+        product={product}
+        storeName={store?.name ?? store?.shopify_shop_domain ?? ""}
+        primaryColor={theme.primaryColor ?? "#000000"}
+        sections={sections}
+        hasOwnerNotes={hasOwnerNotes}
+        stockNoteAge={stockNoteAge(training?.stock_note_updated_at ?? null)}
+        tagUuid={tag_uuid}
+      />
+    );
+  }
+  const isPreview = view === "preview";
 
   const [product, store, enrichment, tapCount, externalReviews, reviewAggregate, externalAwards] = await Promise.all([
     getProductById(pool, state.productId),
@@ -63,7 +99,8 @@ export default async function TapPage({ params }: Props) {
   const sessionId = cookieStore.get("nfc_session")?.value ?? "unknown";
 
   // Check for any applicable discount offer for this product/customer/session.
-  const offer = await getApplicableOffer(pool, state.storeId, state.productId, sessionId, customer?.id ?? null);
+  // Staff previewing the customer page never get (or use up) an offer.
+  const offer = isPreview ? null : await getApplicableOffer(pool, state.storeId, state.productId, sessionId, customer?.id ?? null);
   if (offer) {
     void recordOfferDelivery(pool, offer, customer?.id ?? null, sessionId).catch((err) => {
       console.error("[tap] recordOfferDelivery failed:", err);
@@ -74,13 +111,13 @@ export default async function TapPage({ params }: Props) {
   let brandCollector: BrandCollectorInsight | null = null;
   let categoryPattern: CategoryPatternInsight | null = null;
   let sameBrand: SimilarProductSuggestion[] = [];
-  if (customer && product.vendor) {
+  if (customer && !isPreview && product.vendor) {
     [brandCollector, sameBrand] = await Promise.all([
       getBrandCollectorForCustomer(pool, customer.id, product.vendor),
       getUntappedSameBrandProducts(pool, customer.id, state.storeId, product.vendor, state.productId),
     ]);
   }
-  if (customer && product.product_type) {
+  if (customer && !isPreview && product.product_type) {
     categoryPattern = await getCategoryPatternForCustomer(pool, customer.id, product.product_type);
   }
 
@@ -98,8 +135,11 @@ export default async function TapPage({ params }: Props) {
 
   return (
     <div style={cssVars as React.CSSProperties}>
+      {isPreview && (
+        <StaffViewToggle current="preview" tagUuid={tag_uuid} storeName={store?.name ?? store?.shopify_shop_domain ?? ""} />
+      )}
       {/* Back to collection — only shown to signed-in customers */}
-      {customer && (
+      {customer && !isPreview && (
         <div style={{ padding: "0.75rem 1.25rem 0" }}>
           <a href="/me" style={{ fontSize: "0.8rem", color: "#888", textDecoration: "none" }}>
             ← Your Collection
@@ -131,7 +171,7 @@ export default async function TapPage({ params }: Props) {
           whatsappNumber={store?.whatsapp_number ?? null}
           smsNumber={store?.sms_number ?? null}
         />
-        <NotifyMe
+        {!isPreview && <NotifyMe
           storeId={state.storeId}
           productId={state.productId}
           sessionId={sessionId}
@@ -139,10 +179,10 @@ export default async function TapPage({ params }: Props) {
           customerPhone={customer?.phone ?? null}
           customerEmail={customer?.email ?? null}
           primaryColor={primaryColor}
-        />
+        />}
       </div>
-      <PicksBar currentTap={currentTap} primaryColor={primaryColor} />
-      <ReactionBar tagId={state.tagId} sessionId={sessionId} primaryColor={primaryColor} customerId={customer?.id ?? null} />
+      {!isPreview && <PicksBar currentTap={currentTap} primaryColor={primaryColor} />}
+      {!isPreview && <ReactionBar tagId={state.tagId} sessionId={sessionId} primaryColor={primaryColor} customerId={customer?.id ?? null} />}
     </div>
   );
 }

@@ -18,8 +18,8 @@ export default async function TrainingHomePage() {
         Hi{staff.name ? ` ${staff.name}` : ""} — you&apos;re signed in as staff
       </h1>
       <p style={{ fontSize: "0.95rem", color: "#333", lineHeight: 1.6, marginBottom: "1rem" }}>
-        You&apos;re all set up. Soon, tapping any product in the store will show its training notes:
-        how it fits, how to sell it, and answers to common questions.
+        Tap any product in the store to see its training notes: how to sell it, who it&apos;s for,
+        how it fits, and answers to common questions.
       </p>
       <p style={{ fontSize: "0.85rem", color: "#666", lineHeight: 1.6, padding: "0.75rem 1rem", background: "#f7f7f7", borderRadius: "6px", marginBottom: "1.5rem" }}>
         On iPhone, keep using <strong>Safari</strong> — that&apos;s where tapped products open.
