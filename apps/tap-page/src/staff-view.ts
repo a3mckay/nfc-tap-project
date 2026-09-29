@@ -75,3 +75,14 @@ export function stockNoteAge(updatedAt: Date | null, now = new Date()): string |
   if (days === 1) return "updated yesterday";
   return `updated ${days} days ago`;
 }
+
+// PRD v4 §7 Step 13f: a staff member opening the training view counts toward
+// their training progress. Owners' taps and the customer preview don't.
+export function staffViewToRecord(
+  view: TapView,
+  staff: TapPrincipal | null,
+  productId: string,
+): { staffId: string; storeId: string; productId: string } | null {
+  if (view !== "training" || staff?.kind !== "staff") return null;
+  return { staffId: staff.staffId, storeId: staff.storeId, productId };
+}

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { approveStaffAction, removeStaffAction } from "./actions.js";
 
-interface StaffRow { id: string; email: string; name: string | null; added: string }
+interface StaffRow { id: string; email: string; name: string | null; added: string; progress: string }
 
 interface Props {
   shop: string;
@@ -71,6 +71,7 @@ export function StaffManager({ shop, staff }: Props) {
                 <p style={{ fontSize: "0.78rem", color: "#666", margin: 0 }}>
                   {row.name ? `${row.email} · ` : ""}added {new Date(row.added).toLocaleDateString()}
                 </p>
+                <p style={{ fontSize: "0.78rem", color: "#166534", margin: "2px 0 0" }}>{row.progress}</p>
               </div>
               <button type="button" onClick={() => remove(row)} disabled={pending}
                 style={{ padding: "0.35rem 0.875rem", background: "transparent", color: "#555", border: "1px solid #ddd", borderRadius: "4px", fontSize: "0.78rem", cursor: pending ? "default" : "pointer" }}>

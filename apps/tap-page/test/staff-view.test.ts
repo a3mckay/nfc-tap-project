@@ -80,3 +80,17 @@ describe("stockNoteAge", () => {
     expect(stockNoteAge(null, now)).toBeNull();
   });
 });
+
+describe("staffViewToRecord", () => {
+  it("records a staff member opening the training view", async () => {
+    const { staffViewToRecord } = await import("../src/staff-view.js");
+    expect(staffViewToRecord("training", staff, "prod-1")).toEqual({ staffId: "st-1", storeId: "store-1", productId: "prod-1" });
+  });
+
+  it("doesn't record owners, the customer preview, or customers", async () => {
+    const { staffViewToRecord } = await import("../src/staff-view.js");
+    expect(staffViewToRecord("training", owner, "prod-1")).toBeNull();
+    expect(staffViewToRecord("preview", staff, "prod-1")).toBeNull();
+    expect(staffViewToRecord("customer", null, "prod-1")).toBeNull();
+  });
+});

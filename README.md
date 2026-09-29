@@ -2,7 +2,7 @@
 
 V1 of an NFC-powered in-store product experience platform. See [`docs/PRD-v4.md`](docs/PRD-v4.md) for the full PRD, build order, and current build status.
 
-**Current priority:** staff logins & training view (PRD v4 §7, Step 13). Design: [`docs/staff-experience.md`](docs/staff-experience.md).
+**Latest:** staff logins & training view (PRD v4 §7, Step 13) is complete. Design: [`docs/staff-experience.md`](docs/staff-experience.md).
 
 ## Layout
 

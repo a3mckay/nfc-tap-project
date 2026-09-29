@@ -213,7 +213,7 @@ Reference `docs/PRD-v4.md` §7 for full step details and current status. This is
 
 ---
 
-### Phase 5 — Staff Experience (current priority, added 2026-09-28)
+### Phase 5 — Staff Experience (added 2026-09-28, complete 2026-09-29)
 
 **Step 13: Staff Logins & Training View**
 - Design: `docs/staff-experience.md`; status and sub-steps in PRD v4 §7 Phase 5
