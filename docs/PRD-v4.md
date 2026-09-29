@@ -210,7 +210,7 @@ services/
   api/        Fastify: Shopify OAuth (auth.ts), webhooks, Stripe billing webhook, health
   worker/     Polling worker: generate-copy, match-canonical, enrich-events
 packages/
-  db/         SQL migrations (0000–0019), typed query modules, seeds, schema-conformance test
+  db/         SQL migrations (0000–0020), typed query modules, seeds, schema-conformance test
   email/      Resend wrapper shared by the admin and the tap page
 ```
 
@@ -276,6 +276,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0017 | Staff: `store_staff` (emails approved by the store admin; soft-removed via `revoked_at`) |
 | 0018 | Staff sign-in: `staff_auth_tokens` (single-use emailed links; SHA-256 hash only, 15 min) |
 | 0019 | Staff training notes: `product_training` (ten optional owner-written fields per product; store-scoped) |
+| 0020 | Admin → tap page sign-in handoff: `tap_handoff_tokens` (single-use, 60 s, hash only; staff member or store owner) |
 
 ---
 
@@ -428,7 +429,7 @@ Decided:
 Sub-steps:
 - ✅ 13a: `store_staff` table and the admin Staff page (`/staff`: add, list, remove approved emails)
 - ✅ 13b: `staff` admin role (30-day session, confined to `/training`), staff sign-in by emailed link at `/login/staff` (one link per store), staff home page, invite email when an owner adds staff
-- ⬜ 13c: handoff to the tap page (`nfc_staff` cookie, `getCurrentStaff()`)
+- ✅ 13c: handoff to the tap page — staff (after their emailed link) and store owners (after login) get a 30-day `nfc_staff` cookie on tapshelf.store via a single-use token; `getCurrentStaff()` re-checks them on every request; admin sign-out clears it too
 - ⬜ 13d: staff training view on tap, customer toggle, staff taps excluded from customer analytics
 - ✅ 13e (built before 13c/13d): Staff training section on each product's edit page — ten optional fields (one-line sell, who it's for / not for, fit and sizing, worth the price, closest alternative, common Q&A, companions, brand context, stock note) in `product_training`, with an optional "Draft with AI" that fills only empty fields
 - ⬜ 13f: training progress (`staff_product_views`), shown to owners and staff

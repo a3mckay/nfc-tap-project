@@ -8,8 +8,9 @@ export const config = {
 
 const CURRENT_SHOP_COOKIE = "nfc_current_shop";
 
-// The only page a staff session may visit (PRD v4 §7 Step 13b)
+// The only page a staff session may visit (PRD v4 §7 Step 13b), plus sign-out.
 const STAFF_HOME = "/training";
+const STAFF_ALLOWED = [STAFF_HOME, "/api/logout"];
 
 // Pages only super-admins may visit
 const SUPER_ONLY_PREFIXES = ["/stores"];
@@ -29,7 +30,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   // ── Staff: only the staff home page ─────────────────────────────────────
   if (session.role === "staff") {
-    if (pathname !== STAFF_HOME) return NextResponse.redirect(new URL(STAFF_HOME, request.url));
+    if (!STAFF_ALLOWED.includes(pathname)) return NextResponse.redirect(new URL(STAFF_HOME, request.url));
     requestHeaders.set("x-session-role", "staff");
     return NextResponse.next({ request: { headers: requestHeaders } });
   }

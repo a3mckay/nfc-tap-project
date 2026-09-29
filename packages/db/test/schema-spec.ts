@@ -241,6 +241,20 @@ export const SCHEMA_SPEC: TableSpec[] = [
       { name: "updated_at", type: "timestamp" },
     ],
   },
+  // PRD v4 §7 Step 13c: single-use handoff from the admin to the tap page
+  {
+    name: "tap_handoff_tokens",
+    columns: [
+      { name: "token_hash", type: "text" },
+      { name: "store_id", type: "uuid" },
+      { name: "staff_id", type: "uuid", nullable: true },
+      { name: "store_admin_id", type: "uuid", nullable: true },
+      { name: "return_path", type: "text" },
+      { name: "expires_at", type: "timestamp" },
+      { name: "used_at", type: "timestamp", nullable: true },
+      { name: "created_at", type: "timestamp" },
+    ],
+  },
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {
