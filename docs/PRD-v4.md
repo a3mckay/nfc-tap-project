@@ -430,7 +430,7 @@ Sub-steps:
 - ✅ 13a: `store_staff` table and the admin Staff page (`/staff`: add, list, remove approved emails)
 - ✅ 13b: `staff` admin role (30-day session, confined to `/training`), staff sign-in by emailed link at `/login/staff` (one link per store), staff home page, invite email when an owner adds staff
 - ✅ 13c: handoff to the tap page — staff (after their emailed link) and store owners (after login) get a 30-day `nfc_staff` cookie on tapshelf.store via a single-use token; `getCurrentStaff()` re-checks them on every request; admin sign-out clears it too
-- ⬜ 13d: staff training view on tap, customer toggle, staff taps excluded from customer analytics
+- ✅ 13d: staff and owners of the tag's store see the training view on tap by default (owner's notes, or the product page's fit, materials and FAQ when there are none yet); "View as customer" shows a preview with reactions, sign-ups, offers and personalisation off; their taps never count as customer taps
 - ✅ 13e (built before 13c/13d): Staff training section on each product's edit page — ten optional fields (one-line sell, who it's for / not for, fit and sizing, worth the price, closest alternative, common Q&A, companions, brand context, stock note) in `product_training`, with an optional "Draft with AI" that fills only empty fields
 - ⬜ 13f: training progress (`staff_product_views`), shown to owners and staff
 
