@@ -68,6 +68,13 @@ describe("setPasswordAction", () => {
     expect(db.consumeSetPasswordToken).not.toHaveBeenCalled();
   });
 
+  it("doesn't sign them in if the password couldn't be saved (e.g. demoted meanwhile)", async () => {
+    db.consumeSetPasswordToken.mockResolvedValue(manager);
+    db.setStaffPassword.mockResolvedValueOnce(false);
+    expect(await run(() => setPasswordAction(form({ token: "tok", password: "correct horse", confirm: "correct horse" })))).toBe("/login/set-password?error=expired");
+    expect(jar.set).not.toHaveBeenCalled();
+  });
+
   it("rejects a used or expired link", async () => {
     db.consumeSetPasswordToken.mockResolvedValue(null);
     expect(await run(() => setPasswordAction(form({ token: "tok", password: "correct horse", confirm: "correct horse" })))).toBe("/login/set-password?error=expired");

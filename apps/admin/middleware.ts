@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySession, COOKIE_NAME } from "./src/admin-auth.js";
 import { pinShopParam } from "./src/shop-param.js";
 import { can, permissionForPath, adminHomePath } from "./src/permissions.js";
+import { needsLiveCheck, REFRESH_PATH } from "./src/session-refresh.js";
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|login).*)"],
@@ -40,6 +41,15 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   // ── Owners, managers and co-managers: own store, allowed areas only ───────
   if (session.role === "store" || session.role === "manager") {
+    // Managers: re-read a stale role from the database first (server actions
+    // re-read it themselves in getActionStore).
+    if (pathname === REFRESH_PATH) return NextResponse.next();
+    if (needsLiveCheck(session) && !request.headers.has("next-action")) {
+      const refresh = new URL(REFRESH_PATH, request.url);
+      refresh.searchParams.set("next", pathname + request.nextUrl.search);
+      return NextResponse.redirect(refresh);
+    }
+
     const needed = permissionForPath(pathname);
     if (needed && !can(session, needed)) {
       return NextResponse.redirect(new URL(adminHomePath(session), request.url));

@@ -104,6 +104,12 @@ Things we consciously deferred during the build, with enough context to pick the
 **Why deferred:** Out of scope for Step 14.
 **What's needed:** A "Forgot password?" link that emails a single-use reset link (the `staff_auth_tokens` set_password purpose can be reused for managers; owners need their own).
 
+### An owner whose store row is gone isn't tried as a manager
+**File:** `apps/admin/app/login/actions.ts`
+**What exists:** If an email matches a `store_admins` row with the right password but that store no longer exists, sign-in fails without trying the same email's manager logins.
+**Why deferred:** It needs a deleted store *and* the same password on both accounts. Found in the PR #12 review (2026-10-02).
+**What's needed:** Fall through to `signInManager` when `getStoreById` returns null.
+
 ### An email on several stores' lists signs in to the first matching store
 **Files:** `apps/admin/app/login/actions.ts` (`signInManager`)
 **What exists:** If the same email is a manager at two stores, sign-in goes to the first store whose password matches.

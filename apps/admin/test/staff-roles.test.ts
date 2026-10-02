@@ -81,11 +81,20 @@ describe("promotion emails", () => {
   });
 
   it("sends no email when moving between manager roles or back to staff", async () => {
-    as(OWNER); target("co_manager");
+    as(OWNER);
+    db.getStaffMember.mockResolvedValue({ id: "t-1", role: "co_manager", email: "t@example.com", has_password: true });
     await setStaffRoleAction("own.myshopify.com", "t-1", "manager");
     target("manager");
     await setStaffRoleAction("own.myshopify.com", "t-1", "staff");
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("sends a new link when a co-manager who never set a password becomes a manager", async () => {
+    as(OWNER);
+    db.getStaffMember.mockResolvedValue({ id: "t-1", role: "co_manager", email: "t@example.com", has_password: false });
+    await setStaffRoleAction("own.myshopify.com", "t-1", "manager");
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    expect(db.createSetPasswordToken).toHaveBeenCalledTimes(1);
   });
 
   it("still changes the role if the email fails", async () => {

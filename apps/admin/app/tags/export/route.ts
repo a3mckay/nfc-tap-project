@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPool, getStoreByDomain, getTagsByStore } from "@nfc/db";
+import { getPool, getTagsByStore } from "@nfc/db";
+import { getActionStore } from "@/current-store.js";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const shop = request.nextUrl.searchParams.get("shop");
@@ -9,10 +10,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getStoreByDomain(pool, shop);
+  // Same check as server actions: the session's own store, live role, "catalog".
+  const store = await getActionStore(pool, shop, "catalog");
 
   if (!store) {
-    return NextResponse.json({ error: "Store not found" }, { status: 404 });
+    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
 
   const tags = await getTagsByStore(pool, store.id);

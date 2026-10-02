@@ -118,6 +118,17 @@ describe("staff roles (manager / co-manager)", () => {
     expect(rows[0].password_hash).toBeNull();
   });
 
+  it("says whether someone has a password, without returning it", async () => {
+    const { setStaffRole, getStaffMember } = await import("../src/store-staff.js");
+    const s = await approveStaffEmail(pool, own, "sam@example.com", null);
+    await setStaffRole(pool, s.id, own, "co_manager");
+    expect(await getStaffMember(pool, s.id, own)).toMatchObject({ has_password: false });
+    await pool.query(`update store_staff set password_hash = 'x' where id = $1`, [s.id]);
+    const member = await getStaffMember(pool, s.id, own);
+    expect(member).toMatchObject({ has_password: true });
+    expect(member).not.toHaveProperty("password_hash");
+  });
+
   it("brings a removed person back as staff, not their old role", async () => {
     const { setStaffRole } = await import("../src/store-staff.js");
     const s = await approveStaffEmail(pool, own, "sam@example.com", null);

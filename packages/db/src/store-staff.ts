@@ -8,12 +8,14 @@ export interface StoreStaff {
   email: string;
   name: string | null;
   role: StaffRole;
+  has_password: boolean;   // managers and co-managers who have set their admin password
   created_at: Date;
   revoked_at: Date | null;
 }
 
-// Every column except password_hash, which never leaves the database layer.
-const STAFF_COLUMNS = "id, store_id, email, name, role, created_at, revoked_at";
+// Every column except password_hash, which never leaves the database layer
+// (only whether one is set).
+const STAFF_COLUMNS = "id, store_id, email, name, role, password_hash is not null as has_password, created_at, revoked_at";
 
 // Approves an email for the store. Re-approving an existing email updates the
 // name; re-approving a removed one restores it as plain staff.

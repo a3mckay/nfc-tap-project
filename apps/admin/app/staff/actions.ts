@@ -84,8 +84,9 @@ export async function setStaffRoleAction(
   if (!(await setStaffRole(pool, id, store.id, role))) return { error: "Staff member not found" };
   revalidatePath("/staff");
 
-  // Newly promoted from staff: they need a password to sign in to the admin.
-  if (member.role === "staff" && role !== "staff") {
+  // Newly promoted from staff, or never set a password: they need one to sign
+  // in to the admin.
+  if (role !== "staff" && (member.role === "staff" || !member.has_password)) {
     try {
       const { token, hash } = await newSignInToken();
       await createSetPasswordToken(pool, id, hash, SET_PASSWORD_TTL_MINUTES);

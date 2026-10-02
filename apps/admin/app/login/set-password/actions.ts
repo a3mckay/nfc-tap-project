@@ -25,7 +25,10 @@ export async function setPasswordAction(formData: FormData): Promise<void> {
   const who = token ? await consumeSetPasswordToken(pool, await hashSignInToken(token)) : null;
   if (!who) redirect("/login/set-password?error=expired");
 
-  await setStaffPassword(pool, who.staff_id, who.store_id, await hashPassword(password));
+  // Demoted or removed since the link was sent: don't sign them in.
+  if (!(await setStaffPassword(pool, who.staff_id, who.store_id, await hashPassword(password)))) {
+    redirect("/login/set-password?error=expired");
+  }
 
   const session = managerSession({ staffId: who.staff_id, storeId: who.store_id, storeDomain: who.store_domain, level: who.role });
   const jar = await cookies();

@@ -21,6 +21,9 @@ export interface ManagerSession {
   storeId: string;
   storeDomain: string;
   exp: number;
+  // When `level` was last read from the database (ms since epoch); see
+  // src/session-refresh.ts. Missing on cookies signed before it was added.
+  checkedAt?: number;
 }
 
 // Staff (PRD v4 §7 Step 13) can only reach the staff home page. Their sessions
@@ -40,7 +43,7 @@ export function managerSession(
   who: { staffId: string; storeId: string; storeDomain: string; level: "manager" | "co_manager" },
   now = Date.now(),
 ): ManagerSession {
-  return { role: "manager", ...who, exp: now + STAFF_SESSION_MAX_AGE_SECONDS * 1000 };
+  return { role: "manager", ...who, exp: now + STAFF_SESSION_MAX_AGE_SECONDS * 1000, checkedAt: now };
 }
 
 export function staffSession(

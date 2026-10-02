@@ -442,7 +442,7 @@ Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
 **Step 14: Manager and co-manager roles ✅** (founder, 2026-09-29)
 - The owner can make anyone on the Staff list a **manager** or **co-manager**; a manager can make someone a co-manager (or back to staff) but can't make or change managers.
 - Managers and co-managers get an emailed "Set your password" link (single-use, 3 days) and then sign in on the normal admin login with their own password; demoting someone to staff removes their password.
-- One permission table (`apps/admin/src/permissions.ts`) is enforced by the middleware (pages), `getActionStore(pool, shop, permission)` (every server action, with the manager's role re-read from the database) and the layout (live role re-check; the sidebar shows only allowed areas):
+- One permission table (`apps/admin/src/permissions.ts`) is enforced by the middleware (pages), `getActionStore(pool, shop, permission)` (every server action, with the manager's role re-read from the database) the layout (live role re-check; the sidebar shows only allowed areas), and the tag CSV export. A manager's cookie is re-checked against the database at least once a minute: the middleware sends a stale cookie through `/api/session/refresh`, which re-signs it with the current role or signs the person out (`apps/admin/src/session-refresh.ts`). So demotions, removals and promotions reach client-side navigation and route handlers too:
 
 | Area | Owner | Manager | Co-manager |
 |---|---|---|---|

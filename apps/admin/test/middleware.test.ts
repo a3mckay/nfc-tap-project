@@ -15,8 +15,8 @@ const staffCookie = () =>
 
 describe("middleware for managers and co-managers", () => {
   const exp = () => Date.now() + 60_000;
-  const managerCookie = (level: "manager" | "co_manager") =>
-    signSession({ role: "manager", level, staffId: "m-1", storeId: "store-1", storeDomain: "own.myshopify.com", exp: exp() });
+  const managerCookie = (level: "manager" | "co_manager", checkedAt = Date.now()) =>
+    signSession({ role: "manager", level, staffId: "m-1", storeId: "store-1", storeDomain: "own.myshopify.com", exp: exp(), checkedAt });
   const to = async (path: string, cookie: string) => {
     const loc = (await requestAs(path, cookie)).headers.get("location");
     return loc ? new URL(loc).pathname + new URL(loc).search : null;
@@ -48,6 +48,24 @@ describe("middleware for managers and co-managers", () => {
 
   it("pins a manager to their own store", async () => {
     expect(await to("/tags?shop=other.myshopify.com", await managerCookie("manager"))).toBe("/tags?shop=own.myshopify.com");
+  });
+
+  it("sends a manager whose role hasn't been checked for a minute to be re-checked", async () => {
+    const stale = await managerCookie("manager", Date.now() - 2 * 60_000);
+    expect(await to("/analytics?shop=own.myshopify.com", stale))
+      .toBe(`/api/session/refresh?next=${encodeURIComponent("/analytics?shop=own.myshopify.com")}`);
+    // Route handlers too, e.g. the tag export
+    expect(await to("/tags/export?shop=own.myshopify.com", stale))
+      .toBe(`/api/session/refresh?next=${encodeURIComponent("/tags/export?shop=own.myshopify.com")}`);
+  });
+
+  it("lets the re-check itself and server actions through with a stale cookie", async () => {
+    const stale = await managerCookie("manager", Date.now() - 2 * 60_000);
+    expect(await to("/api/session/refresh?next=%2Ftags", stale)).toBeNull();
+    // Server actions re-read the role themselves (getActionStore)
+    const req = new NextRequest(new URL("/tags?shop=own.myshopify.com", "https://admin.test"), { method: "POST", headers: { "next-action": "abc" } });
+    req.cookies.set(COOKIE_NAME, stale);
+    expect((await middleware(req)).headers.get("location")).toBeNull();
   });
 
   it("still keeps owners out of all-stores", async () => {
