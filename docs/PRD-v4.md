@@ -564,7 +564,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 2. **Tap-page performance gate.** The spec says to enforce it in CI from day one; the Lighthouse job was removed. Decide whether to restore it.
 3. **PII rule vs. customer accounts.** `tap_events` remains PII-free. Customer identity (email, phone) now lives in `customers` / `customer_taps` / `notification_*`. The privacy policy and PIPEDA review must cover this. v3 assumed no customer identity at all.
 4. **"No cross-sell" principle vs. offers and the picks bar.** Offers and the picks bar are arguably engagement, not cross-sell. Confirm they're in the spirit of §4.3.
-5. **Shelf-Side AI Assistant vs. the current tap page.** The proposal shortens the static page (hero, 3 key points, video, then Ask), folds Ask Us into an AI-first flow, and extends the Step 13 staff training view. It also raises the question of whether the first pilot should be a boutique or a specialty grocer/wine shop (§2 vertical order). Decide via [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md) §9 before changing §5.4.
+5. **Shelf-Side AI Assistant vs. the current tap page.** The blocking questions are resolved (decisions D1–D21 in [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md)): keep the header carousel; 3 "Great when…" key points; a sticky Ask bar alongside the picks bar; AI answers drawn from a hidden pool of answers written by owners and managers; first pilot is shoes/menswear. §5.4 changes once that spec is approved for build.
 
 ## 12. Known Gaps & Human To-Dos
 
