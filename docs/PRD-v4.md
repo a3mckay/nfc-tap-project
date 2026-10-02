@@ -6,7 +6,7 @@
 |---|---|
 | Version | v4 (supersedes `nfc-product-prd-v3.docx`, Apr 30 2026) |
 | Canonical location | `docs/PRD-v4.md` in this repo. Edit this file; local copies are not authoritative. |
-| Updated | 2026-09-28 |
+| Updated | 2026-10-02 |
 | Repo | `github.com/a3mckay/nfc-tap-project` (pnpm monorepo) |
 | Domains | `tapshelf.co` (marketing), `admin.tapshelf.co` (admin), `tapshelf.store` (customer tap pages) |
 | Hosting | Railway: admin, tap page and Postgres, deployed from `main` |
@@ -20,12 +20,14 @@
 4. **Section 12** brings in the known gaps from `DEFERRED.md` and the human to-dos from `ACTION_ITEMS.md`.
 5. **Section 11** lists places where the code and the spec disagree (for example, pricing tiers).
 6. **Staff logins and the staff training view** moved from the V2 roadmap into the build order as the **next priority** (§7 Phase 5, Step 13). Decided 2026-09-28. The design is in [`docs/staff-experience.md`](staff-experience.md).
+7. **2026-10-02:** added the Shelf-Side AI Assistant (customer Ask, staff Ask in the existing training view, question insights) as a discovery item. Spec draft: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md). See §9 and §11.5.
 
 ### Status legend
 
 - ✅ **Built**: implemented in the repo
 - 🟡 **Partial**: some of it is built; what's missing is listed
 - ⬜ **Not started**
+- 🔍 **Discovery**: spec in progress; not approved for build
 - 🧍 **Non-code**: physical, legal or business work
 
 > **Note for a Claude session reading this:** statuses come from reading the code (routes, migrations, jobs, greps), not from running the app end to end. Check a status against the code before you rely on it. The working tree may also have uncommitted changes. As of this writing: advisory-lock tag provisioning in `packages/db/src/tags.ts`, plus small edits to canonical, offers and settings actions.
@@ -479,6 +481,7 @@ The SaaS tool is how TapShelf gets to market. The dataset is the long-term defen
 | Feature | Status |
 |---|---|
 | Staff view layer (same tap; staff see inventory, notes, talking points) | ➡️ **Moved into V1** as §7 Phase 5, Step 13 (current priority). Live inventory in the staff view stays deferred. |
+| **Shelf-Side AI Assistant**: customers ask questions on the tap page; staff can ask the same AI and see "common questions" in the Step 13 training view; owners and managers see questions grouped into themes. Builds on Step 13. | 🔍 **Discovery.** Draft spec and open questions in [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md). Not approved for build. |
 | Post-purchase "product passport" | ⬜ |
 | Email capture on OOS | ✅ **Pulled into V1.** Done via NotifyMe subscriptions and restock notifications |
 | PWA / add to home screen | ✅ **Pulled into V1.** Hand-rolled service worker, manifest, 192/512 icons, install prompt with manual fallback |
@@ -540,6 +543,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 2. **Tap-page performance gate.** The spec says to enforce it in CI from day one; the Lighthouse job was removed. Decide whether to restore it.
 3. **PII rule vs. customer accounts.** `tap_events` remains PII-free. Customer identity (email, phone) now lives in `customers` / `customer_taps` / `notification_*`. The privacy policy and PIPEDA review must cover this. v3 assumed no customer identity at all.
 4. **"No cross-sell" principle vs. offers and the picks bar.** Offers and the picks bar are arguably engagement, not cross-sell. Confirm they're in the spirit of §4.3.
+5. **Shelf-Side AI Assistant vs. the current tap page.** The proposal shortens the static page (hero, 3 key points, video, then Ask), folds Ask Us into an AI-first flow, and extends the Step 13 staff training view. It also raises the question of whether the first pilot should be a boutique or a specialty grocer/wine shop (§2 vertical order). Decide via [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md) §9 before changing §5.4.
 
 ## 12. Known Gaps & Human To-Dos
 
