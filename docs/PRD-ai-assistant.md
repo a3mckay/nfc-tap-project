@@ -28,6 +28,15 @@ Round 1 (2026-10-02), answering the ★ questions from v0.1:
 | D9 | **Regulated facts** (allergens, alcohol, supplements, health): the AI answers only from explicit store data and always adds "check the label." |
 | D10 | **PII:** the chat never asks for personal details. Anything that looks like PII is removed **before saving**. The saved record keeps a placeholder (e.g. `[phone removed]`) and a `pii_redacted` flag. The customer is told when this happens, and the owner sees the flag. |
 
+Round 2 (2026-10-02):
+
+| # | Decision |
+|---|---|
+| D11 | **Every product can be asked about.** The LLM answers from all available data for the product. Owners, managers **and co-managers** can add their own answers to questions. **Answer priority:** a staff-authored answer always outranks product description / enrichment data when both exist (§6). |
+| D12 | **Owner answers go into a hidden "answer pool,"** not onto the visible page. The pool feeds the LLM but is never shown as a list. The public page stays light: publicly visible info, plus a supporting pool of owner/manager answers behind it. Promoting an answer into the visible FAQ or the training Q&A is a deliberate manual action, never automatic. |
+| D13 | **Training view placement:** "Customers are asking" goes directly under the one-line sell, and the staff Ask box is pinned at the bottom. |
+| D14 | **The customer AI may use staff training notes,** but it must never sound like selling. No upsell or cross-sell phrasing, no "you should also get…", no revealing that the tool exists to drive bigger baskets. It uses the *facts* in training notes (fit, who it's for, alternatives) only when they answer the customer's question. Internal sales notes (e.g. `worth_the_price` as a pitch, margin, stock pressure) are never quoted or paraphrased as persuasion. See §6.1. |
+
 ---
 
 ## 1. Why
@@ -97,9 +106,10 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 - A new top-level **Questions** tab in the admin (D7).
 - **Landing view:** a list of every product with at least one question, added automatically. Each row shows: product, total questions, new since the owner last reviewed, submitted (unanswered) count, top theme, and last asked. Rows with unreviewed or submitted questions sort first.
 - **Product view** (click a product): grouped theme summaries by default, each with a count and the AI's typical answer. A **Verbatim** toggle shows each question as asked, with the AI's answer, date, asked-by (customer/staff), helpful rating, and the `PII removed` flag where it applies.
-- **Submitted queue:** questions the AI couldn't answer. The owner writes an answer, which is saved to the product FAQ so the AI can use it from then on.
+- **Submitted queue:** questions the AI couldn't answer. An owner, manager or co-manager writes an answer, which goes into the product's hidden **answer pool** (D12). The AI uses it from then on. Any theme (answered or not) can also get a staff-authored answer that overrides the AI's default.
+- **Optional promotion:** "Show on product page" (adds it to the visible FAQ) and "Add to training Q&A" are explicit buttons, never automatic.
 - **Themes view:** questions grouped into themes (e.g. "Sizing / runs small," "Gluten / allergens," "Occasion: wedding"), each with a count, trend, products affected, and how well the AI answered.
-- **Per product:** a "Common questions about this product" panel on the enrichment editor, with counts. One click turns a question into an FAQ entry or adds the answer to enrichment.
+- **Per product:** a "Common questions about this product" panel on the enrichment editor, with counts. Each theme can be answered (into the answer pool), or explicitly promoted to the visible FAQ.
 - **Content gaps:** the submitted queue plus low-confidence answers, sorted by frequency. This is the owner's to-do list.
 - **Visibility:** each panel appears as soon as it has one question, with the count stated ("3 questions so far"). Grouping gets better with volume, so a small-sample notice appears below a threshold (Q5.4).
 - Raw questions can be read and searched by owners and managers. Staff see grouped views only (Q5.6).
@@ -110,7 +120,7 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 |---|---|---|
 | **Tap page structure** (parent §5.4) | Keep the header carousel (photos, then video slide). Below it: name/price, 3 key points, then **Ask** (sticky bar). Long-form fields (backstory, materials, care, sustainability) collapse behind "More details." | D3; Q2.2 |
 | **Ask Us** (WhatsApp / SMS) | The AI no longer hands off to it (D5). Does the card stay anywhere? | Q0.4 |
-| **FAQ accordion** (`enrichments.faq`) | Becomes a source for the AI and the seed for suggested questions. Real questions can be promoted into it. Possibly no longer rendered as a static list. | Q1.4 |
+| **FAQ accordion** (`enrichments.faq`) | Unchanged as a *visible* list, which stays owner-curated. It's also an AI source. The new hidden answer pool is separate, so answering questions doesn't grow the page. | D12 |
 | **AI copy generation** (Step 5) | Prompts move toward problem-first framing ("what it solves, when to use it") per Sarah's advice. The same grounding (Brave) could add material facts for the AI. | Q6.3 |
 | **Enrichment editor** | Adds a "Common questions" panel and a "turn into FAQ" action | — |
 | **Analytics** | Adds question metrics: asks per tap, top themes, unanswered rate. A question becomes a stronger engagement signal than dwell. | Q5.2 |
@@ -130,9 +140,10 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 Principle: **questions are behavioural data, not identity.** Keep them PII-free like `tap_events`.
 
 - `product_questions`
-  - fields: `id`, `store_id`, `product_id`, `tag_id`, `session_id`, `asked_by` (`customer` | `staff`), `staff_id` (nullable), `question_text` (redacted), `pii_redacted` (bool), `answer_text`, `sources_used`, `confidence`, `status` (`answered` | `submitted` | `owner_answered`), `reviewed_at` (nullable), `helpful` (thumbs, nullable), `theme_id`, `created_at`
+  - fields: `id`, `store_id`, `product_id`, `tag_id`, `session_id`, `asked_by` (`customer` | `staff`), `staff_id` (nullable), `question_text` (redacted), `pii_redacted` (bool), `answer_text`, `sources_used`, `confidence`, `status` (`answered` | `submitted` | `staff_answered`), `reviewed_at` (nullable), `helpful` (thumbs, nullable), `theme_id`, `created_at`
 - `staff_id` references the existing `store_staff` table (migration 0017). No new identity tables are needed.
   - Optional `customer_id`, only when the customer is signed in and has opted in, mirroring how `customer_taps` is kept separate (Q7.2).
+- `product_answers` (the hidden answer pool, D12): `id`, `store_id`, `product_id` (nullable for store-wide answers), `theme_id` (nullable), `question` (canonical wording), `answer`, `author_admin_id`, `author_role` (owner / manager / co_manager), `created_at`, `updated_at`, `retired_at`. It's never rendered as a list on the customer page.
 - `question_themes`
   - fields: `id`, `store_id`, `label`, `kind` (fit, materials, allergen, occasion, care, price, availability, …), `product_id` nullable for store-wide themes, `question_count`, `last_asked_at`
 - **Grouping job** (worker): assigns each new question to a theme, using embeddings or an LLM classifier against the store's existing themes, and creates a new theme when nothing fits. Admins can rename, merge or split themes (Q5.3).
@@ -141,13 +152,22 @@ Principle: **questions are behavioural data, not identity.** Keep them PII-free 
 
 ## 6. Answer grounding & trust (proposal)
 
-The AI answers only from:
-1. product data (title, description, variants, inventory)
-2. owner-approved enrichment, including FAQ and internal notes, which go to **staff only**
-3. approved reviews
-4. store policies the owner enters, such as returns and alterations (new; Q6.2)
+The AI answers only from these sources, **in priority order**. When two sources disagree, the higher one wins (D11):
+1. **Answer pool:** answers written by an owner, manager or co-manager (`product_answers`), for this product and then store-wide
+2. **Owner-written product content:** enrichment (incl. the visible FAQ) and `product_training` facts (D14)
+3. **Imported product data:** title, description, variants, inventory
+4. **Approved reviews:** cited as "customers say," never as fact
+5. **Store policies** the owner enters, such as returns and alterations (new; Q6.2)
+
+`internal_staff_notes` are used by the **staff** Ask box only.
 
 It never invents allergens, materials, certifications or medical claims. In regulated categories (food allergens, alcohol, supplements, cannabis) it defaults to "Check the label / ask staff" unless the fact is explicitly in the data (Q6.4). Each answer can show "Based on: product details · staff notes" so the customer knows where it came from.
+
+### 6.1 Customer-facing tone (D14)
+- **Answer the question that was asked.** Mention another product only when the customer's question calls for it ("is there a wider version?"), and phrase it as information, not a recommendation to buy more.
+- **Never:** "you might also like," "complete the look," "add X," urgency or scarcity language, price anchoring, or any reference to staff notes, sales goals, margin or stock pressure.
+- **Training-note fields are facts, not scripts.** `who_its_for`, `fit_and_sizing` and `closest_alternative` can inform an answer. `worth_the_price` and `companion_products` are used only when the customer asks about value or pairings directly, and are restated neutrally.
+- **Eval:** the answer-quality test set (Q6.6) includes "upsell-bait" questions. An answer fails if it pushes an additional purchase.
 
 ## 7. Constraints
 
@@ -177,14 +197,14 @@ Each question has a **proposed default** so you can answer "agree," or override 
 
 ### 9.0 Round 2: new questions raised by the round 1 answers (★ = blocks build)
 1. ✅ *Resolved: the staff experience already exists (Step 13).* ~~**Staff accounts.**~~
-2. ★ **Who can see the Questions tab?** Manager and co-manager roles are in [PR #12](https://github.com/a3mckay/nfc-tap-project/pull/12) (open). Proposed permissions: Owner ✅ · Manager ✅ · Co-manager view only (like training progress). Answering submitted questions: Owner and Manager. Should a co-manager be able to answer too, since they can already edit training notes and customer content?
-3. ★ **What happens to submitted questions?** Proposed: the owner answers in the Questions tab, and the answer is saved to the product FAQ so the AI uses it from then on. Can the customer get the answer back? Only possible if they're signed in. Proposed: if they're signed in, notify them through their NotifyMe channel. Otherwise nothing.
+2. ✅ *Resolved, D11: owner, manager and co-manager can all view and answer.* ~~**Who can see the Questions tab?**~~
+3. 🟡 *Mostly resolved, D12: answers go into the hidden answer pool.* Still open: **notify a signed-in customer when their submitted question is answered?** Proposed: yes, via their NotifyMe channel. Anonymous customers can't be reached.
 4. **Does the Ask Us card (WhatsApp/SMS) stay anywhere?** Options: (a) remove it, (b) keep it under "More details," (c) offer it inside the chat as "Prefer to message the store?" Proposed: (c), but only if the store has numbers set.
 5. **Reviewed state:** does "review the questions" mean an explicit *Mark reviewed* per product (which clears the "new" badge), or does opening the product count as reviewed? Proposed: opening the product clears "new," and submitted questions stay flagged until they're answered or dismissed.
-6. **Where does "Customers are asking" go in the training view?** Proposed: directly under the one-line sell, so it works at a glance during a sale, with the staff Ask box pinned at the bottom like the customer Ask bar.
+6. ✅ *Resolved, D13.*
 7. **Staff questions in the owner view:** shown alongside customer questions with a "Staff" label (proposed), or in a separate tab? Should owners see *which* staff member asked? (They already see per-person training progress, so naming them is consistent.)
-9. **Promote to training Q&A:** should promoting a theme into `product_training.common_questions` be manual (proposed), or should the top 3 themes fill it automatically when it's empty?
-10. **Customer Ask vs. training data:** can the *customer* AI use `product_training` fields (e.g. "who it's for," "closest alternative"), or are they staff-only like `internal_staff_notes`? Proposed: staff-only by default, with a per-store setting to allow it, because owners wrote them expecting only staff to read them.
+9. ✅ *Resolved, D12: manual only.*
+10. ✅ *Resolved, D14: yes, with the tone rules in §6.1.*
 8. **PII notice wording:** shown to the customer in the chat, and as a flag on the owner's verbatim view. Is a plain "contact details removed" enough, or should we name the type ("phone number removed")? Proposed: name the type.
 
 
@@ -198,9 +218,9 @@ Each question has a **proposed default** so you can answer "agree," or override 
 2. **Which fields does a "key point" come from?** Reuse `reasons_to_buy`, or add a new problem-first field ("Great when…")?
 3. **One question or a conversation?** Proposed: a short conversation, capped at about 5 turns per product per session.
 4. **Should suggested-question chips show counts** ("12 people asked this")? That's social proof, but it could look empty early on.
-5. **Can answers mention other products in the store?** Proposed: yes, but only in response to the question (alternatives, sizes, pairings), never pushed unprompted.
+5. ✅ *Resolved, D14 / §6.1: only when the question calls for it, phrased as information.*
 6. ✅ *Resolved, D5.* ~~**Human handoff:**~~ when the AI can't answer, what do we offer? WhatsApp or SMS (existing), "find an associate" (no tech needed), or both? Should the handoff message include the customer's question and the AI's attempt?
-7. **Unanswered follow-up:** should the owner be able to answer a question later and notify the customer (NotifyMe-style)? This needs contact info, which means sign-in.
+7. ➡️ *Merged into Q0.3.*
 8. **Should signed-in customers see a "My questions" history in `/me`?**
 9. **Should a question trigger offers** (new `after_question` trigger)? Proposed: not in this version.
 10. **Languages:** answer in the language the question was asked in? Proposed: yes, since the cost is low and it helps in Toronto.
@@ -212,7 +232,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 3. **What can the staff Ask box use that the customer one can't?** Proposed: `product_training`, `internal_staff_notes`, and the raw recent questions for this product. Cross-location stock stays deferred (see staff-experience.md, "Live store data").
 4. ✅ *Proposed in §3.B.* ~~**Are staff questions logged?**~~ Yes, `asked_by = staff`, and kept out of the customer counts.
 5. ✅ *Resolved by Step 13 (browse by tapping; the staff home page lists what's left). Quizzes are planned separately.* ~~**Training mode format.**~~
-6. **Should owners be able to "pin" an official answer** that both the AI and staff will always use? (This may simply be the promoted `common_questions` entry; see Q0.9.)
+6. ✅ *Resolved, D11/D12: a staff-authored answer in the answer pool is the pinned answer and always wins.*
 
 ### 9.4 Customer Ask: UI
 1. ✅ *Resolved, D4.* ~~**Where does Ask live on the page?**~~
@@ -236,9 +256,9 @@ Each question has a **proposed default** so you can answer "agree," or override 
 3. ✅ *Resolved, D8.* ~~**Grouping:**~~ fully automatic, or owner-curated? Proposed: automatic, with rename, merge and split. How fine-grained? One theme per product ("Does the Weekend Boot run small?") or across products ("Sizing")? Proposed: both levels. Product-level questions roll up into store-level themes.
 4. **Visibility rule:** show from the first question with a count (your stated preference). Do we also show a "low data" badge below N questions? Proposed: a badge under 10.
 5. **Should we send a weekly email digest** to owners ("Top 5 new questions")? Proposed: yes. It's cheap and drives the 7-day retention metric.
-6. **Who sees raw question text?** Proposed: owners and managers. Staff see grouped questions plus suggested answers.
-7. **Fix-the-gap workflow:** when an owner writes an answer to an unanswered theme, where does it go? Proposed: into product FAQ (or store policies, for store-wide themes), so the AI picks it up immediately.
-8. **Is there a "manager" role distinct from owner?** `store_admins` has no roles beyond store/super today.
+6. ✅ *Resolved, D11: owners, managers and co-managers. Staff see grouped themes and approved answers.*
+7. ✅ *Resolved, D12: the hidden answer pool.*
+8. ✅ *Resolved: manager and co-manager roles exist (Step 14, PR #12).*
 9. **Export:** CSV export of questions for owners? Proposed: yes, PII-redacted.
 
 ### 9.6 Grounding, content & quality
