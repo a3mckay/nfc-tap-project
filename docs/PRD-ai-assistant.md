@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Status | **Draft v0.2 — in discovery.** Priority: full build once approved (decision D2). Open questions are in §9; decisions so far are in §0. |
-| Parent spec | [`docs/PRD-v4.md`](PRD-v4.md) (roadmap §9, decision §11.5) |
+| Parent spec | [`docs/PRD-v4.md`](PRD-v4.md) (roadmap §9, decision §11.5). Builds on the staff experience: [`docs/staff-experience.md`](staff-experience.md) (PRD-v4 §7 Step 13, built) and manager roles (Step 14, [PR #12](https://github.com/a3mckay/nfc-tap-project/pull/12), open). |
 | Origin | Advisory conversation with Sarah Young (Servizio Group), 2026-10-01 |
 | Updated | 2026-10-02 (round 1 answers) |
 
@@ -22,7 +22,7 @@ Round 1 (2026-10-02), answering the ★ questions from v0.1:
 | D3 | **Tap page:** keep today's header carousel. Photos come first, and the video stays a carousel slide; it isn't autoplayed, so the < 2 s target holds. Below the header: name/price, 3 key points, then Ask. Long-form details collapse behind "More details." |
 | D4 | **Ask placement:** a sticky "Ask about this ✦" bar near the bottom of the page that opens a half-screen chat. Customers can minimize the chat back to the bar and reopen it, and the conversation is kept for the session. |
 | D5 | **No answer available:** the AI replies "Thanks for asking. We don't have an answer to that one yet, but we've sent your question to {store}." The question is marked **Submitted** and goes into the owner's review queue. The AI doesn't hand off to WhatsApp/SMS. |
-| D6 | **Staff mode:** staff sign in by email and then see the **training view** (common questions, talking points, internal notes) *and* the **customer view** of the product. Staff can ask the AI questions, for training or during a live sale. ⚠️ No staff role exists today; see §3.B and Q3.1. |
+| D6 | **Staff:** use the **existing** staff experience (Step 13). Owners/managers add staff on the Staff page, staff sign in with an emailed link, and on tap they see the training view with the Training / Customer toggle. This PRD only **adds to** that view: common customer questions about the product (with counts) and an Ask box for staff (training, or helping in the middle of a sale). No new staff identity is needed. |
 | D7 | **Questions tab** in the admin. It's its own nav item. Any product with at least one question appears automatically, with counts. Owners click a product to review its questions. |
 | D8 | **Grouping:** automatic at two levels: product themes, rolling up into store-wide themes. Owners can rename, merge and split. Inside a product, the **default view is grouped summaries**, with a toggle to see questions **verbatim**. |
 | D9 | **Regulated facts** (allergens, alcohol, supplements, health): the AI answers only from explicit store data and always adds "check the label." |
@@ -77,20 +77,19 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 - Can point to other products in this store ("we also carry it in a wider fit") without becoming a cross-sell widget. See Q2.5.
 - Works anonymously, keyed to the `session_id` cookie. A signed-in customer can see their past questions in `/me` (Q2.8).
 
-### 3.B Associate Assist (staff view)
+### 3.B Associate Assist (inside the existing staff training view)
 
-This is the parent PRD's §9 "staff view layer," pulled forward and made AI-led.
+**Already built (Step 13):** owner/manager adds staff on `/staff` → staff get an emailed sign-in link → sign-in carries over to `tapshelf.store` (`nfc_staff` cookie) → tapping a tag from their store shows `StaffShell` (training view) by default, with `StaffViewToggle` to the customer view. Training content lives in `product_training` (one-line sell, who it's for, fit, worth the price, closest alternative, **common Q&A**, companions, brand context, stock note). Staff taps are excluded from customer analytics, and training progress is tracked in `staff_product_views`.
 
-**Draft behaviour:**
-- Staff sign in with their email (D6) on `tapshelf.store`. Once signed in, tapping any of the store's tags opens **staff mode**, which has two tabs: **Training** and **Customer view** (exactly what the shopper sees).
-- **This needs a new staff identity.** Today `store_admins` holds admin-panel logins (email + password, `store`/`super` roles), and `customers` holds shopper magic-link logins. Neither is a staff role. Proposal: a `store_staff` table (store, email, name, active), with staff invited by the owner from admin Settings and signing in by magic link on the tap page. See Q0.1 (§9.0).
-- Staff mode shows:
-  1. **"Customers usually ask…"**: the top grouped questions for this product, with counts and suggested answers
-  2. talking points written problem-first
-  3. `internal_staff_notes`
-  4. inventory across locations and sizes
-  5. an "Ask" box for staff, with the same engine plus access to internal notes. Use it to learn a product or to answer a customer during a sale.
-- Training mode: browse the most-asked questions by product or category without a tag, for onboarding new staff.
+**What this PRD adds to the training view:**
+1. **"Customers are asking"**: the top grouped question themes for this product, each with a count ("Sizing: runs small · 14"), and the approved answer. It appears as soon as there's one question, with the total shown ("3 questions so far").
+2. **Ask box for staff:** the same AI engine, but it can also use `product_training` and `internal_staff_notes`. It's useful in quiet periods ("what's the difference between this and X?") and during a sale ("does this come in a wide fit?").
+3. **Customer view toggle:** unchanged. It previews the customer page, including the new Ask bar. Questions asked in preview mode are not logged as customer questions.
+
+**How customer questions feed training content:**
+- `product_training.common_questions` (owner-written Q&A) stays the curated source. In the admin, a question theme can be **promoted** into it with one click, and the answer is pre-filled from the AI or owner answer.
+- Staff questions are logged with `asked_by = staff` and the staff member's id. They're kept out of the customer counts but are visible to owners as a training signal ("staff keep asking about care instructions").
+- A later idea, not in this scope: the planned weekly staff quizzes could draw from the most-asked customer questions.
 
 ### 3.C Question Insights (admin)
 
@@ -118,7 +117,9 @@ This is the parent PRD's §9 "staff view layer," pulled forward and made AI-led.
 | **Reactions / picks bar / offers** | Unchanged in this version. Possible trigger: an offer `after_question`. | Q2.9 |
 | **NotifyMe** | An unanswered question can offer "Get notified when the store answers." | Q2.7 |
 | **Customer accounts / `/me`** | Optional "My questions" history | Q2.8 |
-| **Staff view** (parent §9, not started) | Pulled forward as surface B. Needs a new staff identity (`store_staff`). | D6; Q0.1–0.2 |
+| **Staff training view** (Step 13, built: `StaffShell`, `StaffViewToggle`) | Adds a "Customers are asking" section and a staff Ask box. Customer-view preview shows the Ask bar but doesn't log questions. | D6 |
+| **Training notes** (`product_training.common_questions`) | Owners can promote a customer question theme into the curated training Q&A | Q0.9 |
+| **Staff page / training progress** (Step 13f) | Possibly show staff Ask usage alongside "12 of 40 reviewed" | Q0.7 |
 | **PicksBar** (fixed to the bottom) | Shares the bottom of the screen with the Ask bar, so the two need to be combined or stacked | Q4.9 (§9.4) |
 | **Data intelligence** (parent §8) | New signal: question themes per product, brand and category, under the same governance. Cross-store theme reports would need opt-in. | Q7.x |
 | **Pricing tiers** (parent §5.6 / §11.1) | AI answers have a per-call cost, so tier limits are needed | Q8.x |
@@ -130,7 +131,7 @@ Principle: **questions are behavioural data, not identity.** Keep them PII-free 
 
 - `product_questions`
   - fields: `id`, `store_id`, `product_id`, `tag_id`, `session_id`, `asked_by` (`customer` | `staff`), `staff_id` (nullable), `question_text` (redacted), `pii_redacted` (bool), `answer_text`, `sources_used`, `confidence`, `status` (`answered` | `submitted` | `owner_answered`), `reviewed_at` (nullable), `helpful` (thumbs, nullable), `theme_id`, `created_at`
-- `store_staff`: `id`, `store_id`, `email`, `display_name`, `active`, `invited_at`, `last_seen_at`. Staff sign in by magic link on the tap page. This is separate from `store_admins` (admin panel) and `customers` (shoppers).
+- `staff_id` references the existing `store_staff` table (migration 0017). No new identity tables are needed.
   - Optional `customer_id`, only when the customer is signed in and has opted in, mirroring how `customer_taps` is kept separate (Q7.2).
 - `question_themes`
   - fields: `id`, `store_id`, `label`, `kind` (fit, materials, allergen, occasion, care, price, availability, …), `product_id` nullable for store-wide themes, `question_count`, `last_asked_at`
@@ -175,13 +176,15 @@ It never invents allergens, materials, certifications or medical claims. In regu
 Each question has a **proposed default** so you can answer "agree," or override it. Questions marked ★ block the first build slice.
 
 ### 9.0 Round 2: new questions raised by the round 1 answers (★ = blocks build)
-1. ★ **Staff accounts:** create a new `store_staff` table with magic-link sign-in on the tap page (proposed), or reuse `store_admins` with a new `staff` role and password? Who invites staff: owner only, or managers too? Can staff also use the admin panel (e.g. to view the Questions tab), or only staff mode on the tap page?
-2. ★ **Is there a manager role** between owner and staff? You said "managers and owners." Today every `store_admins` login is effectively an owner. Proposed: add an `owner | manager` role. Managers get everything except billing and staff invites.
+1. ✅ *Resolved: the staff experience already exists (Step 13).* ~~**Staff accounts.**~~
+2. ★ **Who can see the Questions tab?** Manager and co-manager roles are in [PR #12](https://github.com/a3mckay/nfc-tap-project/pull/12) (open). Proposed permissions: Owner ✅ · Manager ✅ · Co-manager view only (like training progress). Answering submitted questions: Owner and Manager. Should a co-manager be able to answer too, since they can already edit training notes and customer content?
 3. ★ **What happens to submitted questions?** Proposed: the owner answers in the Questions tab, and the answer is saved to the product FAQ so the AI uses it from then on. Can the customer get the answer back? Only possible if they're signed in. Proposed: if they're signed in, notify them through their NotifyMe channel. Otherwise nothing.
 4. **Does the Ask Us card (WhatsApp/SMS) stay anywhere?** Options: (a) remove it, (b) keep it under "More details," (c) offer it inside the chat as "Prefer to message the store?" Proposed: (c), but only if the store has numbers set.
 5. **Reviewed state:** does "review the questions" mean an explicit *Mark reviewed* per product (which clears the "new" badge), or does opening the product count as reviewed? Proposed: opening the product clears "new," and submitted questions stay flagged until they're answered or dismissed.
-6. **Training view contents:** confirm the order: (1) common questions with counts and suggested answers, (2) talking points, (3) internal notes, (4) stock across locations/sizes, (5) the Ask box. Anything missing, such as the price-match policy or alterations?
-7. **Staff questions in the owner view:** shown alongside customer questions with a "Staff" label (proposed), or in a separate tab? Should owners see *which* staff member asked?
+6. **Where does "Customers are asking" go in the training view?** Proposed: directly under the one-line sell, so it works at a glance during a sale, with the staff Ask box pinned at the bottom like the customer Ask bar.
+7. **Staff questions in the owner view:** shown alongside customer questions with a "Staff" label (proposed), or in a separate tab? Should owners see *which* staff member asked? (They already see per-person training progress, so naming them is consistent.)
+9. **Promote to training Q&A:** should promoting a theme into `product_training.common_questions` be manual (proposed), or should the top 3 themes fill it automatically when it's empty?
+10. **Customer Ask vs. training data:** can the *customer* AI use `product_training` fields (e.g. "who it's for," "closest alternative"), or are they staff-only like `internal_staff_notes`? Proposed: staff-only by default, with a per-store setting to allow it, because owners wrote them expecting only staff to read them.
 8. **PII notice wording:** shown to the customer in the chat, and as a flag on the owner's verbatim view. Is a plain "contact details removed" enough, or should we name the type ("phone number removed")? Proposed: name the type.
 
 
@@ -204,17 +207,12 @@ Each question has a **proposed default** so you can answer "agree," or override 
 11. **Stock questions** ("do you have a 9?"): answer from live per-location inventory? Proposed: yes, for this store's location only.
 
 ### 9.3 Associate Assist: functionality
-1. 🟡 *Partly resolved, D6: email sign-in.* **How does staff identity work?** Options:
-   - (a) staff sign-in on the tap page, with a magic link per staff email
-   - (b) a store PIN that unlocks staff mode on that device
-   - (c) a separate staff app or URL
-
-   Proposed: (b) for speed, then (a) when staff-level analytics are needed.
-2. **Does an associate tap the same tag** and get staff mode, or scan from a staff app? Proposed: the same tag. A remembered staff device shows staff mode automatically.
-3. **What can staff see that customers can't?** Proposed: internal notes, cross-location stock, margin or price-floor notes (if the owner adds them), and the raw recent questions for this product.
-4. **Are staff questions logged and counted with customer questions?** Proposed: logged, tagged `asked_by=staff`, and shown separately. They're a useful training signal ("staff keep asking X").
-5. **Training mode:** browse by product or category, a quiz format, or both? Proposed: browse only for now.
-6. **Should owners be able to "pin" an official answer** that both the AI and staff will always use?
+1. ✅ *Resolved by Step 13.* ~~**Staff identity**~~: approved emails, emailed sign-in link, handoff to the tap page.
+2. ✅ *Resolved by Step 13.* ~~**Same tag or a staff app?**~~ Same tag; a signed-in staff member sees the training view by default.
+3. **What can the staff Ask box use that the customer one can't?** Proposed: `product_training`, `internal_staff_notes`, and the raw recent questions for this product. Cross-location stock stays deferred (see staff-experience.md, "Live store data").
+4. ✅ *Proposed in §3.B.* ~~**Are staff questions logged?**~~ Yes, `asked_by = staff`, and kept out of the customer counts.
+5. ✅ *Resolved by Step 13 (browse by tapping; the staff home page lists what's left). Quizzes are planned separately.* ~~**Training mode format.**~~
+6. **Should owners be able to "pin" an official answer** that both the AI and staff will always use? (This may simply be the promoted `common_questions` entry; see Q0.9.)
 
 ### 9.4 Customer Ask: UI
 1. ✅ *Resolved, D4.* ~~**Where does Ask live on the page?**~~
