@@ -37,9 +37,17 @@ Round 2 (2026-10-02):
 | D13 | **Training view placement:** "Customers are asking" goes directly under the one-line sell, and the staff Ask box is pinned at the bottom. |
 | D14 | **The customer AI may use staff training notes,** but it must never sound like selling. No upsell or cross-sell phrasing, no "you should also get…", no revealing that the tool exists to drive bigger baskets. It uses the *facts* in training notes (fit, who it's for, alternatives) only when they answer the customer's question. Internal sales notes (e.g. `worth_the_price` as a pitch, margin, stock pressure) are never quoted or paraphrased as persuasion. See §6.1. |
 
----
+Round 3 (2026-10-02):
 
-## 1. Why
+| # | Decision |
+|---|---|
+| D15 | **First pilot:** none signed yet. Design for a **shoe / menswear boutique or specialty store**, so demo content and the quality test set use footwear and menswear products. (Note: Sarah sees these as more catalogue-driven than inspiration-driven, so fit, sizing, care and comparison questions will dominate. That suits a Q&A tool.) |
+| D16 | **Cost:** the founder covers AI costs during a test period, so no tier gating yet. **Model:** the most value-oriented option. Customer and staff answers use **Claude Haiku 4.5** (`claude-haiku-4-5`, $1 / $5 per million input/output tokens), streamed, with the store/product context prompt-cached. Theme grouping runs as a background batch job. If Haiku fails the quality test set (§9.6 Q6), step up to Claude Sonnet 5.5 for the answer route only. |
+| D17 | **Bottom of the screen:** the picks bar and the Ask bar both stay, as separate items that aren't merged (see §3.A "Bottom-bar layout"). |
+| D18 | **Store policies:** owners and managers enter short free-text policies (returns, exchanges, alterations, price match, gift wrap) in admin **Settings**, and the AI cites them. |
+| D19 | **Disclosure:** do the legal minimum (see §7.1). Final wording is subject to the legal review already in ACTION_ITEMS. |
+| D20 | **Data ownership:** each store sees **only its own** question data. The founder (super admin) can see question data across all stores, to build cross-store products later (parent PRD §8). Stores aren't shown each other's data. This must be disclosed in the store Terms of Service. |
+
 
 Today, a tap tells us a customer was curious. It doesn't tell us *why*. And when a customer has a question, the only path is **Ask Us**, which sends them to a human over WhatsApp or SMS. That only works when someone is free to answer, and we capture nothing from it.
 
@@ -77,6 +85,11 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 ### 3.A Customer Ask (tap page)
 
 **Flow:** tap → header carousel (photos, then video) → name/price → 3 key points → sticky **"Ask about this ✦"** bar → half-screen chat with 2–3 suggested questions → streamed answer grounded in the store's data → follow-ups. Customers can minimize the chat to the bar and reopen it. If the AI can't answer, the question is **submitted to the store** (D5).
+
+**Bottom-bar layout (D17):** both bars stay on screen without competing.
+- **Proposed:** the Ask bar is the full-width bottom bar. The picks bar becomes a small floating "Your picks (3)" pill that sits just above it, on the right, and only appears once the customer has reacted to something. Tapping the pill opens the picks tray, as it does today.
+- When the chat is open (half sheet), the picks pill hides. Minimizing the chat brings it back.
+- Alternatives, if the pill feels cramped: (b) stack two slim bars, with picks above Ask; (c) put picks in the page header next to the store logo.
 
 **Draft behaviour:**
 - Suggested-question chips: seeded from the product's FAQ and enrichment at first, then replaced by the most-asked real questions once there's data.
@@ -161,6 +174,8 @@ The AI answers only from these sources, **in priority order**. When two sources 
 
 `internal_staff_notes` are used by the **staff** Ask box only.
 
+**Using the existing AI research tool (founder's preference):** there won't be a seed list of real questions at launch, so the product data has to carry the answers. The existing Brave-grounded "Generate" tool (Step 5) already researches each product to fill enrichment fields. **Proposal:** extend it to also save a short **product fact sheet** (materials, fit, care, sizing, origin, certifications, with the source URL for each fact). The AI uses the fact sheet at priority 3, alongside imported data. It never searches the web while a customer waits, because that would be too slow and impossible to vet.
+
 It never invents allergens, materials, certifications or medical claims. In regulated categories (food allergens, alcohol, supplements, cannabis) it defaults to "Check the label / ask staff" unless the fact is explicitly in the data (Q6.4). Each answer can show "Based on: product details · staff notes" so the customer knows where it came from.
 
 ### 6.1 Customer-facing tone (D14)
@@ -177,6 +192,14 @@ It never invents allergens, materials, certifications or medical claims. In regu
 - **Abuse:** per-session and per-store rate limits, prompt-injection hardening, and moderation for off-topic or abusive input (Q4.5)
 - **Cost:** model choice and caching must keep the per-question cost well under 1¢ on average (Q8.2)
 - **PIPEDA:** the privacy policy must cover the storage of free-text questions. This adds to the existing legal-review item.
+
+### 7.1 Legal minimum for the chat (not legal advice: confirm in the PIPEDA review)
+What the law seems to require, and what we'll do:
+- **PIPEDA (openness + consent):** questions are saved, and could contain personal details. Because we strip PII before saving and key questions to an anonymous session, the obligation is mainly *openness*: say that questions are saved and why, and link to the privacy policy. **We'll show one line under the input:** "Answers are AI-generated. Questions are saved anonymously to help {store} improve. Privacy" (with "Privacy" as a link).
+- **Don't pretend to be human.** No federal AI-disclosure law is in force in Canada, but presenting a bot as a person risks a misleading-representation complaint under the Competition Act. Saying "AI-generated" covers this. No persona names, no "I'm Sarah from the store."
+- **Quebec (Law 25):** if Quebec shoppers use it, the privacy policy must describe the use of the technology. That's covered by the privacy policy update. We make no automated decisions about individuals, so the extra Law 25 notice rules shouldn't apply.
+- **Privacy policy and store ToS updates:** cover saved questions, PII stripping, retention, and the founder's cross-store access (D20).
+- **Not needed:** a consent checkbox, a pop-up, or an age gate. We don't collect identity, and the tool isn't aimed at children.
 
 ## 8. Success metrics (draft)
 
@@ -210,12 +233,12 @@ Each question has a **proposed default** so you can answer "agree," or override 
 
 1. ✅ *Resolved, D1.* ~~**Which surface ships first?**~~ Proposed: **C-lite + A**. Customer Ask captures questions, and owners get a minimal Questions page. Associate Assist (B) follows, because it depends on staff identity, which doesn't exist yet.
 2. ✅ *Resolved, D2: full build.* ~~**Is this V1 (pre-launch) or post-launch?**~~ It competes with the open V1 gaps: dwell capture, orders sync, Web NFC mapping, onboarding. Proposed: build a thin slice for *demos* now, because it's the strongest pitch hook. Harden it after the first pilots.
-3. **Who is the first pilot?** A boutique (current ICP), or a specialty grocer or wine shop, where "is this gluten free?" is the sharpest use case? This also affects parent PRD §2 vertical priority.
+3. ✅ *Resolved, D15.*
 4. **Is this a TapShelf feature or a product line?** Sarah framed it as "shelf-side data" sold three ways. Does it get its own name and pricing, or is it just part of the tiers?
 
 ### 9.2 Customer Ask: functionality
 1. ✅ *Resolved, D3.* ~~**How short is the static page?**~~ Proposed: hero, 3 key points, 1 video, Ask, with "More details" collapsed. Do we keep reviews above the fold?
-2. **Which fields does a "key point" come from?** Reuse `reasons_to_buy`, or add a new problem-first field ("Great when…")?
+2. ★ **Key points (the 3 bullets shown on the page, not AI answers).** These replace the long text block above the Ask bar. Options: (a) reuse the existing `reasons_to_buy` (often feature-led today); (b) add a new problem-first field, "Great when…", written by owners/managers or drafted by the existing Brave-grounded AI tool, which owners can edit; (c) pick the 3 automatically from whatever fields exist. Proposed: (b), falling back to `reasons_to_buy` when it's empty.
 3. **One question or a conversation?** Proposed: a short conversation, capped at about 5 turns per product per session.
 4. **Should suggested-question chips show counts** ("12 people asked this")? That's social proof, but it could look empty early on.
 5. ✅ *Resolved, D14 / §6.1: only when the question calls for it, phrased as information.*
@@ -248,7 +271,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 6. **Voice input** (the phone keyboard mic already works): add a dedicated mic button? Proposed: no, rely on the keyboard mic.
 7. **Should "Based on:" source chips be visible by default** or behind a tap?
 8. **Feedback control:** thumbs up/down on every answer, or only after the last one?
-9. **PicksBar conflict:** the PicksBar is already fixed to the bottom of the screen. Proposed: merge them into one bottom bar, with Ask on the left and the picks thumbnails on the right, so they don't stack.
+9. 🟡 *D17: keep both bars.* Confirm the proposed layout in §3.A.
 
 ### 9.5 Question Insights (admin): functionality & UI
 1. ✅ *Resolved, D7.* ~~**Where does it go in the nav?**~~ A top-level "Questions" item, or a tab in Analytics? Proposed: top-level. It's an action list, not just a chart.
@@ -263,7 +286,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 
 ### 9.6 Grounding, content & quality
 1. **May the AI use general product knowledge** (e.g. what "merino" is), or only store data? Proposed: general knowledge for definitions only, never for product-specific claims.
-2. **Store policies** (returns, alterations, gift wrap): a new settings section the AI can cite? Proposed: yes, as a short free-text field per store.
+2. ✅ *Resolved, D18.*
 3. **Should AI copy prompts move to problem-first framing now**, independent of the chat?
 4. ✅ *Resolved, D9.* ~~**Regulated categories:**~~ for allergens, alcohol, supplements, cannabis and health claims, do we refuse unless the fact is explicitly in the data? Proposed: yes, and always add "check the label."
 5. **Brand or vendor content:** Sarah suggested "if you can bring it over, bring it over." Do we ingest the brand's own product pages or Q&A? Who approves that?
@@ -272,13 +295,13 @@ Each question has a **proposed default** so you can answer "agree," or override 
 ### 9.7 Privacy & data
 1. ✅ *Resolved, D10.* ~~**PII redaction:**~~ redact before storage (proposed), or store raw and redact on read?
 2. **Link questions to signed-in customers?** Proposed: only with opt-in, in a separate table, never in `product_questions`.
-3. **Can questions feed cross-store reports** (parent §8 Models 1–2) under the existing `data_sharing_opted_in` flag, or do they need a separate opt-in?
+3. ✅ *Resolved, D20.*
 4. **Retention** for question text: 24 months like taps, or shorter?
-5. **Customer disclosure:** what notice appears in the chat? For example: "Answers are AI-generated from {store}'s product info. Questions are saved anonymously to help the store improve."
+5. ✅ *Resolved, D19 / §7.1.*
 
 ### 9.8 Business & cost
-1. **Which tiers include Customer Ask, Associate Assist and Insights?** Proposed: Ask with a small free allowance on all tiers. Insights and Assist on paid tiers.
-2. **Cost ceiling per question**, and which model? (Run `claude-api` model and pricing guidance when we get here.)
+1. 🟡 *Deferred, D16: no gating during the founder-funded test period.*
+2. ✅ *Resolved, D16.*
 3. **Does this change the pricing story?** "Cheaper than a part-time associate" becomes stronger with Assist. Does it change the price points in parent §5.6?
 4. **Is Changeroom** (Sarah's multi-brand marketplace, 2027) a design partner for this? If so, brand-level questions across many stores become important earlier.
 
