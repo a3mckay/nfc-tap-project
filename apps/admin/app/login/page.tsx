@@ -64,7 +64,11 @@ export default async function LoginPage({ searchParams }: PageProps) {
               autoComplete="current-password"
               style={{ ...inputStyle, ...(error ? { borderColor: "#fca5a5" } : {}) }}
             />
-            {error && <p style={{ marginTop: "0.4rem", fontSize: "0.8rem", color: "#c00" }}>Incorrect email or password</p>}
+            {error && (
+              <p style={{ marginTop: "0.4rem", fontSize: "0.8rem", color: "#c00" }}>
+                {error === "role" ? "Your access to this store has changed. Sign in again." : "Incorrect email or password"}
+              </p>
+            )}
           </div>
 
           <button

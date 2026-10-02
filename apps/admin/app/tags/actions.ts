@@ -10,7 +10,7 @@ export async function provisionTagsAction(
   countRaw: string,
 ): Promise<{ error?: string; created?: number }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "catalog");
   if (!store) return { error: "Store not found" };
 
   const count = parseProvisionCount(countRaw);

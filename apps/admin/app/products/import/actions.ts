@@ -18,7 +18,7 @@ export async function importProductsCsvAction(
   csv: string,
 ): Promise<CsvImportResult> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "catalog");
   if (!store) return { added: 0, skipped: 0, errors: ["Store not found"] };
 
   const lines = csv.split(/\r?\n/).filter((l) => l.trim().length > 0);

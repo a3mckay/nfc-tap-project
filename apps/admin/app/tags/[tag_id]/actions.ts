@@ -15,7 +15,7 @@ export async function assignTagAction(
   productId: string | null,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "catalog");
   if (!store) return { error: "Store not found" };
 
   const updated = await assignTagToProduct(pool, tagId, store.id, productId || null);
@@ -30,7 +30,7 @@ export async function setTagStatusAction(
   status: TagStatus,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "catalog");
   if (!store) return { error: "Store not found" };
 
   const updated = await setTagStatus(pool, tagId, store.id, status);

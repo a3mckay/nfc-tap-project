@@ -10,7 +10,7 @@ export async function setConsentAction(
   optedIn: boolean,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "store_settings");
   if (!store) return { error: "Store not found" };
   await setDataSharingConsent(pool, store.id, optedIn);
   revalidatePath("/settings");
@@ -22,7 +22,7 @@ export async function setPlatformAction(
   platform: StorePlatform,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "store_settings");
   if (!store) return { error: "Store not found" };
   await setStorePlatform(pool, store.id, platform);
   revalidatePath("/settings");
@@ -36,7 +36,7 @@ export async function saveContactInfoAction(
   smsRaw: string,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "store_settings");
   if (!store) return { error: "Store not found" };
   const whatsapp = normalizePhone(whatsappRaw);
   const sms      = normalizePhone(smsRaw);

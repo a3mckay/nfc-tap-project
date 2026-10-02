@@ -28,7 +28,7 @@ export interface SyncResult {
 
 export async function syncProductsAction(shop: string): Promise<SyncResult> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "catalog");
   if (!store) return { added: 0, updated: 0, archived: 0, error: "Store not found" };
   if (!store.shopify_access_token) return { added: 0, updated: 0, archived: 0, error: "No Shopify access token" };
 
@@ -98,7 +98,7 @@ export async function addManualProductAction(
   if (!title.trim()) return { error: "Title is required" };
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "catalog");
   if (!store) return { error: "Store not found" };
 
   const product = await insertManualProduct(
@@ -121,7 +121,7 @@ export async function setInventoryAction(
   if (!Number.isInteger(quantity) || quantity < 0) return { error: "Invalid quantity" };
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "catalog");
   if (!store) return { error: "Store not found" };
 
   await setProductInventoryManual(pool, productId, store.id, quantity);

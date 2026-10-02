@@ -58,6 +58,7 @@ export async function consumeStaffSignInToken(
       where t.token_hash = $1
         and t.used_at is null
         and t.expires_at > now()
+        and t.purpose = 'sign_in'
         and s.id = t.staff_id
         and s.revoked_at is null
       returning t.staff_id, s.store_id, st.shopify_shop_domain as store_domain`,
