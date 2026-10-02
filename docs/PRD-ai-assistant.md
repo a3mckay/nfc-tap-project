@@ -2,12 +2,31 @@
 
 | | |
 |---|---|
-| Status | **Draft v0.1 — in discovery.** Not approved for build. Open questions are in §9. |
+| Status | **Draft v0.2 — in discovery.** Priority: full build once approved (decision D2). Open questions are in §9; decisions so far are in §0. |
 | Parent spec | [`docs/PRD-v4.md`](PRD-v4.md) (roadmap §9, decision §11.5) |
 | Origin | Advisory conversation with Sarah Young (Servizio Group), 2026-10-01 |
-| Updated | 2026-10-02 |
+| Updated | 2026-10-02 (round 1 answers) |
 
 > **For a Claude session:** this is a discovery draft. Don't build from it until §9 is resolved and the status above says *Approved*. When it's approved, its build steps move into PRD-v4 §7.
+
+---
+
+## 0. Decisions log
+
+Round 1 (2026-10-02), answering the ★ questions from v0.1:
+
+| # | Decision |
+|---|---|
+| D1 | **Ship all three surfaces.** Customer Ask, the owner Questions tab, and staff access to the same data and AI. |
+| D2 | **Full build, not a demo slice.** Once this spec is approved, it becomes a new build phase in PRD-v4 §7. |
+| D3 | **Tap page:** keep today's header carousel. Photos come first, and the video stays a carousel slide; it isn't autoplayed, so the < 2 s target holds. Below the header: name/price, 3 key points, then Ask. Long-form details collapse behind "More details." |
+| D4 | **Ask placement:** a sticky "Ask about this ✦" bar near the bottom of the page that opens a half-screen chat. Customers can minimize the chat back to the bar and reopen it, and the conversation is kept for the session. |
+| D5 | **No answer available:** the AI replies "Thanks for asking. We don't have an answer to that one yet, but we've sent your question to {store}." The question is marked **Submitted** and goes into the owner's review queue. The AI doesn't hand off to WhatsApp/SMS. |
+| D6 | **Staff mode:** staff sign in by email and then see the **training view** (common questions, talking points, internal notes) *and* the **customer view** of the product. Staff can ask the AI questions, for training or during a live sale. ⚠️ No staff role exists today; see §3.B and Q3.1. |
+| D7 | **Questions tab** in the admin. It's its own nav item. Any product with at least one question appears automatically, with counts. Owners click a product to review its questions. |
+| D8 | **Grouping:** automatic at two levels: product themes, rolling up into store-wide themes. Owners can rename, merge and split. Inside a product, the **default view is grouped summaries**, with a toggle to see questions **verbatim**. |
+| D9 | **Regulated facts** (allergens, alcohol, supplements, health): the AI answers only from explicit store data and always adds "check the label." |
+| D10 | **PII:** the chat never asks for personal details. Anything that looks like PII is removed **before saving**. The saved record keeps a placeholder (e.g. `[phone removed]`) and a `pii_redacted` flag. The customer is told when this happens, and the owner sees the flag. |
 
 ---
 
@@ -48,11 +67,12 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 
 ### 3.A Customer Ask (tap page)
 
-**Flow:** tap → short, product-led page → "Ask about this" input with 2–3 suggested questions → streamed answer grounded in the store's data → follow-ups → a path to a human (the current Ask Us) when the AI can't answer or the customer wants a person.
+**Flow:** tap → header carousel (photos, then video) → name/price → 3 key points → sticky **"Ask about this ✦"** bar → half-screen chat with 2–3 suggested questions → streamed answer grounded in the store's data → follow-ups. Customers can minimize the chat to the bar and reopen it. If the AI can't answer, the question is **submitted to the store** (D5).
 
 **Draft behaviour:**
 - Suggested-question chips: seeded from the product's FAQ and enrichment at first, then replaced by the most-asked real questions once there's data.
-- Answers draw only on approved sources (§6). When the AI isn't confident, it says so and offers WhatsApp or SMS, or "ask an associate nearby."
+- Answers draw only on approved sources (§6). When the AI isn't confident, it doesn't guess. It says: "Thanks for asking. We don't have an answer to that one yet, but we've sent your question to {store}." The question is saved as `submitted`.
+- The chat never asks for contact details or other personal information. If a customer types something that looks like PII, it's removed before saving, and the chat tells them: "We removed contact details from your message to keep it private." 
 - Answers are short (2–4 sentences, sized for a phone) and written in the store's voice.
 - Can point to other products in this store ("we also carry it in a wider fit") without becoming a cross-sell widget. See Q2.5.
 - Works anonymously, keyed to the `session_id` cookie. A signed-in customer can see their past questions in `/me` (Q2.8).
@@ -62,22 +82,26 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 This is the parent PRD's §9 "staff view layer," pulled forward and made AI-led.
 
 **Draft behaviour:**
-- An associate taps the same tag. A staff identity (Q3.1) switches the page into staff mode.
+- Staff sign in with their email (D6) on `tapshelf.store`. Once signed in, tapping any of the store's tags opens **staff mode**, which has two tabs: **Training** and **Customer view** (exactly what the shopper sees).
+- **This needs a new staff identity.** Today `store_admins` holds admin-panel logins (email + password, `store`/`super` roles), and `customers` holds shopper magic-link logins. Neither is a staff role. Proposal: a `store_staff` table (store, email, name, active), with staff invited by the owner from admin Settings and signing in by magic link on the tap page. See Q0.1 (§9.0).
 - Staff mode shows:
   1. **"Customers usually ask…"**: the top grouped questions for this product, with counts and suggested answers
   2. talking points written problem-first
   3. `internal_staff_notes`
   4. inventory across locations and sizes
-  5. an "Ask" box for staff, with the same engine plus access to internal notes
+  5. an "Ask" box for staff, with the same engine plus access to internal notes. Use it to learn a product or to answer a customer during a sale.
 - Training mode: browse the most-asked questions by product or category without a tag, for onboarding new staff.
 
 ### 3.C Question Insights (admin)
 
 **Draft behaviour:**
-- A new **Questions** area in the admin (Q5.1 covers whether it's top-level or under Analytics).
+- A new top-level **Questions** tab in the admin (D7).
+- **Landing view:** a list of every product with at least one question, added automatically. Each row shows: product, total questions, new since the owner last reviewed, submitted (unanswered) count, top theme, and last asked. Rows with unreviewed or submitted questions sort first.
+- **Product view** (click a product): grouped theme summaries by default, each with a count and the AI's typical answer. A **Verbatim** toggle shows each question as asked, with the AI's answer, date, asked-by (customer/staff), helpful rating, and the `PII removed` flag where it applies.
+- **Submitted queue:** questions the AI couldn't answer. The owner writes an answer, which is saved to the product FAQ so the AI can use it from then on.
 - **Themes view:** questions grouped into themes (e.g. "Sizing / runs small," "Gluten / allergens," "Occasion: wedding"), each with a count, trend, products affected, and how well the AI answered.
 - **Per product:** a "Common questions about this product" panel on the enrichment editor, with counts. One click turns a question into an FAQ entry or adds the answer to enrichment.
-- **Content gaps:** questions the AI couldn't answer, or answered with low confidence, sorted by frequency. This is the owner's to-do list.
+- **Content gaps:** the submitted queue plus low-confidence answers, sorted by frequency. This is the owner's to-do list.
 - **Visibility:** each panel appears as soon as it has one question, with the count stated ("3 questions so far"). Grouping gets better with volume, so a small-sample notice appears below a threshold (Q5.4).
 - Raw questions can be read and searched by owners and managers. Staff see grouped views only (Q5.6).
 
@@ -85,8 +109,8 @@ This is the parent PRD's §9 "staff view layer," pulled forward and made AI-led.
 
 | Existing feature | Proposed change | Open? |
 |---|---|---|
-| **Tap page structure** (parent §5.4) | Shorter static section: hero, 3 key points, 1 video, then **Ask**. Long-form fields (backstory, materials, care, sustainability) collapse behind "More details" or are used only by the AI. | Q1.1–1.3 |
-| **Ask Us** (WhatsApp / SMS) | Becomes the human handoff *inside* Ask, not a standalone card. It's still shown when AI is off for the store. | Q2.6 |
+| **Tap page structure** (parent §5.4) | Keep the header carousel (photos, then video slide). Below it: name/price, 3 key points, then **Ask** (sticky bar). Long-form fields (backstory, materials, care, sustainability) collapse behind "More details." | D3; Q2.2 |
+| **Ask Us** (WhatsApp / SMS) | The AI no longer hands off to it (D5). Does the card stay anywhere? | Q0.4 |
 | **FAQ accordion** (`enrichments.faq`) | Becomes a source for the AI and the seed for suggested questions. Real questions can be promoted into it. Possibly no longer rendered as a static list. | Q1.4 |
 | **AI copy generation** (Step 5) | Prompts move toward problem-first framing ("what it solves, when to use it") per Sarah's advice. The same grounding (Brave) could add material facts for the AI. | Q6.3 |
 | **Enrichment editor** | Adds a "Common questions" panel and a "turn into FAQ" action | — |
@@ -94,7 +118,8 @@ This is the parent PRD's §9 "staff view layer," pulled forward and made AI-led.
 | **Reactions / picks bar / offers** | Unchanged in this version. Possible trigger: an offer `after_question`. | Q2.9 |
 | **NotifyMe** | An unanswered question can offer "Get notified when the store answers." | Q2.7 |
 | **Customer accounts / `/me`** | Optional "My questions" history | Q2.8 |
-| **Staff view** (parent §9, not started) | Pulled forward as surface B | Q3.x |
+| **Staff view** (parent §9, not started) | Pulled forward as surface B. Needs a new staff identity (`store_staff`). | D6; Q0.1–0.2 |
+| **PicksBar** (fixed to the bottom) | Shares the bottom of the screen with the Ask bar, so the two need to be combined or stacked | Q4.9 (§9.4) |
 | **Data intelligence** (parent §8) | New signal: question themes per product, brand and category, under the same governance. Cross-store theme reports would need opt-in. | Q7.x |
 | **Pricing tiers** (parent §5.6 / §11.1) | AI answers have a per-call cost, so tier limits are needed | Q8.x |
 | **Performance** (parent §6.2) | The page must still load in < 2 s. The Ask UI loads lazily, and the AI call never blocks first paint. | — |
@@ -104,7 +129,8 @@ This is the parent PRD's §9 "staff view layer," pulled forward and made AI-led.
 Principle: **questions are behavioural data, not identity.** Keep them PII-free like `tap_events`.
 
 - `product_questions`
-  - fields: `id`, `store_id`, `product_id`, `tag_id`, `session_id`, `asked_by` (`customer` | `staff`), `question_text` (redacted), `answer_text`, `sources_used`, `confidence`, `handed_off` (bool), `helpful` (thumbs, nullable), `theme_id`, `created_at`
+  - fields: `id`, `store_id`, `product_id`, `tag_id`, `session_id`, `asked_by` (`customer` | `staff`), `staff_id` (nullable), `question_text` (redacted), `pii_redacted` (bool), `answer_text`, `sources_used`, `confidence`, `status` (`answered` | `submitted` | `owner_answered`), `reviewed_at` (nullable), `helpful` (thumbs, nullable), `theme_id`, `created_at`
+- `store_staff`: `id`, `store_id`, `email`, `display_name`, `active`, `invited_at`, `last_seen_at`. Staff sign in by magic link on the tap page. This is separate from `store_admins` (admin panel) and `customers` (shoppers).
   - Optional `customer_id`, only when the customer is signed in and has opted in, mirroring how `customer_taps` is kept separate (Q7.2).
 - `question_themes`
   - fields: `id`, `store_id`, `label`, `kind` (fit, materials, allergen, occasion, care, price, availability, …), `product_id` nullable for store-wide themes, `question_count`, `last_asked_at`
@@ -148,19 +174,29 @@ It never invents allergens, materials, certifications or medical claims. In regu
 
 Each question has a **proposed default** so you can answer "agree," or override it. Questions marked ★ block the first build slice.
 
-### 9.1 Scope & sequencing
-1. ★ **Which surface ships first?** Proposed: **C-lite + A**. Customer Ask captures questions, and owners get a minimal Questions page. Associate Assist (B) follows, because it depends on staff identity, which doesn't exist yet.
-2. ★ **Is this V1 (pre-launch) or post-launch?** It competes with the open V1 gaps: dwell capture, orders sync, Web NFC mapping, onboarding. Proposed: build a thin slice for *demos* now, because it's the strongest pitch hook. Harden it after the first pilots.
+### 9.0 Round 2: new questions raised by the round 1 answers (★ = blocks build)
+1. ★ **Staff accounts:** create a new `store_staff` table with magic-link sign-in on the tap page (proposed), or reuse `store_admins` with a new `staff` role and password? Who invites staff: owner only, or managers too? Can staff also use the admin panel (e.g. to view the Questions tab), or only staff mode on the tap page?
+2. ★ **Is there a manager role** between owner and staff? You said "managers and owners." Today every `store_admins` login is effectively an owner. Proposed: add an `owner | manager` role. Managers get everything except billing and staff invites.
+3. ★ **What happens to submitted questions?** Proposed: the owner answers in the Questions tab, and the answer is saved to the product FAQ so the AI uses it from then on. Can the customer get the answer back? Only possible if they're signed in. Proposed: if they're signed in, notify them through their NotifyMe channel. Otherwise nothing.
+4. **Does the Ask Us card (WhatsApp/SMS) stay anywhere?** Options: (a) remove it, (b) keep it under "More details," (c) offer it inside the chat as "Prefer to message the store?" Proposed: (c), but only if the store has numbers set.
+5. **Reviewed state:** does "review the questions" mean an explicit *Mark reviewed* per product (which clears the "new" badge), or does opening the product count as reviewed? Proposed: opening the product clears "new," and submitted questions stay flagged until they're answered or dismissed.
+6. **Training view contents:** confirm the order: (1) common questions with counts and suggested answers, (2) talking points, (3) internal notes, (4) stock across locations/sizes, (5) the Ask box. Anything missing, such as the price-match policy or alterations?
+7. **Staff questions in the owner view:** shown alongside customer questions with a "Staff" label (proposed), or in a separate tab? Should owners see *which* staff member asked?
+8. **PII notice wording:** shown to the customer in the chat, and as a flag on the owner's verbatim view. Is a plain "contact details removed" enough, or should we name the type ("phone number removed")? Proposed: name the type.
+
+
+1. ✅ *Resolved, D1.* ~~**Which surface ships first?**~~ Proposed: **C-lite + A**. Customer Ask captures questions, and owners get a minimal Questions page. Associate Assist (B) follows, because it depends on staff identity, which doesn't exist yet.
+2. ✅ *Resolved, D2: full build.* ~~**Is this V1 (pre-launch) or post-launch?**~~ It competes with the open V1 gaps: dwell capture, orders sync, Web NFC mapping, onboarding. Proposed: build a thin slice for *demos* now, because it's the strongest pitch hook. Harden it after the first pilots.
 3. **Who is the first pilot?** A boutique (current ICP), or a specialty grocer or wine shop, where "is this gluten free?" is the sharpest use case? This also affects parent PRD §2 vertical priority.
 4. **Is this a TapShelf feature or a product line?** Sarah framed it as "shelf-side data" sold three ways. Does it get its own name and pricing, or is it just part of the tiers?
 
 ### 9.2 Customer Ask: functionality
-1. ★ **How short is the static page?** Proposed: hero, 3 key points, 1 video, Ask, with "More details" collapsed. Do we keep reviews above the fold?
+1. ✅ *Resolved, D3.* ~~**How short is the static page?**~~ Proposed: hero, 3 key points, 1 video, Ask, with "More details" collapsed. Do we keep reviews above the fold?
 2. **Which fields does a "key point" come from?** Reuse `reasons_to_buy`, or add a new problem-first field ("Great when…")?
 3. **One question or a conversation?** Proposed: a short conversation, capped at about 5 turns per product per session.
 4. **Should suggested-question chips show counts** ("12 people asked this")? That's social proof, but it could look empty early on.
 5. **Can answers mention other products in the store?** Proposed: yes, but only in response to the question (alternatives, sizes, pairings), never pushed unprompted.
-6. ★ **Human handoff:** when the AI can't answer, what do we offer? WhatsApp or SMS (existing), "find an associate" (no tech needed), or both? Should the handoff message include the customer's question and the AI's attempt?
+6. ✅ *Resolved, D5.* ~~**Human handoff:**~~ when the AI can't answer, what do we offer? WhatsApp or SMS (existing), "find an associate" (no tech needed), or both? Should the handoff message include the customer's question and the AI's attempt?
 7. **Unanswered follow-up:** should the owner be able to answer a question later and notify the customer (NotifyMe-style)? This needs contact info, which means sign-in.
 8. **Should signed-in customers see a "My questions" history in `/me`?**
 9. **Should a question trigger offers** (new `after_question` trigger)? Proposed: not in this version.
@@ -168,7 +204,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 11. **Stock questions** ("do you have a 9?"): answer from live per-location inventory? Proposed: yes, for this store's location only.
 
 ### 9.3 Associate Assist: functionality
-1. ★ **How does staff identity work?** Options:
+1. 🟡 *Partly resolved, D6: email sign-in.* **How does staff identity work?** Options:
    - (a) staff sign-in on the tap page, with a magic link per staff email
    - (b) a store PIN that unlocks staff mode on that device
    - (c) a separate staff app or URL
@@ -181,7 +217,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 6. **Should owners be able to "pin" an official answer** that both the AI and staff will always use?
 
 ### 9.4 Customer Ask: UI
-1. ★ **Where does Ask live on the page?**
+1. ✅ *Resolved, D4.* ~~**Where does Ask live on the page?**~~
    - (a) an inline section after the key points
    - (b) a sticky bottom bar ("Ask about this ✦") that opens a sheet
    - (c) both
@@ -194,11 +230,12 @@ Each question has a **proposed default** so you can answer "agree," or override 
 6. **Voice input** (the phone keyboard mic already works): add a dedicated mic button? Proposed: no, rely on the keyboard mic.
 7. **Should "Based on:" source chips be visible by default** or behind a tap?
 8. **Feedback control:** thumbs up/down on every answer, or only after the last one?
+9. **PicksBar conflict:** the PicksBar is already fixed to the bottom of the screen. Proposed: merge them into one bottom bar, with Ask on the left and the picks thumbnails on the right, so they don't stack.
 
 ### 9.5 Question Insights (admin): functionality & UI
-1. ★ **Where does it go in the nav?** A top-level "Questions" item, or a tab in Analytics? Proposed: top-level. It's an action list, not just a chart.
+1. ✅ *Resolved, D7.* ~~**Where does it go in the nav?**~~ A top-level "Questions" item, or a tab in Analytics? Proposed: top-level. It's an action list, not just a chart.
 2. **What goes on the dashboard home?** Proposed: a "Customers asked 38 questions this week · top theme: Sizing" card.
-3. ★ **Grouping:** fully automatic, or owner-curated? Proposed: automatic, with rename, merge and split. How fine-grained? One theme per product ("Does the Weekend Boot run small?") or across products ("Sizing")? Proposed: both levels. Product-level questions roll up into store-level themes.
+3. ✅ *Resolved, D8.* ~~**Grouping:**~~ fully automatic, or owner-curated? Proposed: automatic, with rename, merge and split. How fine-grained? One theme per product ("Does the Weekend Boot run small?") or across products ("Sizing")? Proposed: both levels. Product-level questions roll up into store-level themes.
 4. **Visibility rule:** show from the first question with a count (your stated preference). Do we also show a "low data" badge below N questions? Proposed: a badge under 10.
 5. **Should we send a weekly email digest** to owners ("Top 5 new questions")? Proposed: yes. It's cheap and drives the 7-day retention metric.
 6. **Who sees raw question text?** Proposed: owners and managers. Staff see grouped questions plus suggested answers.
@@ -210,12 +247,12 @@ Each question has a **proposed default** so you can answer "agree," or override 
 1. **May the AI use general product knowledge** (e.g. what "merino" is), or only store data? Proposed: general knowledge for definitions only, never for product-specific claims.
 2. **Store policies** (returns, alterations, gift wrap): a new settings section the AI can cite? Proposed: yes, as a short free-text field per store.
 3. **Should AI copy prompts move to problem-first framing now**, independent of the chat?
-4. ★ **Regulated categories:** for allergens, alcohol, supplements, cannabis and health claims, do we refuse unless the fact is explicitly in the data? Proposed: yes, and always add "check the label."
+4. ✅ *Resolved, D9.* ~~**Regulated categories:**~~ for allergens, alcohol, supplements, cannabis and health claims, do we refuse unless the fact is explicitly in the data? Proposed: yes, and always add "check the label."
 5. **Brand or vendor content:** Sarah suggested "if you can bring it over, bring it over." Do we ingest the brand's own product pages or Q&A? Who approves that?
 6. **How do we measure answer quality** before launch? Proposed: a seed set of 50 real-world questions per demo vertical, with checked answers, as an eval.
 
 ### 9.7 Privacy & data
-1. ★ **PII redaction:** redact before storage (proposed), or store raw and redact on read?
+1. ✅ *Resolved, D10.* ~~**PII redaction:**~~ redact before storage (proposed), or store raw and redact on read?
 2. **Link questions to signed-in customers?** Proposed: only with opt-in, in a separate table, never in `product_questions`.
 3. **Can questions feed cross-store reports** (parent §8 Models 1–2) under the existing `data_sharing_opted_in` flag, or do they need a separate opt-in?
 4. **Retention** for question text: 24 months like taps, or shorter?
