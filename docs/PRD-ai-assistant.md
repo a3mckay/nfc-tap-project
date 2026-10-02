@@ -47,6 +47,7 @@ Round 3 (2026-10-02):
 | D18 | **Store policies:** owners and managers enter short free-text policies (returns, exchanges, alterations, price match, gift wrap) in admin **Settings**, and the AI cites them. |
 | D19 | **Disclosure:** do the legal minimum (see §7.1). Final wording is subject to the legal review already in ACTION_ITEMS. |
 | D20 | **Data ownership:** each store sees **only its own** question data. The founder (super admin) can see question data across all stores, to build cross-store products later (parent PRD §8). Stores aren't shown each other's data. This must be disclosed in the store Terms of Service. |
+| D21 | **Key points:** a new problem-first field, **"Great when…"** (3 short bullets), written by owners, managers or co-managers, or drafted by the existing Brave-grounded AI tool and edited by them. When it's empty, the page shows the first 3 `reasons_to_buy`. |
 
 
 Today, a tap tells us a customer was curious. It doesn't tell us *why*. And when a customer has a question, the only path is **Ask Us**, which sends them to a human over WhatsApp or SMS. That only works when someone is free to answer, and we capture nothing from it.
@@ -238,7 +239,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 
 ### 9.2 Customer Ask: functionality
 1. ✅ *Resolved, D3.* ~~**How short is the static page?**~~ Proposed: hero, 3 key points, 1 video, Ask, with "More details" collapsed. Do we keep reviews above the fold?
-2. ★ **Key points (the 3 bullets shown on the page, not AI answers).** These replace the long text block above the Ask bar. Options: (a) reuse the existing `reasons_to_buy` (often feature-led today); (b) add a new problem-first field, "Great when…", written by owners/managers or drafted by the existing Brave-grounded AI tool, which owners can edit; (c) pick the 3 automatically from whatever fields exist. Proposed: (b), falling back to `reasons_to_buy` when it's empty.
+2. ✅ *Resolved, D21.*
 3. **One question or a conversation?** Proposed: a short conversation, capped at about 5 turns per product per session.
 4. **Should suggested-question chips show counts** ("12 people asked this")? That's social proof, but it could look empty early on.
 5. ✅ *Resolved, D14 / §6.1: only when the question calls for it, phrased as information.*
