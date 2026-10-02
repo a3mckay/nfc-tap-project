@@ -17,7 +17,7 @@ export async function sendNotificationAction(
   if (message.trim().length > 480) return { sent: 0, failed: 0, error: "Message too long (max 480 characters)." };
 
   const pool  = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "marketing");
   if (!store) return { sent: 0, failed: 0, error: "Store not found." };
 
   const recipients = await getProductNotifiableRecipients(pool, store.id, productId, eventType);
@@ -52,7 +52,7 @@ export async function getRecipientCountAction(
   eventType: NotificationEventType,
 ): Promise<{ count: number; error?: string }> {
   const pool  = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "marketing");
   if (!store) return { count: 0, error: "Store not found." };
   const recipients = await getProductNotifiableRecipients(pool, store.id, productId, eventType);
   return { count: recipients.length };

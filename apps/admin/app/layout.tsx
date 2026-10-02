@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headers, cookies } from "next/headers";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { verifySession, COOKIE_NAME } from "../src/admin-auth.js";
+import type { AdminSession } from "../src/admin-auth.js";
 import { StoreSwitcher } from "../src/StoreSwitcher.js";
+import { getAdminSession, getCurrentAdminSession } from "../src/current-store.js";
+import { can, accessRedirect, type Permission } from "../src/permissions.js";
 import { getPool, getAllStores } from "@nfc/db";
 
 export const metadata: Metadata = { title: "TapShelf Admin" };
@@ -26,16 +29,40 @@ function Divider() {
   return <div style={{ height: "1px", background: "#eee", margin: "0.4rem 0" }} />;
 }
 
-async function Sidebar() {
-  const jar = await cookies();
-  const session = await verifySession(jar.get(COOKIE_NAME)?.value);
+// Sidebar links in groups, each link shown only to roles with the permission
+// it needs; empty groups are dropped.
+const MAIN_NAV: [string, string, Permission][][] = [
+  [
+    ["/products", "Products", "catalog"],
+    ["/enrichment", "Content", "content"],
+    ["/tags", "Tags", "catalog"],
+    ["/staff", "Staff", "progress"],
+  ],
+  [
+    ["/reviews", "Reviews", "content"],
+    ["/offers", "Offers", "marketing"],
+  ],
+  [
+    ["/notifications", "Notifications", "marketing"],
+    ["/analytics", "Analytics", "analytics"],
+    ["/theme", "Theme", "store_settings"],
+    ["/canonical", "Product Matching", "store_settings"],
+  ],
+];
+const FOOTER_NAV: [string, string, Permission][] = [
+  ["/plan", "Plan", "billing"],
+  ["/settings", "Settings", "store_settings"],
+  ["/onboarding", "Getting Started", "store_settings"],
+];
+
+async function Sidebar({ session }: { session: AdminSession | null }) {
   if (!session) return null;
 
   // Staff only see their home page, without the owner navigation.
   if (session.role === "staff") return null;
 
   const headersList = await headers();
-  const role = headersList.get("x-session-role") ?? "super";
+  const role = session.role;
   let currentShop = headersList.get("x-current-shop") ?? "";
 
   // Super-admin: full store switcher
@@ -68,10 +95,15 @@ async function Sidebar() {
 
       {/* Store indicator */}
       <div style={{ borderBottom: "1px solid #eee" }}>
-        {role === "store" ? (
-          /* Store admins see their store name, no switcher */
+        {role === "store" || role === "manager" ? (
+          /* Owners and managers see their store name, no switcher */
           <div style={{ ...linkStyle, padding: "0.875rem 1.25rem", fontWeight: 500, color: "#333" }}>
             {s}
+            {role === "manager" && (
+              <span style={{ display: "block", fontSize: "0.72rem", color: "#888", fontWeight: 400, marginTop: "2px" }}>
+                {session.level === "manager" ? "Manager" : "Co-manager"}
+              </span>
+            )}
           </div>
         ) : s ? (
           <Suspense>
@@ -88,24 +120,23 @@ async function Sidebar() {
       {s && (
         <>
           <div style={{ flex: 1, paddingTop: "0.35rem", paddingBottom: "0.35rem" }}>
-            <Link href={`/products?shop=${s}`} style={linkStyle}>Products</Link>
-            <Link href={`/enrichment?shop=${s}`} style={linkStyle}>Content</Link>
-            <Link href={`/tags?shop=${s}`} style={linkStyle}>Tags</Link>
-            <Link href={`/staff?shop=${s}`} style={linkStyle}>Staff</Link>
-            <Divider />
-            <Link href={`/reviews?shop=${s}`} style={linkStyle}>Reviews</Link>
-            <Link href={`/offers?shop=${s}`} style={linkStyle}>Offers</Link>
-            <Divider />
-            <Link href={`/notifications?shop=${s}`} style={linkStyle}>Notifications</Link>
-            <Link href={`/analytics?shop=${s}`} style={linkStyle}>Analytics</Link>
-            <Link href={`/theme?shop=${s}`} style={linkStyle}>Theme</Link>
-            <Link href={`/canonical?shop=${s}`} style={linkStyle}>Product Matching</Link>
+            {MAIN_NAV
+              .map((group) => group.filter((item) => can(session, item[2])))
+              .filter((group) => group.length > 0)
+              .map((group, k) => (
+                <div key={group[0]![0]}>
+                  {k > 0 && <Divider />}
+                  {group.map((item) => (
+                    <Link key={item[0]} href={`${item[0]}?shop=${s}`} style={linkStyle}>{item[1]}</Link>
+                  ))}
+                </div>
+              ))}
           </div>
 
           <div style={{ borderTop: "1px solid #eee", paddingTop: "0.35rem", paddingBottom: "0.35rem" }}>
-            <Link href={`/plan?shop=${s}`} style={dimLinkStyle}>Plan</Link>
-            <Link href={`/settings?shop=${s}`} style={dimLinkStyle}>Settings</Link>
-            <Link href={`/onboarding?shop=${s}`} style={dimLinkStyle}>Getting Started</Link>
+            {FOOTER_NAV.filter((item) => can(session, item[2])).map((item) => (
+              <Link key={item[0]} href={`${item[0]}?shop=${s}`} style={dimLinkStyle}>{item[1]}</Link>
+            ))}
             {role === "super" && (
               <Link href="/stores" style={dimLinkStyle}>All Stores</Link>
             )}
@@ -125,11 +156,22 @@ async function Sidebar() {
   );
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Managers: re-check their live role on every admin page (x-pathname is only
+  // set by the middleware, so sign-in pages are skipped).
+  const pathname = (await headers()).get("x-pathname");
+  const cookieSession = await getAdminSession();
+  let session = cookieSession;
+  if (pathname && cookieSession?.role === "manager") {
+    session = await getCurrentAdminSession(getPool({ connectionString: process.env.DATABASE_URL }));
+    const to = accessRedirect(cookieSession, session, pathname);
+    if (to) redirect(to);
+  }
+
   return (
     <html lang="en">
       <body style={{ fontFamily: "system-ui, sans-serif", display: "flex", minHeight: "100vh", margin: 0 }}>
-        <Sidebar />
+        <Sidebar session={session} />
         <main style={{ flex: 1, padding: "2rem", maxWidth: "900px" }}>
           {children}
         </main>

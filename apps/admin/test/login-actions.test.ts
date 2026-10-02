@@ -7,6 +7,7 @@ const db = vi.hoisted(() => ({
   getStoreAdminByEmail: vi.fn(),
   verifyPassword: vi.fn(async () => true),
   getStoreById: vi.fn(),
+  getManagerLoginsByEmail: vi.fn(async () => []),
 }));
 const jar = vi.hoisted(() => ({ set: vi.fn() }));
 const redirect = vi.hoisted(() => vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`); }));

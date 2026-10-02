@@ -16,7 +16,7 @@ export async function runPublicSearchForProductAction(
   productId: string,
 ): Promise<RunPublicSearchResult> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return { items_found: 0, items_stored: 0, error: "Store not found" };
 
   const product = await getProductById(pool, productId);
@@ -39,7 +39,7 @@ export async function setPublicReviewsEnabledAction(
   enabled: boolean,
 ): Promise<{ error?: string }> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "content");
   if (!store) return { error: "Store not found" };
 
   await pool.query(

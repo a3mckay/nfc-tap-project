@@ -29,7 +29,7 @@ export async function saveOfferAction(input: OfferFormInput): Promise<{ error?: 
   }
 
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, input.shop);
+  const store = await getActionStore(pool, input.shop, "marketing");
   if (!store) return { error: "Store not found" };
 
   const data = {
@@ -56,7 +56,7 @@ export async function saveOfferAction(input: OfferFormInput): Promise<{ error?: 
 
 export async function deleteOfferAction(shop: string, id: string): Promise<void> {
   const pool = getPool({ connectionString: process.env.DATABASE_URL });
-  const store = await getActionStore(pool, shop);
+  const store = await getActionStore(pool, shop, "marketing");
   if (!store) return;
   await deleteStoreOffer(pool, id, store.id);
   revalidatePath("/offers");

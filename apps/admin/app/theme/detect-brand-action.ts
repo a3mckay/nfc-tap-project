@@ -2,6 +2,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { getAdminSession } from "@/current-store.js";
+import { can } from "@/permissions.js";
 
 export interface BrandSuggestion {
   primary: string;
@@ -23,9 +24,8 @@ const FONT_OPTIONS = [
 export async function detectBrandAction(
   url: string,
 ): Promise<{ result?: BrandSuggestion; error?: string }> {
-  // Calls paid external APIs: owners and super admins only.
-  const session = await getAdminSession();
-  if (!session || session.role === "staff") return { error: "Not allowed" };
+  // Calls paid external APIs, from the theme settings: owners and super admins only.
+  if (!can(await getAdminSession(), "store_settings")) return { error: "Not allowed" };
 
   // Step 1 — screenshot via Microlink (free, no API key, real headless browser)
   let screenshotUrl: string;

@@ -5,6 +5,7 @@ const db = vi.hoisted(() => ({
   getPool: vi.fn(() => ({})),
   approveStaffEmail: vi.fn(async () => ({})),
   revokeStaff: vi.fn(async () => true),
+  getStaffMember: vi.fn(async () => ({ id: "staff-1", role: "staff" })),
 }));
 const getActionStore = vi.hoisted(() => vi.fn());
 const sendEmail = vi.hoisted(() => vi.fn(async (_email: { to: string; subject: string; html: string }) => {}));
@@ -28,7 +29,7 @@ beforeEach(() => {
 describe("approveStaffAction", () => {
   it("approves a normalized email for the session's store", async () => {
     expect(await approveStaffAction(SHOP, " Sam@Example.com ", " Sam ")).toEqual({});
-    expect(getActionStore).toHaveBeenCalledWith(expect.anything(), SHOP);
+    expect(getActionStore).toHaveBeenCalledWith(expect.anything(), SHOP, "staff");
     expect(db.approveStaffEmail).toHaveBeenCalledWith(expect.anything(), "store-own", "sam@example.com", "Sam");
   });
 
@@ -59,7 +60,7 @@ describe("approveStaffAction", () => {
 
   it("does nothing without a store", async () => {
     getActionStore.mockResolvedValue(null);
-    expect(await approveStaffAction(SHOP, "sam@example.com", "")).toEqual({ error: "Store not found" });
+    expect(await approveStaffAction(SHOP, "sam@example.com", "")).toEqual({ error: "Not allowed" });
     expect(db.approveStaffEmail).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
@@ -72,13 +73,13 @@ describe("removeStaffAction", () => {
   });
 
   it("reports when the staff member isn't the store's", async () => {
-    db.revokeStaff.mockResolvedValue(false);
+    db.getStaffMember.mockResolvedValueOnce(null as never);
     expect(await removeStaffAction(SHOP, "staff-x")).toEqual({ error: "Staff member not found" });
   });
 
   it("does nothing without a store", async () => {
     getActionStore.mockResolvedValue(null);
-    expect(await removeStaffAction(SHOP, "staff-1")).toEqual({ error: "Store not found" });
+    expect(await removeStaffAction(SHOP, "staff-1")).toEqual({ error: "Not allowed" });
     expect(db.revokeStaff).not.toHaveBeenCalled();
   });
 });

@@ -41,7 +41,7 @@ beforeEach(() => {
 describe("tag actions", () => {
   it("assignTagAction scopes the write to the session's store", async () => {
     expect(await assignTagAction(SHOP, "tag-1", "prod-own")).toEqual({});
-    expect(getActionStore).toHaveBeenCalledWith(expect.anything(), SHOP);
+    expect(getActionStore).toHaveBeenCalledWith(expect.anything(), SHOP, "catalog");
     expect(db.assignTagToProduct).toHaveBeenCalledWith(expect.anything(), "tag-1", "store-own", "prod-own");
   });
 
@@ -70,7 +70,7 @@ describe("tag actions", () => {
 describe("pending review/award actions", () => {
   it("setReviewStatusAction resolves the store and scopes the write", async () => {
     await setReviewStatusAction(SHOP, "rev-1", "approved");
-    expect(getActionStore).toHaveBeenCalledWith(expect.anything(), SHOP);
+    expect(getActionStore).toHaveBeenCalledWith(expect.anything(), SHOP, "content");
     expect(db.setReviewStatus).toHaveBeenCalledWith(expect.anything(), "rev-1", "store-own", "approved");
   });
 

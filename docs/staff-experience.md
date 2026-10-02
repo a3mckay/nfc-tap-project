@@ -283,6 +283,19 @@ existing web view), and a domain association file. The tap page and database
 would stay the same, since a native app would call the same staff-session
 endpoints. Revisit after staff are using the web version.
 
+## Later: weekly quizzes (next planned feature)
+
+The founder's idea (2026-09-29): a short quiz for each staff member every week,
+generated automatically from the owner's training notes, with hints that send staff
+to tap specific products ("Stuck? Go tap the Trail Runner GTX"). Owners see scores
+and which products the team keeps missing. Open questions before building:
+
+1. Multiple choice (quick on a phone, scored automatically) or short written answers?
+2. Delivered by a Monday email, a card on the staff home page, or both?
+3. Scheduling: needs something to run it weekly (what triggers the existing cron
+   routes isn't recorded yet — see `ACTION_ITEMS.md`).
+4. Can managers review or tweak the generated questions before they go out?
+
 ## Decisions needed
 
 Each question has a recommendation. Answers get folded into the sections above.
@@ -307,10 +320,9 @@ Each question has a recommendation. Answers get folded into the sections above.
    of 40 tagged products" (built in 13f).
 7. **Which staff fields are in the first release?** ✅ The ten fields in §4,
    decided 2026-09-29.
-8. **Should managers be able to edit training notes?** The founder wants owners
-   *or managers* to write them. There's no manager role yet: owners (store admins)
-   can edit today. Open: add a manager role (edit training notes and staff, but not
-   billing or settings), or let the owner mark a staff member as able to edit.
+8. **Should managers be able to edit training notes?** ✅ Yes: manager and
+   co-manager roles, built 2026-09-29 (PRD v4 §7 Step 14, with the full
+   permission table).
 
 ### Staff usability
 9. **What does a staff member see for a product with no staff content yet?**
