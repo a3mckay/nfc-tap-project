@@ -24,6 +24,7 @@ export * from "./enrichments.js";
 export * from "./analytics.js";
 export * from "./canonical.js";
 export * from "./governance.js";
+export * from "./retention.js";
 export * from "./customers.js";
 export * from "./auth_tokens.js";
 export * from "./reviews.js";

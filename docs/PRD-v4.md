@@ -386,7 +386,7 @@ Covered by Steps 5–7 above.
 
 **Step 8c: Consent & governance 🟡**
 - ✅ Opt-out flag and `data_access_audit` helpers (`packages/db/src/governance.ts`)
-- ⬜ Monthly job to delete raw tap events older than 24 months
+- ✅ Job to delete raw data older than 24 months (2026-10-05): `deleteExpiredRawData` removes tap events, reactions and chat questions; `/api/cron/retention` runs it daily, called by `.github/workflows/scheduled-jobs.yml`. Daily totals and signed-in customers' own history stay. Needs `CRON_SECRET` set (see `ACTION_ITEMS.md`).
 - 🧍 Terms of Service and Privacy Policy need legal review
 - 🧍 PIPEDA review
 
