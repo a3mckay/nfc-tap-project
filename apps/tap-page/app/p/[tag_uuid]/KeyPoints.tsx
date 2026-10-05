@@ -15,8 +15,9 @@ export function KeyPoints({ greatWhen, reasonsToBuy, primaryColor }: Props) {
       <h2 style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#999", marginBottom: "0.6rem" }}>{kp.title}</h2>
       <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {kp.points.map((point, i) => (
-          <li key={i} style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", fontSize: "0.92rem", color: "#222" }}>
-            <span style={{ color: primaryColor, flexShrink: 0, marginTop: "1px", fontWeight: 700 }}>✦</span>
+          <li key={i} style={{ display: "flex", gap: "0.7rem", alignItems: "flex-start", fontSize: "0.92rem", lineHeight: 1.5, color: "#222" }}>
+            {/* A plain dot: ✦ is kept for the AI (the Ask bar and chat). */}
+            <span aria-hidden="true" style={{ width: "6px", height: "6px", background: primaryColor, borderRadius: "50%", flexShrink: 0, marginTop: "0.55em" }} />
             <span>{point}</span>
           </li>
         ))}

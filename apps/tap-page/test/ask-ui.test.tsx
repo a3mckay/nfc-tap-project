@@ -49,6 +49,12 @@ describe("KeyPoints", () => {
     expect(html).toContain("you sleep hot");
     expect(html).toContain("you like a lived-in look");
   });
+
+  it("marks points with a brand-colour dot, keeping ✦ for the AI's Ask bar", () => {
+    const html = renderToStaticMarkup(<KeyPoints greatWhen={["you sleep hot"]} reasonsToBuy={[]} primaryColor="#123456" />);
+    expect(html).not.toContain("✦");
+    expect(html).toMatch(/aria-hidden="true"[^>]*background:#123456[^>]*border-radius:50%/);
+  });
 });
 
 describe("AskBar", () => {
