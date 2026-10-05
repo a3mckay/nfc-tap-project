@@ -1,0 +1,80 @@
+// PRD v4 §7 Step 15c: gathers what the assistant may answer from for a live
+// tag's product (docs/PRD-ai-assistant.md §6). internal_staff_notes are never
+// loaded for customers.
+import {
+  getTagByUuid, getProductById, getStoreById, getEnrichmentByProductId, getProductTraining,
+  getProductFacts, getActiveAnswers, getApprovedReviewsByProduct,
+} from "@nfc/db";
+import { resolveTagState } from "@/tag-state.js";
+import type { LoadedContext } from "./handle.js";
+
+type Pool = Parameters<typeof getTagByUuid>[0];
+
+const stripHtml = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+function variantLabels(variants: unknown): { options: string[]; price: string | null } {
+  const list = Array.isArray(variants) ? (variants as Array<{ title?: unknown; price?: unknown }>) : [];
+  const options = list
+    .map((v) => (typeof v.title === "string" ? v.title : null))
+    .filter((t): t is string => !!t && t !== "Default Title");
+  const price = typeof list[0]?.price === "string" ? list[0].price : null;
+  return { options: [...new Set(options)].slice(0, 40), price };
+}
+
+export async function loadAnswerContext(pool: Pool, tagUuid: string): Promise<LoadedContext | null> {
+  const state = resolveTagState(await getTagByUuid(pool, tagUuid));
+  if (state.kind !== "active") return null;
+  const { storeId, productId, tagId } = state;
+
+  const [product, store, enrichment, training, facts, answers, reviews] = await Promise.all([
+    getProductById(pool, productId),
+    getStoreById(pool, storeId),
+    getEnrichmentByProductId(pool, productId),
+    getProductTraining(pool, productId, storeId),
+    getProductFacts(pool, storeId, productId),
+    getActiveAnswers(pool, storeId, productId),
+    getApprovedReviewsByProduct(pool, productId),
+  ]);
+  if (!product || !store || product.store_id !== storeId) return null;
+
+  const { options, price } = variantLabels(product.variants);
+  const description = [
+    product.description_html ? stripHtml(product.description_html).slice(0, 1500) : null,
+    price ? `Price: $${price}` : null,
+  ].filter(Boolean).join(" ") || null;
+
+  return {
+    storeId,
+    productId,
+    tagId,
+    context: {
+      storeName: store.name ?? store.shopify_shop_domain,
+      product: { title: product.title, vendor: product.vendor, productType: product.product_type, description, variants: options },
+      answers: answers.map((a) => ({ question: a.question, answer: a.answer, scope: a.product_id ? "product" : "store" })),
+      enrichment: enrichment && {
+        greatWhen: enrichment.great_when ?? [],
+        reasonsToBuy: enrichment.reasons_to_buy ?? [],
+        backstory: enrichment.backstory,
+        materials: enrichment.materials,
+        fitNotes: enrichment.fit_notes,
+        care: enrichment.care_instructions,
+        sustainability: enrichment.sustainability_notes,
+        faq: enrichment.faq ?? [],
+      },
+      training: training && {
+        whoItsFor: training.who_its_for,
+        whoItsNotFor: training.who_its_not_for,
+        fitAndSizing: training.fit_and_sizing,
+        closestAlternative: training.closest_alternative,
+        worthThePrice: training.worth_the_price ?? [],
+        companionProducts: training.companion_products,
+        commonQuestions: training.common_questions ?? [],
+      },
+      facts: facts.map((f) => ({ topic: f.topic, fact: f.fact, sourceKind: f.source_kind })),
+      reviews: [
+        ...reviews.map((r) => ({ rating: r.rating === null ? null : Number(r.rating), text: r.body })),
+        ...(enrichment?.reviews ?? []).map((r) => ({ rating: r.rating, text: r.text })),
+      ].filter((r) => r.text),
+    },
+  };
+}

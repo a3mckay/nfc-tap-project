@@ -92,3 +92,37 @@ describe("recordQuestion", () => {
     expect(q).toBeNull();
   });
 });
+
+describe("countRecentSessionQuestions", () => {
+  it("counts this session's customer questions about the product in the recent window", async () => {
+    const { countRecentSessionQuestions } = await import("../src/product-questions.js");
+    for (let i = 0; i < 3; i++) await recordQuestion(pool, { ...base(), questionText: `q${i}` });
+    await recordQuestion(pool, { ...base(), sessionId: "sess-2", questionText: "other session" });
+    await pool.query(
+      `update product_questions set created_at = now() - interval '5 hours' where question_text = 'q0' and product_id = $1`,
+      [own.productId],
+    );
+    expect(await countRecentSessionQuestions(pool, "sess-1", own.productId, 4)).toBe(2);
+  });
+});
+
+describe("getActiveAnswers", () => {
+  it("returns the store's answers for this product, then store-wide ones, without retired answers or other stores'", async () => {
+    const { getActiveAnswers } = await import("../src/product-questions.js");
+    const add = (storeId: string, productId: string | null, question: string, retired = false) => pool.query(
+      `insert into product_answers (store_id, product_id, question, answer, author_role, retired_at)
+       values ($1, $2, $3, 'a', 'owner', $4)`,
+      [storeId, productId, question, retired ? new Date() : null],
+    );
+    await add(own.storeId, null, "Return policy?");
+    await add(own.storeId, own.productId, "Made in Canada?");
+    await add(own.storeId, own.productId, "Old answer", true);
+    await add(other.storeId, null, "Other store policy");
+
+    const answers = await getActiveAnswers(pool, own.storeId, own.productId);
+    expect(answers.map((a) => [a.question, a.product_id === null ? "store" : "product"])).toEqual([
+      ["Made in Canada?", "product"],
+      ["Return policy?", "store"],
+    ]);
+  });
+});

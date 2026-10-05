@@ -11,6 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
     "@nfc/db": "workspace:*",
     "@nfc/email": "workspace:*",
     "next": "^15.5.16",
