@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getPool, getTagByUuid, countRecentSessionQuestions, recordQuestion } from "@nfc/db";
+import {
+  getPool, getTagByUuid, countRecentSessionQuestions, recordQuestion,
+  getUngroupedQuestions, getThemeOptions, applyThemeAssignments,
+} from "@nfc/db";
 import { SESSION_COOKIE } from "@/lib/cookies.js";
 import { getCurrentStaff } from "@/lib/staff-auth.js";
 import { handleAsk, type AskDeps, type HistoryTurn } from "@/ask/handle.js";
 import { loadAnswerContext } from "@/ask/load.js";
 import { streamAnswer } from "@/ask/model.js";
+import { groupProductQuestions } from "@/ask/group.js";
+import { classifyQuestions } from "@/ask/classify.js";
 
 // PRD v4 §7 Step 15c: a customer asks about the product on a live tag. Streams
 // newline-delimited JSON events (see AskEvent in src/ask/handle.ts).
@@ -34,10 +39,24 @@ export async function POST(request: NextRequest): Promise<Response> {
   const [tag, staff] = await Promise.all([getTagByUuid(pool, body.tagUuid), getCurrentStaff()]);
   const isTeam = !!staff && !!tag && staff.storeId === tag.store_id;
 
+  let productTitle = "";
   const deps: AskDeps = {
-    loadContext: (uuid) => loadAnswerContext(pool, uuid),
+    loadContext: async (uuid) => {
+      const loaded = await loadAnswerContext(pool, uuid);
+      productTitle = loaded?.context.product.title ?? "";
+      return loaded;
+    },
     countRecent: (s, p, h) => countRecentSessionQuestions(pool, s, p, h),
-    record: async (q) => { await recordQuestion(pool, q); },
+    record: async (q) => {
+      await recordQuestion(pool, q);
+      // Group it into a theme in the background (Step 15f); the answer has already been sent.
+      void groupProductQuestions(q.storeId, q.productId, productTitle, {
+        getUngrouped: (s, p, n) => getUngroupedQuestions(pool, s, p, n),
+        getOptions: (s, p) => getThemeOptions(pool, s, p),
+        apply: (s, p, a) => applyThemeAssignments(pool, s, p, a),
+        classify: classifyQuestions,
+      }).catch((err) => console.error("[ask] grouping failed:", err));
+    },
     streamModel: streamAnswer,
   };
   const events = handleAsk(
