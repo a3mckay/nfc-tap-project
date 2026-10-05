@@ -50,7 +50,10 @@ export type ThemeAssignment =
 
 // Applies a grouping run. New product themes are created under the store-wide
 // theme with the same label (case-insensitive), creating that too if needed.
-// Questions, themes and products are all checked against the store.
+// Questions, themes and products are all checked against the store. Runs for
+// the same store are applied one at a time (two questions asked at once can
+// start two runs), and a new theme is only created for a question that's still
+// ungrouped, so simultaneous runs don't leave duplicate or empty themes.
 export async function applyThemeAssignments(
   pool: Pool,
   storeId: string,
@@ -60,6 +63,7 @@ export async function applyThemeAssignments(
   const client = await pool.connect();
   try {
     await client.query("begin");
+    await client.query(`select pg_advisory_xact_lock(hashtext('question-themes:' || $1))`, [storeId]);
     const created = new Map<string, string>();   // new product-theme label → id, within this run
     for (const a of assignments) {
       let themeId: string | null = null;
@@ -70,6 +74,11 @@ export async function applyThemeAssignments(
         );
         themeId = rows[0]?.id ?? null;
       } else {
+        const ungrouped = await client.query(
+          `select 1 from product_questions where id = $1 and store_id = $2 and product_id = $3 and theme_id is null`,
+          [a.questionId, storeId, productId],
+        );
+        if (!ungrouped.rowCount) continue;   // another run already grouped it
         const key = a.newTheme.label.trim().toLowerCase();
         themeId = created.get(key) ?? null;
         if (!themeId) {

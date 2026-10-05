@@ -70,6 +70,28 @@ describe("question themes", () => {
     expect(options.storeThemes.map((t) => t.label)).toEqual(["Sizing"]);
   });
 
+  it("doesn't create a theme for questions another grouping run already grouped", async () => {
+    const q = await ask(own, "Does it run small?");
+    await applyThemeAssignments(pool, own.storeId, own.productId, [{ questionId: q!.id, newTheme: { label: "Does it run small?", kind: "fit", storeTheme: "Sizing" } }]);
+    // A second run that classified the same question at the same time
+    await applyThemeAssignments(pool, own.storeId, own.productId, [{ questionId: q!.id, newTheme: { label: "Runs small?", kind: "fit", storeTheme: "Fit" } }]);
+    const options = await getThemeOptions(pool, own.storeId, own.productId);
+    expect(options.productThemes.map((t) => t.label)).toEqual(["Does it run small?"]);
+    expect(options.storeThemes.map((t) => t.label)).toEqual(["Sizing"]);
+  });
+
+  it("applies simultaneous runs one at a time", async () => {
+    const q1 = await ask(own, "Does it run small?");
+    const q2 = await ask(own, "Should I size up?");
+    await Promise.all([
+      applyThemeAssignments(pool, own.storeId, own.productId, [{ questionId: q1!.id, newTheme: { label: "Sizing question", kind: "fit", storeTheme: "Sizing" } }, { questionId: q2!.id, newTheme: { label: "Sizing question", kind: "fit", storeTheme: "Sizing" } }]),
+      applyThemeAssignments(pool, own.storeId, own.productId, [{ questionId: q1!.id, newTheme: { label: "Sizing question", kind: "fit", storeTheme: "Sizing" } }, { questionId: q2!.id, newTheme: { label: "Sizing question", kind: "fit", storeTheme: "Sizing" } }]),
+    ]);
+    const options = await getThemeOptions(pool, own.storeId, own.productId);
+    expect(options.productThemes).toHaveLength(1);
+    expect(options.storeThemes).toHaveLength(1);
+  });
+
   it("ignores assignments for another store's questions or themes", async () => {
     const mine = await ask(own, "Does it run small?");
     const theirs = await ask(other, "Does it run small?");
