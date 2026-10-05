@@ -20,7 +20,8 @@ import { FallbackPage } from "./FallbackPage.js";
 import { ProductShell } from "./ProductShell.js";
 import { ReactionBar } from "./ReactionBar.js";
 import { PicksBar, type LocalTap } from "./PicksBar.js";
-import { AskUs } from "./AskUs.js";
+import { AskBar } from "./AskBar.js";
+import { suggestedQuestions } from "@/ask/client.js";
 import { NotifyMe } from "./NotifyMe.js";
 
 interface Props {
@@ -150,8 +151,8 @@ export default async function TapPage({ params, searchParams }: Props) {
           </a>
         </div>
       )}
-      {/* Extra bottom padding for both fixed bars (PicksBar + ReactionBar) */}
-      <div style={{ paddingBottom: "9rem" }}>
+      {/* Extra bottom padding for the Ask bar and the picks pill */}
+      <div style={{ paddingBottom: "8rem" }}>
         <ProductShell
           product={product}
           theme={theme}
@@ -168,12 +169,7 @@ export default async function TapPage({ params, searchParams }: Props) {
           brandCollector={brandCollector}
           categoryPattern={categoryPattern}
           sameBrand={sameBrand}
-        />
-        <AskUs
-          productTitle={product.title}
-          storeName={store?.shopify_shop_domain ?? ""}
-          whatsappNumber={store?.whatsapp_number ?? null}
-          smsNumber={store?.sms_number ?? null}
+          afterKeyPoints={!isPreview && <ReactionBar tagId={state.tagId} sessionId={sessionId} primaryColor={primaryColor} customerId={customer?.id ?? null} />}
         />
         {!isPreview && <NotifyMe
           storeId={state.storeId}
@@ -186,7 +182,14 @@ export default async function TapPage({ params, searchParams }: Props) {
         />}
       </div>
       {!isPreview && <PicksBar currentTap={currentTap} primaryColor={primaryColor} />}
-      {!isPreview && <ReactionBar tagId={state.tagId} sessionId={sessionId} primaryColor={primaryColor} customerId={customer?.id ?? null} />}
+      {/* The Shelf-Side AI Assistant (PRD v4 §7 Step 15e). The team's previews aren't recorded. */}
+      <AskBar
+        tagUuid={tag_uuid}
+        productTitle={product.title}
+        storeName={store?.name ?? store?.shopify_shop_domain ?? ""}
+        primaryColor={primaryColor}
+        suggestions={suggestedQuestions(enrichment?.faq ?? [])}
+      />
     </div>
   );
 }

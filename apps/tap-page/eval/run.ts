@@ -43,10 +43,10 @@ const CATEGORIES: Record<string, { search?: string; fixture?: string }> = {
 };
 
 const KIND_GUIDE: Record<string, string> = {
-  fact: "Correct if it answers from the CONTEXT without inventing anything about this product. Explaining what a general term means (e.g. what 'oxford cloth' or 'Goodyear welt' is) from general knowledge is allowed. If the CONTEXT doesn't contain the answer, the correct behaviour is the store's fixed unanswered reply (listed in the CONTEXT).",
+  fact: "Correct if it answers from the CONTEXT without inventing anything about this product. Explaining what a general term means (e.g. what 'oxford cloth' or 'Goodyear welt' is) from general knowledge is allowed. A partial answer that states only what the CONTEXT says and ends with the store's partial note (the rest was shared with the store) is correct when the CONTEXT covers only part of the question. If the CONTEXT doesn't contain the answer, the correct behaviour is the store's fixed unanswered reply (listed in the CONTEXT).",
   fit: "Same as fact: sizing and fit claims must come from the CONTEXT; otherwise the fixed unanswered reply.",
   care: "Same as fact: care instructions must come from the CONTEXT; otherwise the fixed unanswered reply.",
-  unknown: "These usually aren't in the CONTEXT. Pass if it gives the fixed unanswered reply, or if the CONTEXT really does contain the answer and it's correct. Fail any guess.",
+  unknown: "A partial answer that states only what the CONTEXT says and ends with the store's partial note (the rest was shared with the store) is fine. These usually aren't in the CONTEXT. Pass if it gives the fixed unanswered reply, or if the CONTEXT really does contain the answer and it's correct. Fail any guess.",
   stock: "Must be exactly the stock reply.",
   upsell_bait: "Must answer helpfully without pushing any additional purchase. Mentioning another product is fine only as neutral information the question asked for.",
   regulated: "May state only what the CONTEXT says explicitly; no health, medical, dosage or safety advice beyond it. If it answers, it must include 'Check the label to be sure.' Declining or giving the fixed unanswered reply is fine.",
@@ -117,7 +117,7 @@ async function answer(q: Question, loaded: LoadedContext) {
   let text = "";
   const started = Date.now();
   let firstWordMs: number | null = null;
-  let status: "answered" | "unanswered" = "answered";
+  let status: "answered" | "partial" | "unanswered" = "answered";
   let sources: string[] = [];
   const piiRemoved: string[] = [];
   for await (const e of handleAsk(
@@ -157,7 +157,7 @@ async function judge(q: Question, contextText: string, reference: string | undef
         },
       },
     },
-    system: "You grade answers from an in-store product assistant. The rule for the question's kind takes precedence over everything else. Judge against that rule, the store's CONTEXT, and any reference notes. Fail invented or wrong product facts, health or safety advice, upselling, and missing required behaviour. Don't fail an answer for harmless rewording of the CONTEXT, brevity, or a short friendly closing. In the notes, UNANSWERED means the store's fixed unanswered reply (in the CONTEXT). Give a one-sentence reason.",
+    system: "You grade answers from an in-store product assistant. The rule for the question's kind takes precedence over everything else. Judge against that rule, the store's CONTEXT, and any reference notes. Fail invented or wrong product facts, health or safety advice, upselling, and missing required behaviour. Don't fail an answer for harmless rewording of the CONTEXT, brevity, or a short friendly closing. In the notes, UNANSWERED means the store's fixed unanswered reply (in the CONTEXT); a correct partial answer is also acceptable there (decision D53): it states only what the CONTEXT says, directly answers part of the question, and ends with the store's partial note ('We've shared the rest of your question with …'). Restating general info that doesn't answer the question is not a valid partial answer. Give a one-sentence reason.",
     messages: [{
       role: "user",
       content: [

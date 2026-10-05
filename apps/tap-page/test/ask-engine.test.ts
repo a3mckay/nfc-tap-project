@@ -1,7 +1,7 @@
 // PRD v4 §7 Step 15c: the Shelf-Side AI Assistant's answer engine
 // (docs/PRD-ai-assistant.md §3.A, §6, §6.1; D5, D9, D11, D14, D22, D24, D25, D41).
 import { describe, it, expect, vi } from "vitest";
-import { buildContext, SYSTEM_PROMPT, STOCK_REPLY, PRICE_REPLY, unansweredReply, offTopicReply, type AnswerContext } from "@/ask/prompt.js";
+import { buildContext, SYSTEM_PROMPT, STOCK_REPLY, PRICE_REPLY, unansweredReply, offTopicReply, partialNote, type AnswerContext } from "@/ask/prompt.js";
 import { MetaSplitter } from "@/ask/meta.js";
 import { handleAsk, MAX_QUESTIONS_PER_VISIT, type AskDeps, type AskEvent } from "@/ask/handle.js";
 
@@ -53,7 +53,7 @@ describe("buildContext", () => {
 
 describe("SYSTEM_PROMPT", () => {
   it("carries the rules the spec requires", () => {
-    for (const rule of [/never (push|suggest) (an )?additional purchase|no upsell/i, /\[unanswered/, /\[stock/, /\[off_topic/, /\[price/, /language the customer/i, /<<meta/, /never ask for (contact|personal)/i, /"regulated"/]) {
+    for (const rule of [/never (push|suggest) (an )?additional purchase|no upsell/i, /\[unanswered/, /\[stock/, /\[off_topic/, /\[price/, /\[partial/, /language the customer/i, /<<meta/, /never ask for (contact|personal)/i, /"regulated"/]) {
       expect(SYSTEM_PROMPT).toMatch(rule);
     }
   });
@@ -110,6 +110,30 @@ describe("handleAsk", () => {
     expect(said(events)).toBe(unansweredReply("Queen West Shoes"));
     expect(events.at(-1)).toEqual({ type: "done", status: "unanswered", sources: [] });
     expect(d.record).toHaveBeenCalledWith(expect.objectContaining({ status: "unanswered", answerText: null }));
+  });
+
+  it("answers what it can and sends the rest to the store, flagged for owners (D53)", async () => {
+    const d = deps({ streamModel: model("[partial en]\nIt's made by Sanctuary, an LA-based label.", '\n<<meta {"sources":["owner_content"],"regulated":false}>>') });
+    const events = await run(d);
+    expect(said(events)).toBe(`It's made by Sanctuary, an LA-based label. ${partialNote("Queen West Shoes")}`);
+    expect(events.at(-1)).toEqual({ type: "done", status: "partial", sources: ["Product details"] });
+    expect(d.record).toHaveBeenCalledWith(expect.objectContaining({
+      status: "unanswered", answerText: `It's made by Sanctuary, an LA-based label. ${partialNote("Queen West Shoes")}`,
+    }));
+  });
+
+  it("doesn't repeat the partial note if the model already wrote it", async () => {
+    const note = partialNote("Queen West Shoes");
+    const events = await run(deps({ streamModel: model(`[partial en]\nIt's hand-wash only. ${note}`, '\n<<meta {"sources":[],"regulated":false}>>') }));
+    expect(said(events).split(note).length - 1).toBe(1);
+  });
+
+  it("treats an answer that says the information doesn't cover something as partial (D53)", async () => {
+    const d = deps({ streamModel: model("[answer en]\nIt layers under a jacket. Our product information doesn't say how warm it is.", '\n<<meta {"sources":["owner_content"],"regulated":false}>>') });
+    const events = await run(d);
+    expect(said(events)).toBe(`It layers under a jacket. Our product information doesn't say how warm it is. ${partialNote("Queen West Shoes")}`);
+    expect(events.at(-1)).toMatchObject({ type: "done", status: "partial" });
+    expect(d.record).toHaveBeenCalledWith(expect.objectContaining({ status: "unanswered" }));
   });
 
   it("uses the model's translation of a fixed reply for other languages", async () => {

@@ -91,6 +91,12 @@ The Privacy Policy / PIPEDA review (below) must also cover storing customers' ty
 
 ---
 
+## AI assistant go-live (PRD v4 §7 Step 15)
+
+- **Railway tap-page service:** add `ANTHROPIC_API_KEY` (the chat returns "Questions aren't available right now" without it). The admin service needs `BRAVE_SEARCH_API_KEY` for Generate's brand-first research.
+- **Privacy page:** the chat's disclosure line should link to a privacy policy, and there isn't one yet (tapshelf.co has no privacy page). Part of the legal review below.
+- **Check on a phone:** the floating "Your picks" pill only shows after two products have been tapped in a visit; it hasn't been checked on a real device yet.
+
 ## Needed before public launch
 
 ### Legal review

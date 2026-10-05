@@ -42,19 +42,18 @@ export function ReactionBar({ tagId, sessionId, primaryColor, customerId }: Prop
   }
 
   return (
+    // Inline under the key points, so the bottom of the screen belongs to the Ask
+    // bar and the picks pill (PRD v4 §7 Step 15e, D37).
     <div style={{
-      position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      borderTop: "1px solid #eee",
+      border: "1px solid #eee",
+      borderRadius: "12px",
       background: "#fff",
-      padding: "0.875rem 1rem",
+      padding: "0.75rem 1rem",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      gap: "0.75rem",
-      zIndex: 50,
+      flexWrap: "wrap",
+      gap: "0.6rem",
     }}>
       {done ? (
         <p style={{ fontSize: "0.85rem", color: "#444", margin: 0, fontWeight: 500 }}>
