@@ -81,6 +81,16 @@ Once registered:
 
 ---
 
+## Product decisions: Shelf-Side AI Assistant (discovery)
+
+### Answer the open questions in `docs/PRD-ai-assistant.md` §9
+Start with the ★ items: which surface ships first, V1 vs. post-launch, tap-page length, human handoff, staff identity, Ask placement, Questions nav, grouping, regulated categories, PII redaction. Nothing gets built until the spec status says *Approved*.
+
+### Add free-text questions to the legal review
+The Privacy Policy / PIPEDA review (below) must also cover storing customers' typed questions (redacted, keyed to an anonymous session).
+
+---
+
 ## Needed before public launch
 
 ### Legal review
