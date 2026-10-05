@@ -284,6 +284,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0023 | `staff_auth_tokens.purpose` (sign_in / set_password) |
 | 0024 | Shelf-Side AI Assistant: `product_questions` (PII stripped on write), `question_themes`, `product_answers` (hidden answer pool), `product_facts` (research fact sheet), `enrichments.great_when` |
 | 0025 | `store_brand_websites` (each store's brand website for brand-first research; `confirmed` once an owner or manager checks it) |
+| 0026 | `store_policies` (one row per filled-in policy; the types live in `packages/db/src/store-policies.ts`) |
 
 ---
 
@@ -477,7 +478,7 @@ Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md) (decisions D1–D45). Cu
 - ⬜ **15g Questions tab (admin):** a new nav item for owners, managers and co-managers (new `questions` permission). Products appear automatically once they have a question; grouped summaries by default, with a Verbatim toggle; an Unanswered filter; answering adds to the answer pool (D12, D38); explicit "Show on product page" and "Add to training Q&A" buttons. Store policies have their own page (15j, D48).
 - ⬜ **15h Staff side:** "Customers are asking" under the one-line sell in the training view, and a staff Ask box that can also use training notes and internal notes (D6, D13, D31). Staff questions appear on the Questions tab with a "Staff" label and name.
 - ⬜ **15i Admin home page:** `/` becomes a real home page with tap activity and customer questions at a glance (D44), and it's where owners, managers and co-managers land after sign-in (D45).
-- ⬜ **15j Store policies page** (D48; built next, before 15e): owners and managers fill in the standard policies; the assistant's `store_policy` source reads them.
+- ✅ **15j Store policies page** (2026-10-05; D48): owners and managers fill in the standard policies; the assistant's `store_policy` source reads them. Built: `/policies` in the admin (new `policies` permission: owner and manager), eight policy types (returns and exchanges, warranty and repairs, alterations and tailoring, price matching, holds and special orders, delivery and shipping, gift cards and gift wrap, ID and age requirements); the assistant reads them first in its `store_policy` section.
 - ⬜ **15k Contradiction and AI-draft checks** (D49, D50): the conflict banner on save/generate; Generate checks findings against the product's title and type; "AI draft, not reviewed" marking; reviewed content ranks above AI drafts.
 - ⬜ **15l Category spec fields** (D51, last slice): per-product spec templates by product type (store industry as default), filled by the research tool with sources, read by the assistant.
 - 🧍 Privacy Policy and store Terms of Service updates for saved questions and the founder's cross-store access (D19, D20); part of the existing legal review.

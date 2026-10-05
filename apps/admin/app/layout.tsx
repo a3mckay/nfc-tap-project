@@ -37,6 +37,7 @@ const MAIN_NAV: [string, string, Permission][][] = [
     ["/enrichment", "Content", "content"],
     ["/tags", "Tags", "catalog"],
     ["/staff", "Staff", "progress"],
+    ["/policies", "Store policies", "policies"],
   ],
   [
     ["/reviews", "Reviews", "content"],

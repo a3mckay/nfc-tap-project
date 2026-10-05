@@ -13,16 +13,17 @@ export type Permission =
   | "catalog"            // products and tags
   | "marketing"          // offers and customer notifications
   | "analytics"
+  | "policies"           // store policies the AI assistant answers from (D48)
   | "store_settings"     // theme, settings, product matching, getting started
   | "billing"            // plan and billing
   | "all_stores";        // super admin: every store
 
 const OWNER: Permission[] = [
   "training", "content", "progress", "staff", "assign_co_manager", "assign_manager",
-  "catalog", "marketing", "analytics", "store_settings", "billing",
+  "catalog", "marketing", "analytics", "policies", "store_settings", "billing",
 ];
 const MANAGER: Permission[] = [
-  "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics",
+  "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics", "policies",
 ];
 const CO_MANAGER: Permission[] = ["training", "content", "progress"];
 
@@ -49,6 +50,7 @@ const PAGES: [string, Permission][] = [
   ["/offers", "marketing"],
   ["/notifications", "marketing"],
   ["/analytics", "analytics"],
+  ["/policies", "policies"],
   ["/theme", "store_settings"],
   ["/settings", "store_settings"],
   ["/canonical", "store_settings"],

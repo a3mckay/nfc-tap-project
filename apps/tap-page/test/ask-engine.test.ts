@@ -13,6 +13,7 @@ const ctx = (over: Partial<AnswerContext> = {}): AnswerContext => ({
   training: { whoItsFor: "People who want one smart-casual boot", whoItsNotFor: null, fitAndSizing: null, closestAlternative: "The Desert Boot", worthThePrice: ["Resoleable"], companionProducts: "Suede protector", commonQuestions: [] },
   facts: [{ topic: "origin", fact: "Made in Portugal", sourceKind: "brand" }],
   reviews: [{ rating: 5, text: "Comfortable from day one" }],
+  policies: [{ label: "Returns and exchanges", text: "30 days with tags." }],
   ...over,
 });
 
@@ -25,6 +26,13 @@ describe("buildContext", () => {
     expect(text).toContain("Made in Canada?");
     expect(text).toContain("Return policy?");
     expect(text).toContain("Queen West Shoes");
+  });
+
+  it("puts the store's policies in the store-wide section, before store-wide answers (D48)", () => {
+    const text = buildContext(ctx());
+    const section = text.slice(text.indexOf("[store_policy]"));
+    expect(section).toContain("Returns and exchanges: 30 days with tags.");
+    expect(section.indexOf("Returns and exchanges")).toBeLessThan(section.indexOf("Return policy?"));
   });
 
   it("puts staff training notes after the store's customer-facing content (D49)", () => {

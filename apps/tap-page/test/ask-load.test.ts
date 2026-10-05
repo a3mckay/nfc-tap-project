@@ -14,6 +14,7 @@ const db = vi.hoisted(() => ({
     { id: "a2", product_id: null, question: "Returns?", answer: "30 days." },
   ]),
   getApprovedReviewsByProduct: vi.fn(async () => [{ rating: "4.0", body: "Comfy" }]),
+  getStorePolicies: vi.fn(async () => [{ key: "returns", label: "Returns and exchanges", text: "30 days." }]),
 }));
 vi.mock("@nfc/db", () => db);
 
@@ -48,6 +49,7 @@ describe("loadAnswerContext", () => {
       description: "Suede chukka Price: $245.00", variants: ["9 / Brown", "10 / Brown"],
     });
     expect(loaded!.context.answers.map((a) => a.scope)).toEqual(["product", "store"]);
+    expect(loaded!.context.policies).toEqual([{ label: "Returns and exchanges", text: "30 days." }]);
     expect(loaded!.context.reviews).toEqual([{ rating: 4, text: "Comfy" }, { rating: 5, text: "Great" }]);
   });
 

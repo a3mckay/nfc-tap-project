@@ -12,7 +12,7 @@ const staff: AdminSession = { role: "staff", staffId: "x", storeId: "s", storeDo
 
 const ALL: Permission[] = [
   "training", "content", "progress", "staff", "assign_co_manager", "assign_manager",
-  "catalog", "marketing", "analytics", "store_settings", "billing", "all_stores",
+  "catalog", "marketing", "analytics", "policies", "store_settings", "billing", "all_stores",
 ];
 const allowed = (s: AdminSession | null) => ALL.filter((p) => can(s, p));
 
@@ -27,7 +27,7 @@ describe("can", () => {
 
   it("gives managers the day-to-day, but not settings, billing or making managers", () => {
     expect(allowed(manager)).toEqual([
-      "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics",
+      "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics", "policies",
     ]);
   });
 
@@ -115,5 +115,14 @@ describe("staffRowControls (Staff page)", async () => {
 
   it("gives co-managers a view only", () => {
     expect(staffRowControls(coManager, "staff")).toEqual({ roles: [], canRemove: false });
+  });
+});
+
+describe("store policies (D48)", () => {
+  it("are edited by owners and managers on /policies", () => {
+    expect(permissionForPath("/policies")).toBe("policies");
+    expect(can(owner, "policies")).toBe(true);
+    expect(can(manager, "policies")).toBe(true);
+    expect(can(coManager, "policies")).toBe(false);
   });
 });
