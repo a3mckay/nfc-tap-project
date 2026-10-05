@@ -12,7 +12,7 @@ const staff: AdminSession = { role: "staff", staffId: "x", storeId: "s", storeDo
 
 const ALL: Permission[] = [
   "training", "content", "progress", "staff", "assign_co_manager", "assign_manager",
-  "catalog", "marketing", "analytics", "policies", "store_settings", "billing", "all_stores",
+  "catalog", "marketing", "analytics", "policies", "questions", "store_settings", "billing", "all_stores",
 ];
 const allowed = (s: AdminSession | null) => ALL.filter((p) => can(s, p));
 
@@ -27,12 +27,12 @@ describe("can", () => {
 
   it("gives managers the day-to-day, but not settings, billing or making managers", () => {
     expect(allowed(manager)).toEqual([
-      "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics", "policies",
+      "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics", "policies", "questions",
     ]);
   });
 
   it("gives co-managers training notes, product content and a view of progress", () => {
-    expect(allowed(coManager)).toEqual(["training", "content", "progress"]);
+    expect(allowed(coManager)).toEqual(["training", "content", "progress", "questions"]);
   });
 
   it("gives staff and anonymous sessions nothing", () => {
@@ -124,5 +124,14 @@ describe("store policies (D48)", () => {
     expect(can(owner, "policies")).toBe(true);
     expect(can(manager, "policies")).toBe(true);
     expect(can(coManager, "policies")).toBe(false);
+  });
+});
+
+describe("the Questions tab (D7, D11)", () => {
+  it("is open to owners, managers and co-managers", () => {
+    expect(permissionForPath("/questions")).toBe("questions");
+    expect(permissionForPath("/questions/p-1")).toBe("questions");
+    for (const who of [owner, manager, coManager]) expect(can(who, "questions")).toBe(true);
+    expect(can(staff, "questions")).toBe(false);
   });
 });
