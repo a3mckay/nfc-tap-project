@@ -15,6 +15,9 @@ const db = vi.hoisted(() => ({
   ]),
   getApprovedReviewsByProduct: vi.fn(async () => [{ rating: "4.0", body: "Comfy" }]),
   getStorePolicies: vi.fn(async () => [{ key: "returns", label: "Returns and exchanges", text: "30 days." }]),
+  getProductSpecs: vi.fn(async () => [{ key: "thc", value: "22%", source_url: null, source_kind: "owner", owner_edited: true }]),
+  specCategoryFor: vi.fn(() => "cannabis"),
+  specFieldsFor: vi.fn(() => [{ key: "thc", label: "THC", hint: "" }, { key: "cbd", label: "CBD", hint: "" }]),
   getRecentQuestions: vi.fn(async () => [{ question_text: "Does it run small?", answer_text: "True to size." }]),
 }));
 vi.mock("@nfc/db", () => db);
@@ -47,7 +50,7 @@ describe("loadAnswerContext", () => {
     expect(loaded!.context.storeName).toBe("Queen West Shoes");
     expect(loaded!.context.product).toEqual({
       title: "Weekend Chukka", vendor: "Northfield", productType: "Boots",
-      description: "Suede chukka Price: $245.00", variants: ["9 / Brown", "10 / Brown"],
+      description: "Suede chukka Price: $245.00", variants: ["9 / Brown", "10 / Brown"], specs: [{ label: "THC", value: "22%" }],
     });
     expect(loaded!.context.answers.map((a) => a.scope)).toEqual(["product", "store"]);
     expect(loaded!.context.enrichment?.aiDraft).toBe(false);

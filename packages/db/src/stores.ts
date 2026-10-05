@@ -20,6 +20,7 @@ export interface Store {
   stripe_subscription_id: string | null;
   tier_expires_at: Date | null;
   platform: StorePlatform;
+  industry: string | null;   // PRD v4 §7 Step 15l: fallback spec category (D51)
   /** E.164 digits only, e.g. "14155551234". Used for wa.me deep links on tap pages. */
   whatsapp_number: string | null;
   /** E.164 digits only. Used for sms: deep links on tap pages. */

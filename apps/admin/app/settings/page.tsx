@@ -2,6 +2,7 @@ import { getPool, getStoreByDomain } from "@nfc/db";
 import { ConsentToggle } from "./ConsentToggle.js";
 import { PlatformPicker } from "./PlatformPicker.js";
 import { ContactSettings } from "./ContactSettings.js";
+import { IndustryPicker } from "./IndustryPicker.js";
 
 interface PageProps {
   searchParams: Promise<{ shop?: string }>;
@@ -63,12 +64,12 @@ export default async function SettingsPage({ searchParams }: PageProps) {
 
       <section style={{ marginBottom: "2.5rem" }}>
         <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
-          E-commerce platform
+          Main industry
         </p>
         <p style={{ fontSize: "0.875rem", color: "#555", marginBottom: "1rem", lineHeight: 1.5 }}>
-          Tells us how to manage your products. Shopify gets full automation; other platforms use manual workflows.
+          Decides which product specs (like THC % or alcohol %) we ask for when a product&apos;s type doesn&apos;t make it clear.
         </p>
-        <PlatformPicker shop={shop} initialPlatform={store.platform} />
+        <IndustryPicker shop={shop} initial={store.industry ?? ""} />
       </section>
 
       <section>

@@ -141,3 +141,19 @@ describe("factsFromModel", () => {
     ]);
   });
 });
+
+describe("specsFromModel (Step 15l)", async () => {
+  const { specsFromModel } = await import("../src/lib/product-research.js");
+  const sources = [{ n: 1, kind: "brand" as const, url: "https://carmel.ca/animal-face", title: "", text: "" }];
+
+  it("keeps values for the template's fields that cite a real source", () => {
+    expect(specsFromModel([
+      { key: "thc", value: " 22–26% ", source: 1 },
+      { key: "cbd", value: "<1%", source: 4 },
+      { key: "nonsense", value: "x", source: 1 },
+      { key: "size", value: "  ", source: 1 },
+    ], sources, ["thc", "cbd", "size"])).toEqual([
+      { key: "thc", value: "22–26%", source_url: "https://carmel.ca/animal-face", source_kind: "brand" },
+    ]);
+  });
+});

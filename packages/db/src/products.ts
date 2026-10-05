@@ -29,6 +29,7 @@ export interface Product {
   shopify_updated_at: Date | null;
   is_manual: boolean;
   deleted_at: Date | null;
+  spec_category: string | null;   // PRD v4 §7 Step 15l: category override (D51)
 }
 
 export async function upsertProduct(
