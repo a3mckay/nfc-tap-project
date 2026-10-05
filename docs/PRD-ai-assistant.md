@@ -79,6 +79,8 @@ Round 5 (2026-10-05):
 | D40 | **Weekly owner email and a dashboard card are in scope.** They're built as the last step of this phase, before staff quizzes, on the existing Resend setup (`@nfc/email`). Contents are to be defined (§9.9). |
 | D41 | **Claims need a source.** Product-specific facts must come from a source in §6: the answer pool, owner content, product data, the research fact sheet, or reviews (phrased as "customers say"). The model's own unsourced knowledge is used only to explain terms. |
 | D42 | **Brand/vendor pages are the most trusted research source.** The AI research tool must be updated to do this (§6.2); that's a build step. |
+| D43 | **Weekly owner email moves out of this phase** (supersedes the email part of D40). It's a broader piece of work that needs its own design, so it'll be scoped after this feature ships, still ahead of staff quizzes. |
+| D44 | **The dashboard card goes on the admin home page**, which should put tap activity and customer questions front and centre. |
 
 
 Today, a tap tells us a customer was curious. It doesn't tell us *why*. And when a customer has a question, the only path is **Ask Us**, which sends them to a human over WhatsApp or SMS. That only works when someone is free to answer, and we capture nothing from it.
@@ -348,11 +350,10 @@ Each question has a **proposed default** so you can answer "agree," or override 
 3. ⏸ *Parked, D35.*
 
 ### 9.9 Still to discuss before build
-1. **Weekly owner email (D40):** who gets it (owner only, or managers too), what day it goes out, and what's in it. Proposed contents: questions this week vs. last, top 3 themes, Unanswered questions needing an answer (with a link to the Questions tab), and the most-asked product.
-2. **Dashboard card (D40):** same data as the email, in short form, on the admin home or the Questions tab.
-3. **Thumbs up/down** (D39): parked.
-4. **Problem-first framing for the existing AI copy prompt** (Q6.3): parked. It changes future drafts only, not existing copy.
-5. Other founder questions to come back to before build.
+1. **Admin home page (D44):** today `/` is a placeholder list of links, and nobody lands on it: owners go to Tags after sign-in, managers to Tags, co-managers to Content. Should `/` become a real home page (taps + questions at a glance) and the default landing page after sign-in for all three roles?
+2. **Thumbs up/down** (D39): parked.
+3. **Problem-first framing for the existing AI copy prompt** (Q6.3): parked.
+4. The founder's own questions, still to be raised.
 
 ---
 

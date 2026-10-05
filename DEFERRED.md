@@ -118,6 +118,15 @@ Things we consciously deferred during the build, with enough context to pick the
 
 ---
 
+## Owner emails
+
+### Weekly owner email
+**What exists:** Nothing scheduled. Resend works via `@nfc/email` (staff sign-in, invites).
+**Why deferred:** Founder, 2026-10-05: it'll cover more than AI questions (taps, questions, staff training) and needs its own design. Scope it after the Shelf-Side AI Assistant ships, before staff quizzes (`docs/PRD-ai-assistant.md` D43).
+**What's needed:** Recipients (owner / managers), schedule, contents, unsubscribe, and a cron route like `api/cron/brand-refresh`.
+
+---
+
 ## Security / Production Hardening
 
 ### No rate limiting on the API
