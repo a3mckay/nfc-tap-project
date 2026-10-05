@@ -81,6 +81,7 @@ export interface AnswerContext {
   } | null;
   facts: Array<{ topic: string; fact: string; sourceKind: string }>;
   reviews: Array<{ rating: number | null; text: string }>;
+  policies: Array<{ label: string; text: string }>;   // the store's policies page (D48)
 }
 
 type Line = string | null | undefined | false;
@@ -131,7 +132,10 @@ export function buildContext(c: AnswerContext): string {
       c.facts.map((f) => `- (${f.topic}, ${f.sourceKind}) ${f.fact}`)),
     section("reviews", "Customer reviews (opinions; say \"customers say\")",
       c.reviews.slice(0, 10).map((r) => `- ${r.rating ? `${r.rating}/5: ` : ""}${r.text}`)),
-    section("store_policy", `${c.storeName}'s store-wide answers and policies`, qa(storeAnswers)),
+    section("store_policy", `${c.storeName}'s store policies and store-wide answers`, [
+      ...c.policies.map((p) => `${p.label}: ${p.text}`),
+      ...qa(storeAnswers),
+    ]),
   ].filter(Boolean);
 
   return [

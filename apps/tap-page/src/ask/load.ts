@@ -3,7 +3,7 @@
 // loaded for customers.
 import {
   getTagByUuid, getProductById, getStoreById, getEnrichmentByProductId, getProductTraining,
-  getProductFacts, getActiveAnswers, getApprovedReviewsByProduct,
+  getProductFacts, getActiveAnswers, getApprovedReviewsByProduct, getStorePolicies,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
 import type { LoadedContext } from "./handle.js";
@@ -35,7 +35,7 @@ export async function loadProductContext(
   tagId: string,
 ): Promise<LoadedContext | null> {
 
-  const [product, store, enrichment, training, facts, answers, reviews] = await Promise.all([
+  const [product, store, enrichment, training, facts, answers, reviews, policies] = await Promise.all([
     getProductById(pool, productId),
     getStoreById(pool, storeId),
     getEnrichmentByProductId(pool, productId),
@@ -43,6 +43,7 @@ export async function loadProductContext(
     getProductFacts(pool, storeId, productId),
     getActiveAnswers(pool, storeId, productId),
     getApprovedReviewsByProduct(pool, productId),
+    getStorePolicies(pool, storeId),
   ]);
   if (!product || !store || product.store_id !== storeId) return null;
 
@@ -84,6 +85,7 @@ export async function loadProductContext(
         ...reviews.map((r) => ({ rating: r.rating === null ? null : Number(r.rating), text: r.body })),
         ...(enrichment?.reviews ?? []).map((r) => ({ rating: r.rating, text: r.text })),
       ].filter((r) => r.text),
+      policies: policies.map((p) => ({ label: p.label, text: p.text })),
     },
   };
 }
