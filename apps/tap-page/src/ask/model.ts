@@ -10,6 +10,7 @@ export const ANSWER_MODEL = "claude-haiku-4-5";
 export async function* streamAnswer(
   system: { rules: string; context: string },
   messages: ModelMessage[],
+  onUsage?: (usage: Anthropic.Usage) => void,   // the quality test set's cost report
 ): AsyncIterable<string> {
   const client = new Anthropic();
   const stream = client.messages.stream({
@@ -24,4 +25,5 @@ export async function* streamAnswer(
   for await (const event of stream) {
     if (event.type === "content_block_delta" && event.delta.type === "text_delta") yield event.delta.text;
   }
+  if (onUsage) onUsage((await stream.finalMessage()).usage);
 }

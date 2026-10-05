@@ -24,7 +24,16 @@ function variantLabels(variants: unknown): { options: string[]; price: string | 
 export async function loadAnswerContext(pool: Pool, tagUuid: string): Promise<LoadedContext | null> {
   const state = resolveTagState(await getTagByUuid(pool, tagUuid));
   if (state.kind !== "active") return null;
-  const { storeId, productId, tagId } = state;
+  return loadProductContext(pool, state.storeId, state.productId, state.tagId);
+}
+
+// The same context for a product, without a tag (used by the quality test set).
+export async function loadProductContext(
+  pool: Pool,
+  storeId: string,
+  productId: string,
+  tagId: string,
+): Promise<LoadedContext | null> {
 
   const [product, store, enrichment, training, facts, answers, reviews] = await Promise.all([
     getProductById(pool, productId),
