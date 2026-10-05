@@ -182,3 +182,19 @@ export async function fetchPageText(url: string): Promise<string | null> {
     return null;
   }
 }
+
+// Spec values from the model (PRD v4 §7 Step 15l): only the template's fields,
+// only with a real source (D41).
+export function specsFromModel(
+  raw: Array<{ key: string; value: string; source: number }>,
+  sources: ResearchSource[],
+  allowedKeys: string[],
+): Array<{ key: string; value: string; source_url: string | null; source_kind: SourceKind }> {
+  const byN = new Map(sources.map((s) => [s.n, s]));
+  const keys = new Set(allowedKeys);
+  return (raw ?? []).flatMap((s) => {
+    const source = byN.get(s.source);
+    const value = s.value?.trim();
+    return source && value && keys.has(s.key) ? [{ key: s.key, value, source_url: source.url, source_kind: source.kind }] : [];
+  });
+}

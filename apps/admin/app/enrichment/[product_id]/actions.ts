@@ -2,7 +2,8 @@
 
 import {
   getPool, upsertFullEnrichment, getProductById, updateManualProduct, getBrandWebsite, setBrandWebsite,
-  replaceResearchedFacts, saveReviewFlags, type Review, type FaqItem,
+  replaceResearchedFacts, saveReviewFlags, getSpecSetup, saveResearchedSpecs, specCategoryFor, specFieldsFor,
+  type Review, type FaqItem,
 } from "@nfc/db";
 import { checkProductNotes } from "@/lib/check-product.js";
 import { getActionStore } from "@/current-store.js";
@@ -14,7 +15,7 @@ import {
 import Anthropic from "@anthropic-ai/sdk";
 import { braveSearch } from "../../../lib/public-reviews/search.js";
 import {
-  findBrandDomain, researchProduct, sourcesForPrompt, factsFromModel, fetchPageText, FACT_TOPICS,
+  findBrandDomain, researchProduct, sourcesForPrompt, factsFromModel, specsFromModel, fetchPageText, FACT_TOPICS,
   type ResearchDeps, type ResearchSource,
 } from "@/lib/product-research.js";
 
@@ -99,6 +100,7 @@ export interface GeneratedDraft {
   great_when: string[];
   facts?: Array<{ topic: string; fact: string; source: number }>;
   mismatches?: string[];
+  specs?: Array<{ key: string; value: string; source: number }>;
 }
 
 export async function generateEnrichmentAction(
@@ -124,6 +126,10 @@ export async function generateEnrichmentAction(
       ? `Description: ${product.description_html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 800)}`
       : null,
   ].filter(Boolean).join("\n");
+
+  // The spec fields for this product's category (Step 15l, D51).
+  const setup = await getSpecSetup(pool, store.id, productId);
+  const specFields = setup ? specFieldsFor(specCategoryFor(setup)) : [];
 
   // Research the product, brand's own site first (PRD v4 §7 Step 15b). Every
   // source is numbered so the facts the model returns can cite one.
@@ -205,13 +211,26 @@ export async function generateEnrichmentAction(
             },
             description: "Up to 12 facts about this product that are stated in the numbered sources, each citing its source number. Prefer brand sources. Leave out anything no source states. Empty array if there are no sources.",
           },
+          specs: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                key: { type: "string", enum: specFields.length ? specFields.map((f) => f.key) : ["none"] },
+                value: { type: "string", description: "Short value as the source states it, e.g. '22%' or 'Veneto, Italy'." },
+                source: { type: "integer", description: "The number of the source it comes from." },
+              },
+              required: ["key", "value", "source"],
+            },
+            description: `Values for these spec fields, only where a numbered source states them: ${specFields.map((f) => `${f.key} (${f.label}: ${f.hint})`).join("; ") || "none"}. Leave out any field no source states. Empty array if there are no sources.`,
+          },
           mismatches: {
             type: "array",
             items: { type: "string" },
             description: "Findings in the sources that don't fit this product's title or type (e.g. a source describes a sleeveless top but this is a shirt, or a different colourway or model), which you left out of the copy and facts. One short sentence each. Empty array if none.",
           },
         },
-        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "video_url", "faq", "great_when", "facts", "mismatches"],
+        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "video_url", "faq", "great_when", "facts", "mismatches", "specs"],
       },
     }],
     tool_choice: { type: "tool", name: "submit_product_copy" },
@@ -259,6 +278,7 @@ export async function generateEnrichmentAction(
   if (sources.length > 0) {
     await replaceResearchedFacts(pool, store.id, productId, factsFromModel(draft.facts ?? [], sources));
     await saveReviewFlags(pool, store.id, productId, "mismatch", draft.mismatches ?? []);   // D50
+    await saveResearchedSpecs(pool, store.id, productId, specsFromModel(draft.specs ?? [], sources, specFields.map((f) => f.key)));   // D51
   }
   await checkProductNotes(pool, store.id, productId);   // D49
 

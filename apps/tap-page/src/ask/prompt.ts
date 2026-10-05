@@ -65,7 +65,10 @@ Format: plain sentences, no headings, no bullet lists, no markdown. After an ans
 
 export interface AnswerContext {
   storeName: string;
-  product: { title: string; vendor: string | null; productType: string | null; description: string | null; variants: string[] };
+  product: {
+    title: string; vendor: string | null; productType: string | null; description: string | null; variants: string[];
+    specs?: Array<{ label: string; value: string }>;   // category spec fields (Step 15l, D51)
+  };
   answers: Array<{ question: string; answer: string; scope: "product" | "store" }>;
   enrichment: {
     greatWhen: string[];
@@ -143,6 +146,7 @@ export function buildContext(c: AnswerContext): string {
       field("Type", c.product.productType),
       field("Description", c.product.description),
       c.product.variants.length ? `Options listed (not live stock): ${c.product.variants.join(", ")}` : null,
+      c.product.specs?.length ? `Specs: ${c.product.specs.map((x) => `${x.label}: ${x.value}`).join("; ")}` : null,
     ]),
     section("product_research", "Research fact sheet (brand sources are most reliable)",
       c.facts.map((f) => `- (${f.topic}, ${f.sourceKind}) ${f.fact}`)),

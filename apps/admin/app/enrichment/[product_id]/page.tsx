@@ -7,7 +7,12 @@ import {
   getProductFacts,
   getBrandWebsite,
   getReviewFlags,
+  getProductSpecs,
+  getSpecSetup,
+  specCategoryFor,
+  SPEC_TEMPLATES,
 } from "@nfc/db";
+import { SpecsPanel } from "./SpecsPanel.js";
 import { ReviewFlags } from "./ReviewFlags.js";
 import { EnrichmentPageClient } from "./EnrichmentPageClient.js";
 import { FactSheet } from "./FactSheet.js";
@@ -46,11 +51,13 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     );
   }
 
-  const [product, enrichment, facts, flags] = await Promise.all([
+  const [product, enrichment, facts, flags, specs, specSetup] = await Promise.all([
     getProductById(pool, product_id),
     getEnrichmentByProductId(pool, product_id),
     getProductFacts(pool, store.id, product_id),
     getReviewFlags(pool, store.id, product_id),
+    getProductSpecs(pool, store.id, product_id),
+    getSpecSetup(pool, store.id, product_id),
   ]);
 
   if (!product || product.store_id !== store.id) {
@@ -109,6 +116,17 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         isAiGenerated={enrichment?.ai_generated ?? false}
         publicReviewsEnabled={(store as unknown as { public_reviews_enabled?: boolean })?.public_reviews_enabled ?? false}
       />
+
+      {specSetup && (
+        <SpecsPanel
+          shop={shop}
+          productId={product_id}
+          detected={specCategoryFor({ ...specSetup, override: null })}
+          override={specSetup.override}
+          templates={SPEC_TEMPLATES}
+          specs={specs.map((x) => ({ key: x.key, value: x.value, source_url: x.source_url, source_kind: x.source_kind }))}
+        />
+      )}
 
       <FactSheet
         shop={shop}

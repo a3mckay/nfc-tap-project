@@ -1,6 +1,6 @@
 "use server";
 
-import { getPool, setDataSharingConsent, setStorePlatform, updateStoreContactInfo, type StorePlatform } from "@nfc/db";
+import { getPool, setDataSharingConsent, setStorePlatform, updateStoreContactInfo, setStoreIndustry, SPEC_CATEGORIES, type StorePlatform } from "@nfc/db";
 import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import { normalizePhone } from "../../src/phone-utils.js";
@@ -41,6 +41,18 @@ export async function saveContactInfoAction(
   const whatsapp = normalizePhone(whatsappRaw);
   const sms      = normalizePhone(smsRaw);
   await updateStoreContactInfo(pool, store.id, whatsapp, sms);
+  revalidatePath("/settings");
+  return {};
+}
+
+// PRD v4 §7 Step 15l: the store's main industry, the fallback spec category for
+// products whose type doesn't say (D51).
+export async function setIndustryAction(shop: string, industry: string): Promise<{ error?: string }> {
+  const pool = getPool({ connectionString: process.env.DATABASE_URL });
+  const store = await getActionStore(pool, shop, "store_settings");
+  if (!store) return { error: "Store not found" };
+  if (industry && !(SPEC_CATEGORIES as string[]).includes(industry)) return { error: "Unknown industry" };
+  await setStoreIndustry(pool, store.id, industry || null);
   revalidatePath("/settings");
   return {};
 }

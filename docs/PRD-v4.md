@@ -287,6 +287,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0026 | `store_policies` (one row per filled-in policy; the types live in `packages/db/src/store-policies.ts`) |
 | 0027 | `product_question_reviews` (when the team last opened a product on the Questions tab; later questions are "new") |
 | 0028 | `product_review_flags` (contradictions between a product's notes, and research findings that don't fit it; one row per kind) |
+| 0029 | Category spec fields: `stores.industry`, `products.spec_category`, `product_specs` (one value per spec field, with its source; owner edits win) |
 
 ---
 
@@ -465,9 +466,9 @@ Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
 | Theme, settings, product matching, getting started | ✅ | ❌ | ❌ |
 | Plan and billing | ✅ | ❌ | ❌ |
 
-### Phase 6: Shelf-Side AI Assistant 🟡
+### Phase 6: Shelf-Side AI Assistant ✅
 
-**Step 15: Shelf-Side AI Assistant 🟡** (approved by the founder 2026-10-05)
+**Step 15: Shelf-Side AI Assistant ✅** (built 2026-10-05; go-live checklist in `ACTION_ITEMS.md`) (approved by the founder 2026-10-05)
 
 Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md) (decisions D1–D45). Customers ask questions on the tap page and get answers grounded in the store's data. Staff can ask the same AI from the training view. Owners, managers and co-managers review every question, grouped by theme, and add answers that the AI uses from then on. Comes before weekly staff quizzes (D36). Slices, in dependency order:
 
@@ -482,7 +483,7 @@ Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md) (decisions D1–D45). Cu
 - ✅ **15i Admin home page** (2026-10-05): `/` becomes a real home page with tap activity and customer questions at a glance (D44), and it's where owners, managers and co-managers land after sign-in (D45). Built: `apps/admin/app/page.tsx` with a questions card ("Customers asked N questions this week · top theme", most-asked product, link to Unanswered) for anyone with the `questions` permission, and a taps card (this week vs last, top 3 products) for anyone with `analytics`; counts in `packages/db/src/home-summary.ts`. `adminHomePath` and the owner sign-in now go to `/?shop=…`; the sidebar's "TapShelf Admin" links home.
 - ✅ **15j Store policies page** (2026-10-05; D48): owners and managers fill in the standard policies; the assistant's `store_policy` source reads them. Built: `/policies` in the admin (new `policies` permission: owner and manager), eight policy types (returns and exchanges, warranty and repairs, alterations and tailoring, price matching, holds and special orders, delivery and shipping, gift cards and gift wrap, ID and age requirements); the assistant reads them first in its `store_policy` section.
 - ✅ **15k Contradiction and AI-draft checks** (2026-10-05; D49, D50): the conflict banner on save/generate; Generate checks findings against the product's title and type; "AI draft, not reviewed" marking; reviewed content ranks above AI drafts. Built: after saving product copy, saving training notes, or Generate, a Claude Haiku 4.5 check (`apps/admin/src/lib/consistency-check.ts`, `check-product.ts`) compares customer copy, training notes and research facts and stores contradictions; Generate also returns and stores findings that don't fit the product (`mismatches`). Both show in a "Check these before customers ask" banner on the product and training editors, and clear when the notes agree. A check failure never blocks a save. On the tap page, copy still marked `ai_generated` ranks below the listing and research. "AI draft, not reviewed" marking uses the existing `ai_generated` flag, which saving clears.
-- ⬜ **15l Category spec fields** (D51, last slice): per-product spec templates by product type (store industry as default), filled by the research tool with sources, read by the assistant.
+- ✅ **15l Category spec fields** (2026-10-05; D51): per-product spec templates by product type (store industry as default), filled by the research tool with sources, read by the assistant. Built: templates and detection in `packages/db/src/spec-templates.ts` (cannabis, wine, beer, spirits, eyewear, footwear, apparel, home, general); `product_specs` storage; Generate fills only fields a numbered source states; a "Product specs" panel on the product editor (category picker with "Automatic" detection; values typed there win); "Main industry" in Settings as the fallback (it replaced a duplicated platform section); the assistant lists specs in the product listing.
 - 🧍 Privacy Policy and store Terms of Service updates for saved questions and the founder's cross-store access (D19, D20); part of the existing legal review.
 
 Out of scope for this phase: weekly owner email (D43, `DEFERRED.md`), thumbs up/down (D39), problem-first framing of the existing copy prompt, live stock answers (D25).

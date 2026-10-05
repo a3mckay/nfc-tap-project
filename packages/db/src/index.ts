@@ -14,6 +14,8 @@ export * from "./question-themes.js";
 export * from "./question-insights.js";
 export * from "./home-summary.js";
 export * from "./review-flags.js";
+export * from "./spec-templates.js";
+export * from "./product-specs.js";
 export * from "./reactions.js";
 export * from "./products.js";
 export * from "./tags.js";

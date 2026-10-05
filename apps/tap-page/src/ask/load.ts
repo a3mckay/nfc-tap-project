@@ -4,6 +4,7 @@
 import {
   getTagByUuid, getProductById, getStoreById, getEnrichmentByProductId, getProductTraining,
   getProductFacts, getActiveAnswers, getApprovedReviewsByProduct, getStorePolicies, getRecentQuestions,
+  getProductSpecs, specCategoryFor, specFieldsFor,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
 import type { LoadedContext } from "./handle.js";
@@ -36,7 +37,7 @@ export async function loadProductContext(
   audience: "customer" | "staff" = "customer",
 ): Promise<LoadedContext | null> {
 
-  const [product, store, enrichment, training, facts, answers, reviews, policies] = await Promise.all([
+  const [product, store, enrichment, training, facts, answers, reviews, policies, specValues] = await Promise.all([
     getProductById(pool, productId),
     getStoreById(pool, storeId),
     getEnrichmentByProductId(pool, productId),
@@ -45,10 +46,18 @@ export async function loadProductContext(
     getActiveAnswers(pool, storeId, productId),
     getApprovedReviewsByProduct(pool, productId),
     getStorePolicies(pool, storeId),
+    getProductSpecs(pool, storeId, productId),
   ]);
   if (!product || !store || product.store_id !== storeId) return null;
 
   const { options, price } = variantLabels(product.variants);
+  // Spec values, labelled by the product's category template (Step 15l, D51).
+  const fields = specFieldsFor(specCategoryFor({
+    productType: product.product_type, title: product.title,
+    override: product.spec_category, storeIndustry: store.industry,
+  }));
+  const valueByKey = new Map(specValues.map((v) => [v.key, v.value]));
+  const specs = fields.filter((f) => valueByKey.has(f.key)).map((f) => ({ label: f.label, value: valueByKey.get(f.key)! }));
   const description = [
     product.description_html ? stripHtml(product.description_html).slice(0, 1500) : null,
     price ? `Price: $${price}` : null,
@@ -60,7 +69,7 @@ export async function loadProductContext(
     tagId,
     context: {
       storeName: store.name ?? store.shopify_shop_domain,
-      product: { title: product.title, vendor: product.vendor, productType: product.product_type, description, variants: options },
+      product: { title: product.title, vendor: product.vendor, productType: product.product_type, description, variants: options, specs },
       answers: answers.map((a) => ({ question: a.question, answer: a.answer, scope: a.product_id ? "product" : "store" })),
       enrichment: enrichment && {
         greatWhen: enrichment.great_when ?? [],

@@ -7,7 +7,7 @@ import { handleAsk, MAX_QUESTIONS_PER_VISIT, type AskDeps, type AskEvent } from 
 
 const ctx = (over: Partial<AnswerContext> = {}): AnswerContext => ({
   storeName: "Queen West Shoes",
-  product: { title: "Weekend Chukka", vendor: "Northfield", productType: "Boots", description: "Suede chukka.", variants: ["8", "9", "10"] },
+  product: { title: "Weekend Chukka", vendor: "Northfield", productType: "Boots", description: "Suede chukka.", variants: ["8", "9", "10"], specs: [{ label: "Upper", value: "Full-grain suede" }, { label: "Waterproof", value: "Water-resistant" }] },
   answers: [{ question: "Made in Canada?", answer: "No, it's made in Portugal.", scope: "product" }, { question: "Return policy?", answer: "30 days, unworn.", scope: "store" }],
   enrichment: { greatWhen: ["you need one boot from office to bar"], reasonsToBuy: [], backstory: null, materials: "Full-grain suede", fitNotes: "True to size", care: null, sustainability: null, faq: [] },
   training: { whoItsFor: "People who want one smart-casual boot", whoItsNotFor: null, fitAndSizing: null, closestAlternative: "The Desert Boot", worthThePrice: ["Resoleable"], companionProducts: "Suede protector", commonQuestions: [] },
@@ -52,6 +52,12 @@ describe("buildContext", () => {
     expect(draft.indexOf("[product_research]")).toBeLessThan(draft.indexOf("[owner_content]"));
     const reviewed = buildContext(ctx());
     expect(reviewed.indexOf("[owner_content]")).toBeLessThan(reviewed.indexOf("[product_details]"));
+  });
+
+  it("lists the product's specs in the product listing (D51)", () => {
+    const text = buildContext(ctx());
+    const listing = text.slice(text.indexOf("[product_details]"), text.indexOf("[product_research]"));
+    expect(listing).toContain("Specs: Upper: Full-grain suede; Waterproof: Water-resistant");
   });
 
   it("puts staff training notes after the store's customer-facing content (D49)", () => {

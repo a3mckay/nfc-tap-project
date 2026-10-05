@@ -12,6 +12,10 @@ const db = vi.hoisted(() => ({
   setBrandWebsite: vi.fn(async () => {}),
   replaceResearchedFacts: vi.fn(async () => true),
   saveReviewFlags: vi.fn(async () => {}),
+  getSpecSetup: vi.fn(async () => ({ storeIndustry: null, override: null, productType: "Boots", title: "Weekend Chukka" })),
+  saveResearchedSpecs: vi.fn(async () => {}),
+  specCategoryFor: vi.fn(() => "footwear"),
+  specFieldsFor: vi.fn(() => [{ key: "upper", label: "Upper", hint: "" }, { key: "waterproof", label: "Waterproof", hint: "" }]),
 }));
 const checkProductNotes = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("@/lib/check-product.js", () => ({ checkProductNotes }));
@@ -47,6 +51,7 @@ const modelOutput = (extra: Record<string, unknown> = {}) => ({
         { topic: "fit", fact: "Made up claim", source: 7 },
       ],
       mismatches: ["One source describes the mid-top, not this low-top."],
+      specs: [{ key: "upper", value: "Full-grain suede", source: 1 }, { key: "waterproof", value: "Yes", source: 9 }],
       ...extra,
     },
   }],
@@ -113,6 +118,16 @@ describe("checks after Generate (Step 15k)", () => {
     await generateEnrichmentAction("own.myshopify.com", "p-1");
     expect(db.saveReviewFlags).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1", "mismatch", ["One source describes the mid-top, not this low-top."]);
     expect(checkProductNotes).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1");
+  });
+});
+
+describe("spec fields (Step 15l)", () => {
+  it("asks for the category's fields and saves sourced values", async () => {
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(JSON.stringify(create.mock.calls[0]![0].tools)).toContain("upper (Upper");
+    expect(db.saveResearchedSpecs).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1", [
+      { key: "upper", value: "Full-grain suede", source_url: "https://northfield.com/chukka", source_kind: "brand" },
+    ]);
   });
 });
 
