@@ -173,6 +173,12 @@ export async function clearPendingBrandSuggestion(
   );
 }
 
+// The display name customers see on tap pages, in the chat and in link
+// previews. Blank clears it, and the web address is shown instead.
+export async function setStoreName(pool: Pool, storeId: string, name: string): Promise<void> {
+  await pool.query(`update stores set name = $2 where id = $1`, [storeId, name.trim() || null]);
+}
+
 export async function setStorePlatform(
   pool: Pool,
   storeId: string,
