@@ -82,6 +82,7 @@ Round 5 (2026-10-05):
 | D43 | **Weekly owner email moves out of this phase** (supersedes the email part of D40). It's a broader piece of work that needs its own design, so it'll be scoped after this feature ships, still ahead of staff quizzes. |
 | D44 | **The dashboard card goes on the admin home page**, which should put tap activity and customer questions front and centre. |
 | D45 | **Admin home page:** `/` becomes a real home page with tap activity and questions at a glance. Owners, managers and co-managers all land there after sign-in. |
+| D46 | **Quality test set, revised (2026-10-05):** 350 questions instead of 100: 50 per category for the sample store's five products (Air Force 1, Animal Face cannabis, Campofiorin wine, Easy Pointelle Shirt, Erika Classic sunglasses) plus 50 each for menswear and home furnishings, which use sample products. Supersedes the count in D33. |
 
 
 Today, a tap tells us a customer was curious. It doesn't tell us *why*. And when a customer has a question, the only path is **Ask Us**, which sends them to a human over WhatsApp or SMS. That only works when someone is free to answer, and we capture nothing from it.

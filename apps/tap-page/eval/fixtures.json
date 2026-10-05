@@ -1,0 +1,71 @@
+{
+  "_comment": "Sample products for categories the founder's sample store doesn't carry yet (menswear, home furnishings). Invented for testing only; shaped like AnswerContext in src/ask/prompt.ts.",
+  "Oxford Cloth Button-Down (sample)": {
+    "storeName": "Sample Store",
+    "product": {
+      "title": "Oxford Cloth Button-Down",
+      "vendor": "Harbour Supply",
+      "productType": "Shirts",
+      "description": "A classic button-down in 100% cotton oxford cloth with a soft-rolled collar, one chest pocket and a box pleat at the back. Price: $98.00",
+      "variants": ["S / Blue", "M / Blue", "L / Blue", "XL / Blue", "S / White", "M / White", "L / White", "XL / White"]
+    },
+    "answers": [
+      { "question": "Can I return it?", "answer": "Unworn, unwashed items with tags can be returned within 30 days for a refund or exchange.", "scope": "store" },
+      { "question": "Do you do alterations?", "answer": "We offer free sleeve shortening on full-price shirts; it takes about a week.", "scope": "store" }
+    ],
+    "enrichment": {
+      "greatWhen": ["you want one shirt that works with jeans or a blazer", "the office is business casual", "you like a shirt that gets softer every wash"],
+      "reasonsToBuy": ["Softens with every wash", "Works dressed up or down"],
+      "backstory": null,
+      "materials": "100% cotton oxford cloth, mid-weight.",
+      "fitNotes": "Classic fit through the chest and waist; true to size. Size down for a closer fit.",
+      "care": "Machine wash cold, hang to dry. Warm iron if you want it crisp.",
+      "sustainability": null,
+      "faq": [{ "question": "Does it shrink?", "answer": "Up to about 2% after the first hot wash; wash cold to avoid it." }]
+    },
+    "training": {
+      "whoItsFor": "Anyone who wants a smart-casual shirt that also works under a blazer.",
+      "whoItsNotFor": "Someone who wants a very slim, formal dress shirt.",
+      "fitAndSizing": "Neck sizes: S 14.5–15, M 15.5–16, L 16.5–17, XL 17.5–18.",
+      "closestAlternative": "Our poplin dress shirt is smoother and more formal.",
+      "worthThePrice": ["Cotton that lasts for years"],
+      "companionProducts": "Navy chinos",
+      "commonQuestions": []
+    },
+    "facts": [
+      { "topic": "construction", "fact": "Button-down collar with a box pleat at the back", "sourceKind": "brand" },
+      { "topic": "origin", "fact": "Made in Portugal", "sourceKind": "brand" }
+    ],
+    "reviews": [{ "rating": 5, "text": "Fits true to size and got softer after a few washes." }]
+  },
+  "Washed Linen Duvet Cover (sample)": {
+    "storeName": "Sample Store",
+    "product": {
+      "title": "Washed Linen Duvet Cover",
+      "vendor": "Field & Fold",
+      "productType": "Bedding",
+      "description": "Stonewashed 100% linen duvet cover with a hidden button closure and corner ties. Price: $289.00 (Queen)",
+      "variants": ["Twin / White", "Queen / White", "King / White", "Queen / Sage", "King / Sage"]
+    },
+    "answers": [
+      { "question": "Can I return bedding once opened?", "answer": "Bedding can be returned within 30 days if it's unwashed and in its original packaging.", "scope": "store" }
+    ],
+    "enrichment": {
+      "greatWhen": ["you sleep hot", "you like a relaxed, lived-in look", "you want bedding that gets softer with time"],
+      "reasonsToBuy": ["Breathable for warm sleepers", "Softens with every wash"],
+      "backstory": null,
+      "materials": "100% European flax linen, stonewashed for softness.",
+      "fitNotes": "Twin 68x90 in, Queen 90x90 in, King 106x90 in.",
+      "care": "Machine wash warm, tumble dry low. No bleach. No ironing needed — the texture is part of the look.",
+      "sustainability": null,
+      "faq": []
+    },
+    "training": null,
+    "facts": [
+      { "topic": "origin", "fact": "Linen woven in Lithuania", "sourceKind": "brand" },
+      { "topic": "features", "fact": "OEKO-TEX Standard 100 certified", "sourceKind": "brand" },
+      { "topic": "construction", "fact": "Hidden button closure with interior corner ties", "sourceKind": "brand" }
+    ],
+    "reviews": [{ "rating": 4, "text": "A little rough at first, soft after two washes." }]
+  }
+}
