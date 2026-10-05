@@ -6,6 +6,8 @@ export * from "./product-training.js";
 export * from "./tap-handoff.js";
 export * from "./staff-progress.js";
 export * from "./manager-auth.js";
+export * from "./pii.js";
+export * from "./product-questions.js";
 export * from "./reactions.js";
 export * from "./products.js";
 export * from "./tags.js";
