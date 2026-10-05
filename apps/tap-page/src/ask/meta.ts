@@ -1,16 +1,15 @@
-// The model ends each answer with a `<<meta {...}>>` line (see prompt.ts). This
+// The model ends each answer with a `<<meta {...}>>` line (see prompt.ts).
+// The mode line at the start is read separately (readModeLine in handle.ts). This
 // splits a streamed answer into the text the customer sees and that metadata,
 // holding back anything that might be the start of the marker until it's sure.
 
 export interface AnswerMeta {
-  status: "answered" | "unanswered";
-  topic: "stock" | "off_topic" | null;
   sources: string[];
-  language: string | null;
+  regulated: boolean;
 }
 
 const MARKER = "<<meta";
-const DEFAULT_META: AnswerMeta = { status: "answered", topic: null, sources: [], language: null };
+const DEFAULT_META: AnswerMeta = { sources: [], regulated: false };
 
 export class MetaSplitter {
   private pending = "";
@@ -55,12 +54,10 @@ function parseMeta(raw: string | null): AnswerMeta {
   if (!raw) return { ...DEFAULT_META };
   const json = raw.slice(MARKER.length).replace(/>>\s*$/, "").trim();
   try {
-    const m = JSON.parse(json) as Partial<AnswerMeta> & { topic?: string | null };
+    const m = JSON.parse(json) as Partial<AnswerMeta>;
     return {
-      status: m.status === "unanswered" ? "unanswered" : "answered",
-      topic: m.topic === "stock" || m.topic === "off_topic" ? m.topic : null,
       sources: Array.isArray(m.sources) ? m.sources.filter((s): s is string => typeof s === "string") : [],
-      language: typeof m.language === "string" && /^[a-z]{2}$/i.test(m.language) ? m.language.toLowerCase() : null,
+      regulated: m.regulated === true,
     };
   } catch {
     return { ...DEFAULT_META };

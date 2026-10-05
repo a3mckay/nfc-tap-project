@@ -73,7 +73,7 @@
   "id": "wine-11",
   "category": "wine",
   "product": "Campofiorin",
-  "kind": "fact",
+  "kind": "price",
   "question": "How much is it?"
  },
  {
