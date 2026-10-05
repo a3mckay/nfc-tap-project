@@ -1,6 +1,9 @@
 "use server";
 
-import { getPool, upsertFullEnrichment, getProductById, updateManualProduct, type Review, type FaqItem } from "@nfc/db";
+import {
+  getPool, upsertFullEnrichment, getProductById, updateManualProduct, getBrandWebsite, setBrandWebsite,
+  replaceResearchedFacts, type Review, type FaqItem,
+} from "@nfc/db";
 import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import {
@@ -9,6 +12,10 @@ import {
 } from "../../../src/enrichment-utils.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { braveSearch } from "../../../lib/public-reviews/search.js";
+import {
+  findBrandDomain, researchProduct, sourcesForPrompt, factsFromModel, fetchPageText, FACT_TOPICS,
+  type ResearchDeps, type ResearchSource,
+} from "@/lib/product-research.js";
 
 export interface EnrichmentFormData {
   shop: string;
@@ -31,7 +38,10 @@ export interface EnrichmentFormData {
   awards_text: string;
   faq: FaqItem[];
   internal_staff_notes: string;
+  great_when_text: string;   // one key point per line, up to 3
 }
+
+const MAX_GREAT_WHEN = 3;
 
 export async function saveEnrichmentAction(
   data: EnrichmentFormData,
@@ -67,6 +77,7 @@ export async function saveEnrichmentAction(
     awards: parseReasonsInput(data.awards_text),
     faq: data.faq,
     internal_staff_notes: data.internal_staff_notes.trim() || null,
+    great_when: parseReasonsInput(data.great_when_text).slice(0, MAX_GREAT_WHEN),
   });
 
   revalidatePath("/enrichment");
@@ -83,6 +94,8 @@ export interface GeneratedDraft {
   staff_quote: string;
   faq: FaqItem[];
   video_url: string;
+  great_when: string[];
+  facts?: Array<{ topic: string; fact: string; source: number }>;
 }
 
 export async function generateEnrichmentAction(
@@ -109,20 +122,28 @@ export async function generateEnrichmentAction(
       : null,
   ].filter(Boolean).join("\n");
 
-  // Optionally ground copy in real web sources via Brave Search
+  // Research the product, brand's own site first (PRD v4 §7 Step 15b). Every
+  // source is numbered so the facts the model returns can cite one.
   let webContext = "";
   let youtubeUrl = "";
+  let sources: ResearchSource[] = [];
   if (process.env.BRAVE_SEARCH_API_KEY) {
-    const query = [product.vendor, product.title].filter(Boolean).join(" ");
+    const deps: ResearchDeps = { search: braveSearch, fetchText: fetchPageText };
     try {
-      // Run product research and YouTube searches in parallel
-      const [results, ytResults] = await Promise.all([
-        braveSearch(`${query} materials features review`, 6),
+      const known = product.vendor ? await getBrandWebsite(pool, store.id, product.vendor) : null;
+      const brand = product.vendor ? await findBrandDomain(product.vendor, known?.website ?? null, deps) : null;
+      if (brand?.found && product.vendor) {
+        await setBrandWebsite(pool, store.id, product.vendor, `https://${brand.domain}`, false);
+      }
+      const query = [product.vendor, product.title].filter(Boolean).join(" ");
+      const [found, ytResults] = await Promise.all([
+        researchProduct(product, brand?.domain ?? null, deps),
         braveSearch(`${query} site:youtube.com`, 3),
       ]);
-      if (results.length > 0) {
-        webContext = "\n\nWeb research about this product (use to ground your copy in facts):\n" +
-          results.map((r, i) => `[${i + 1}] ${r.title}\n${r.description}`).join("\n\n");
+      sources = found;
+      if (sources.length > 0) {
+        webContext = "\n\nNumbered sources about this product. Brand sources are the most trusted; ground your copy in them and don't invent facts:\n" +
+          sourcesForPrompt(sources);
       }
       // Find the first proper YouTube watch URL
       const ytMatch = ytResults.find((r) => r.url.includes("youtube.com/watch"));
@@ -163,8 +184,26 @@ export async function generateEnrichmentAction(
             },
             description: "2-3 questions a customer might actually ask in store. Answers must be brief.",
           },
+          great_when: {
+            type: "array",
+            items: { type: "string" },
+            description: "Exactly 3 short phrases that complete the sentence 'Great when…', naming the situation or problem this product is for (e.g. 'you need one boot from office to bar'). Max 10 words each. Don't repeat 'Great when'. No upselling.",
+          },
+          facts: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                topic: { type: "string", enum: [...FACT_TOPICS] },
+                fact: { type: "string", description: "One specific, checkable fact about this exact product, in a short sentence." },
+                source: { type: "integer", description: "The number of the source this fact comes from." },
+              },
+              required: ["topic", "fact", "source"],
+            },
+            description: "Up to 12 facts about this product that are stated in the numbered sources, each citing its source number. Prefer brand sources. Leave out anything no source states. Empty array if there are no sources.",
+          },
         },
-        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "video_url", "faq"],
+        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "video_url", "faq", "great_when", "facts"],
       },
     }],
     tool_choice: { type: "tool", name: "submit_product_copy" },
@@ -203,9 +242,16 @@ export async function generateEnrichmentAction(
     awards: [],
     faq: draft.faq ?? [],
     internal_staff_notes: null,
+    great_when: (draft.great_when ?? []).slice(0, MAX_GREAT_WHEN),
     ai_generated: true,
   });
 
+  // Only a run that actually researched replaces the fact sheet; the owner's
+  // edited and added facts are always kept.
+  if (sources.length > 0) {
+    await replaceResearchedFacts(pool, store.id, productId, factsFromModel(draft.facts ?? [], sources));
+  }
+
   revalidatePath(`/enrichment/${productId}`);
-  return { draft };
+  return { draft: { ...draft, great_when: (draft.great_when ?? []).slice(0, MAX_GREAT_WHEN) } };
 }

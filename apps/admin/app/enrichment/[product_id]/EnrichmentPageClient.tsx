@@ -50,6 +50,7 @@ export function EnrichmentPageClient({
       staff_quote: draft.staff_quote || prev.staff_quote,
       video_url: draft.video_url || prev.video_url,
       faq: draft.faq?.length ? draft.faq : prev.faq,
+      great_when_text: draft.great_when?.length ? draft.great_when.join("\n") : prev.great_when_text,
     }));
     setFormKey((k) => k + 1);
     setJustGenerated(true);

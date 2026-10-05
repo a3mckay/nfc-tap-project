@@ -8,6 +8,7 @@ export * from "./staff-progress.js";
 export * from "./manager-auth.js";
 export * from "./pii.js";
 export * from "./product-questions.js";
+export * from "./product-facts.js";
 export * from "./reactions.js";
 export * from "./products.js";
 export * from "./tags.js";
