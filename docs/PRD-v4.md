@@ -21,6 +21,7 @@
 5. **Section 11** lists places where the code and the spec disagree (for example, pricing tiers).
 6. **Staff logins and the staff training view** moved from the V2 roadmap into the build order as the **next priority** (§7 Phase 5, Step 13). Decided 2026-09-28. The design is in [`docs/staff-experience.md`](staff-experience.md).
 7. **2026-10-02 → 2026-10-05:** the Shelf-Side AI Assistant (customer Ask, staff Ask in the existing training view, question insights) was specified and approved as §7 Phase 6, Step 15. Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md).
+8. **Section 16** lists parked features: built or spec'd, still wanted, set aside for now. First entry: customer contact over WhatsApp/SMS (2026-10-05).
 
 ### Status legend
 
@@ -541,7 +542,7 @@ The SaaS tool is how TapShelf gets to market. The dataset is the long-term defen
 
 ## 10. Features Added After v3 (not in the original PRD)
 
-These were built in May 2026. The migrations number them as expansion sections §1–§7, §14 and §16. The original expansion plan document wasn't found in the repo; this section records what was built.
+These were built in May 2026. The migrations number them as expansion sections §1–§7, §14 and §16 (an older plan's numbering, not this PRD's). The original expansion plan document wasn't found in the repo; this section records what was built.
 
 **Tap page experience**
 - **Visual-first redesign:** reviews moved up and long text collapsed
@@ -550,7 +551,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 - **Reactions:** loved / liked / passed on each product
 - **Persuasion elements:** staff photo beside the staff quote; "Only X left" scarcity once inventory drops below `stores.scarcity_threshold` (default 5)
 - **Recognition section:** approved awards
-- **Ask Us:** WhatsApp and SMS deep-link buttons using the store's contact numbers
+- **Ask Us:** WhatsApp and SMS deep-link buttons using the store's contact numbers. ⏸️ *Parked 2026-10-05: replaced by the AI assistant. See §16.*
 - **NotifyMe:** inline opt-in after viewing a product (sale, restock and offer alerts); works anonymously by session or signed in
 - **Offers:** store-configured codes shown `always`, `after_reaction` or `after_n_taps`, scoped per product or store-wide, with optional expiry
 - **Back navigation** on product pages
@@ -575,7 +576,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 
 **Admin / platform**
 - **Multi-store admin:** `/stores`; per-store email + password login (PBKDF2, edge-safe); logout
-- **Settings:** store contact numbers, platform picker, data-sharing toggle
+- **Settings:** platform picker, main industry, data-sharing toggle (the store contact numbers section was removed 2026-10-05; see §16)
 - **Analytics additions:** customer segments, offer performance, curiosity gap, dead zones
 - **`/offers` management**
 - **Product import:** CSV import and manual product creation
@@ -673,5 +674,21 @@ These were built in May 2026. The migrations number them as expansion sections �
 - **Keep the running docs current:** add new deferrals to `DEFERRED.md` and new human tasks to `ACTION_ITEMS.md`.
 - **Hosting:** Railway (admin, tap page, Postgres), deployed from `main`; DNS via Namecheap. GitHub user `a3mckay`.
 - **Migrations in production:** the admin service's Railway pre-deploy command runs `pnpm --filter @nfc/db migrate:up` before each deploy. To run them by hand, use the Postgres service's `DATABASE_PUBLIC_URL` (the plain `DATABASE_URL` is only reachable inside Railway): `DATABASE_URL="…" corepack pnpm db:migrate`.
+
+## 16. Parked Features (good ideas, not now)
+
+Features that were built or spec'd and then deliberately set aside. They're still wanted; they're waiting for the right time. Before reviving one, check it against what's been built since.
+
+### 16.1 Customer contact (Ask Us over WhatsApp / SMS)
+
+- **What it was:** the store entered a WhatsApp and an SMS number in Settings ("Customer contact"). The tap page showed an "Ask Us" card that opened a WhatsApp chat or the phone's messages app with the store.
+- **Why it's parked (2026-10-05):** the Shelf-Side AI Assistant (§7 Phase 6) answers customer questions on the tap page, saves them, and sends the ones it can't answer to the store (D5, D26, D53). The Ask Us card was removed from the tap page in Step 15e, which left the Settings section doing nothing, so it was removed too.
+- **What's kept:** the `stores.whatsapp_number` and `stores.sms_number` columns (migration 0015) and any numbers already saved. Nothing reads or writes them now. The Settings form, its save action and the phone-number formatter are in git history (removed in the commit that added this section).
+- **When it could come back:**
+  - as a "Talk to a person" option in the chat when the AI can't answer and the store wants live replies;
+  - for stores that staff a phone line and want customers to reach them directly.
+- **Open questions when revived:** should the customer's question and the AI's attempt go with the message? Who answers outside store hours? How do we capture these conversations as questions for the owner's Questions view, the way the chat does?
+
+---
 
 *End of document · PRD v4 · TapShelf*
