@@ -41,7 +41,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
   );
 }
 
-const AI_FIELDS = new Set(["backstory", "materials", "fit_notes", "reasons_to_buy_text"]);
+const AI_FIELDS = new Set(["backstory", "materials", "fit_notes", "reasons_to_buy_text", "great_when_text"]);
 
 export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) {
   const [form, setForm] = useState<EnrichmentFormData>(initial);
@@ -166,6 +166,16 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
       {/* Why Buy */}
       <div style={sectionStyle}>
         <p style={sectionHeadingStyle}>Why Buy</p>
+        <div style={fieldStyle}>
+          <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            Great when…
+            {showAiBadge("great_when_text") && <AiBadge />}
+          </label>
+          <span style={hintStyle}>The 3 key points customers see first. Name the situation it&apos;s for, one per line, finishing &ldquo;Great when…&rdquo;</span>
+          <textarea style={{ ...taStyle, minHeight: "70px" }} value={form.great_when_text}
+            onChange={(e) => set("great_when_text", e.target.value)}
+            placeholder={"you need one boot from office to bar\nit's wet but not snowing\nyou hate breaking shoes in"} />
+        </div>
         <div style={fieldStyle}>
           <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "0.4rem" }}>
             Reasons to buy

@@ -4,8 +4,11 @@ import {
   getStoreByDomain,
   getProductById,
   getEnrichmentByProductId,
+  getProductFacts,
+  getBrandWebsite,
 } from "@nfc/db";
 import { EnrichmentPageClient } from "./EnrichmentPageClient.js";
+import { FactSheet } from "./FactSheet.js";
 import { ProductTabs } from "@/ProductTabs.js";
 import type { EnrichmentFormData } from "./actions.js";
 import {
@@ -41,9 +44,10 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     );
   }
 
-  const [product, enrichment] = await Promise.all([
+  const [product, enrichment, facts] = await Promise.all([
     getProductById(pool, product_id),
     getEnrichmentByProductId(pool, product_id),
+    getProductFacts(pool, store.id, product_id),
   ]);
 
   if (!product || product.store_id !== store.id) {
@@ -54,6 +58,7 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     );
   }
 
+  const brandWebsite = product.vendor ? await getBrandWebsite(pool, store.id, product.vendor) : null;
   const productImages = product.images as Array<{ url: string; altText: string | null }> | null;
 
   const initial: EnrichmentFormData = {
@@ -77,6 +82,7 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     awards_text: formatReasonsForEdit(enrichment?.awards ?? []),
     faq: enrichment?.faq ?? [],
     internal_staff_notes: enrichment?.internal_staff_notes ?? "",
+    great_when_text: formatReasonsForEdit(enrichment?.great_when ?? []),
   };
 
   return (
@@ -98,6 +104,17 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         productTitle={product.title}
         isAiGenerated={enrichment?.ai_generated ?? false}
         publicReviewsEnabled={(store as unknown as { public_reviews_enabled?: boolean })?.public_reviews_enabled ?? false}
+      />
+
+      <FactSheet
+        shop={shop}
+        productId={product_id}
+        vendor={product.vendor}
+        brandWebsite={brandWebsite}
+        facts={facts.map((f) => ({
+          id: f.id, topic: f.topic, fact: f.fact, source_url: f.source_url,
+          source_kind: f.source_kind, owner_edited: f.owner_edited,
+        }))}
       />
 
     </main>

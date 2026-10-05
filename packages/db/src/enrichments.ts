@@ -40,6 +40,7 @@ export interface Enrichment {
   faq: FaqItem[];
   internal_staff_notes: string | null;
   ai_generated: boolean;
+  great_when: string[];   // PRD v4 §7 Step 15: up to 3 problem-first key points
   updated_at: Date;
 }
 
@@ -117,6 +118,7 @@ export interface FullEnrichmentInput {
   awards: string[];
   faq: FaqItem[];
   internal_staff_notes: string | null;
+  great_when: string[];
   ai_generated?: boolean;
 }
 
@@ -146,8 +148,8 @@ export async function upsertFullEnrichment(
        (product_id, backstory, fit_notes, materials, care_instructions,
         sustainability_notes, reasons_to_buy, staff_quote, staff_name,
         staff_photo_url, video_url, extra_images, reviews, awards, faq,
-        internal_staff_notes, ai_generated)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+        internal_staff_notes, ai_generated, great_when)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
      on conflict (product_id)
      do update set
        backstory             = excluded.backstory,
@@ -166,6 +168,7 @@ export async function upsertFullEnrichment(
        faq                   = excluded.faq,
        internal_staff_notes  = excluded.internal_staff_notes,
        ai_generated          = excluded.ai_generated,
+       great_when            = excluded.great_when,
        updated_at            = now()`,
     [
       input.product_id,
@@ -185,6 +188,7 @@ export async function upsertFullEnrichment(
       JSON.stringify(input.faq),
       input.internal_staff_notes,
       input.ai_generated ?? false,
+      JSON.stringify(input.great_when),
     ],
   );
 }
