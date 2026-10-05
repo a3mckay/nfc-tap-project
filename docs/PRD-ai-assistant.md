@@ -68,6 +68,7 @@ Round 4 (2026-10-05):
 | D34 | **Linking questions to signed-in customers:** only in a separate table, if a feature ever needs it. **Retention:** 24 months, the same as taps. |
 | D35 | **Positioning:** this is part of TapShelf, and may become its central value. It is not a separate product. **Pricing** is parked until after the test period. |
 | D36 | **Build order:** the AI assistant comes before weekly staff quizzes. |
+| D37 | **Bottom of the screen: option A.** The Ask bar spans the full width at the bottom. "Your picks (N)" is a small floating pill just above it on the right. The pill appears only after the customer reacts to something and hides while the chat is open. |
 
 
 Today, a tap tells us a customer was curious. It doesn't tell us *why*. And when a customer has a question, the only path is **Ask Us**, which sends them to a human over WhatsApp or SMS. That only works when someone is free to answer, and we capture nothing from it.
@@ -107,10 +108,10 @@ The same engine drives three surfaces. Sarah's framing: one technology, three us
 
 **Flow:** tap → header carousel (photos, then video) → name/price → 3 key points → sticky **"Ask about this ✦"** bar → half-screen chat with 2–3 suggested questions → streamed answer grounded in the store's data → follow-ups. Customers can minimize the chat to the bar and reopen it. If there's no reliable data to answer from, the question is flagged **Unanswered** for the store (D5).
 
-**Bottom-bar layout (D17):** both bars stay on screen without competing.
-- **Proposed:** the Ask bar is the full-width bottom bar. The picks bar becomes a small floating "Your picks (3)" pill that sits just above it, on the right, and only appears once the customer has reacted to something. Tapping the pill opens the picks tray, as it does today.
+**Bottom-bar layout (D17, D37):** both bars stay on screen without competing.
+- **Chosen (option A):** the Ask bar is the full-width bottom bar. The picks bar becomes a small floating "Your picks (3)" pill that sits just above it, on the right, and only appears once the customer has reacted to something. Tapping the pill opens the picks tray, as it does today.
 - When the chat is open (half sheet), the picks pill hides. Minimizing the chat brings it back.
-- Alternatives, if the pill feels cramped: (b) stack two slim bars, with picks above Ask; (c) put picks in the page header next to the store logo.
+- Options considered and not chosen: (b) two stacked bars; (c) picks in the page header.
 
 **Draft behaviour:**
 - Suggested-question chips: seeded from the product's FAQ and enrichment at first, then replaced by the most-asked real questions once there's data.
@@ -295,7 +296,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 6. ✅ *Resolved, D28.*
 7. ✅ *Resolved, D29.*
 8. ⏸ *Parked (§9.9): thumbs up/down.*
-9. 🟡 *D17: keep both bars.* Layout options shown as mockups; awaiting the founder's pick.
+9. ✅ *Resolved, D37: option A.*
 
 ### 9.5 Question Insights (admin): functionality & UI
 1. ✅ *Resolved, D7.* ~~**Where does it go in the nav?**~~ A top-level "Questions" item, or a tab in Analytics? Proposed: top-level. It's an action list, not just a chart.
@@ -334,8 +335,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 3. **Dashboard card** (Q5.2).
 4. **Weekly email digest** (Q5.5). No weekly owner email exists today.
 5. **Problem-first framing for the existing AI copy generation** (Q6.3).
-6. **Bottom-bar layout** (Q4.9): pick from the mockups.
-7. Other founder questions to come back to before build.
+6. Other founder questions to come back to before build.
 
 ---
 
