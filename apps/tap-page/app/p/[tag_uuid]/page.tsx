@@ -23,6 +23,7 @@ import { ReactionBar } from "./ReactionBar.js";
 import { PicksBar, type LocalTap } from "./PicksBar.js";
 import { AskBar } from "./AskBar.js";
 import { suggestedQuestions } from "@/ask/client.js";
+import { isAutomatedVisit } from "@/link-preview-bots.js";
 import { shareMetadata } from "@/share-meta.js";
 import { NotifyMe } from "./NotifyMe.js";
 
@@ -232,6 +233,7 @@ async function recordTapEvent(
     const sessionId = cookieStore.get("nfc_session")?.value ?? "unknown";
     const headerStore = await headers();
     const ua = headerStore.get("user-agent") ?? null;
+    if (isAutomatedVisit(ua)) return;   // link previews and crawlers aren't taps
     const deviceType = ua ? classifyDevice(ua) : null;
     await insertTapEvent(pool, { tag_id: tagId, product_id: productId, store_id: storeId, session_id: sessionId, device_type: deviceType });
   } catch (err) {
