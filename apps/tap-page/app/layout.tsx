@@ -3,8 +3,9 @@ import "./globals.css";
 import { ServiceWorkerRegistration } from "./ServiceWorkerRegistration.js";
 
 export const metadata: Metadata = {
-  title: "Product Detail",
-  description: "Scan this tag to learn more about this product.",
+  // Product pages set their own title and link preview (src/share-meta.ts).
+  title: "TapShelf",
+  description: "Tap the shelf tag to learn more about a product.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
