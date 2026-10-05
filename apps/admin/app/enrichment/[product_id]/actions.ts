@@ -2,8 +2,9 @@
 
 import {
   getPool, upsertFullEnrichment, getProductById, updateManualProduct, getBrandWebsite, setBrandWebsite,
-  replaceResearchedFacts, type Review, type FaqItem,
+  replaceResearchedFacts, saveReviewFlags, type Review, type FaqItem,
 } from "@nfc/db";
+import { checkProductNotes } from "@/lib/check-product.js";
 import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import {
@@ -80,6 +81,7 @@ export async function saveEnrichmentAction(
     great_when: parseReasonsInput(data.great_when_text).slice(0, MAX_GREAT_WHEN),
   });
 
+  await checkProductNotes(pool, store.id, data.product_id);   // Step 15k (D49)
   revalidatePath("/enrichment");
   return {};
 }
@@ -96,6 +98,7 @@ export interface GeneratedDraft {
   video_url: string;
   great_when: string[];
   facts?: Array<{ topic: string; fact: string; source: number }>;
+  mismatches?: string[];
 }
 
 export async function generateEnrichmentAction(
@@ -202,8 +205,13 @@ export async function generateEnrichmentAction(
             },
             description: "Up to 12 facts about this product that are stated in the numbered sources, each citing its source number. Prefer brand sources. Leave out anything no source states. Empty array if there are no sources.",
           },
+          mismatches: {
+            type: "array",
+            items: { type: "string" },
+            description: "Findings in the sources that don't fit this product's title or type (e.g. a source describes a sleeveless top but this is a shirt, or a different colourway or model), which you left out of the copy and facts. One short sentence each. Empty array if none.",
+          },
         },
-        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "video_url", "faq", "great_when", "facts"],
+        required: ["backstory", "materials", "fit_notes", "care_instructions", "sustainability_notes", "reasons_to_buy", "staff_quote", "video_url", "faq", "great_when", "facts", "mismatches"],
       },
     }],
     tool_choice: { type: "tool", name: "submit_product_copy" },
@@ -250,7 +258,9 @@ export async function generateEnrichmentAction(
   // edited and added facts are always kept.
   if (sources.length > 0) {
     await replaceResearchedFacts(pool, store.id, productId, factsFromModel(draft.facts ?? [], sources));
+    await saveReviewFlags(pool, store.id, productId, "mismatch", draft.mismatches ?? []);   // D50
   }
+  await checkProductNotes(pool, store.id, productId);   // D49
 
   revalidatePath(`/enrichment/${productId}`);
   return { draft: { ...draft, great_when: (draft.great_when ?? []).slice(0, MAX_GREAT_WHEN) } };

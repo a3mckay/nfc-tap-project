@@ -11,7 +11,10 @@ const db = vi.hoisted(() => ({
   getBrandWebsite: vi.fn(async (): Promise<{ website: string; confirmed: boolean } | null> => null),
   setBrandWebsite: vi.fn(async () => {}),
   replaceResearchedFacts: vi.fn(async () => true),
+  saveReviewFlags: vi.fn(async () => {}),
 }));
+const checkProductNotes = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/lib/check-product.js", () => ({ checkProductNotes }));
 const getActionStore = vi.hoisted(() => vi.fn(async () => ({ id: "store-1", shopify_shop_domain: "own.myshopify.com" })));
 const braveSearch = vi.hoisted(() => vi.fn());
 const fetchPageText = vi.hoisted(() => vi.fn(async () => "Full-grain suede upper. Made in Portugal."));
@@ -43,6 +46,7 @@ const modelOutput = (extra: Record<string, unknown> = {}) => ({
         { topic: "origin", fact: "Made in Portugal", source: 1 },
         { topic: "fit", fact: "Made up claim", source: 7 },
       ],
+      mismatches: ["One source describes the mid-top, not this low-top."],
       ...extra,
     },
   }],
@@ -104,6 +108,14 @@ describe("generateEnrichmentAction research", () => {
   });
 });
 
+describe("checks after Generate (Step 15k)", () => {
+  it("saves research findings that don't fit the product, and re-checks the notes", async () => {
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(db.saveReviewFlags).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1", "mismatch", ["One source describes the mid-top, not this low-top."]);
+    expect(checkProductNotes).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1");
+  });
+});
+
 describe("saveEnrichmentAction", () => {
   it("saves Great when… one per line, at most three", async () => {
     await saveEnrichmentAction({
@@ -114,5 +126,6 @@ describe("saveEnrichmentAction", () => {
       great_when_text: "one\n\ntwo\nthree\nfour",
     });
     expect(db.upsertFullEnrichment).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ great_when: ["one", "two", "three"] }));
+    expect(checkProductNotes).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1");
   });
 });

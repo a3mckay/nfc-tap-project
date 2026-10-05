@@ -364,6 +364,16 @@ export const SCHEMA_SPEC: TableSpec[] = [
       { name: "reviewed_at", type: "timestamp", nullable: false },
     ],
   },
+  {
+    name: "product_review_flags",
+    columns: [
+      { name: "store_id", type: "uuid", nullable: false },
+      { name: "product_id", type: "uuid", nullable: false },
+      { name: "kind", type: "text", nullable: false },
+      { name: "messages", type: "json", nullable: false },
+      { name: "checked_at", type: "timestamp", nullable: false },
+    ],
+  },
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {

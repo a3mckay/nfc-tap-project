@@ -71,6 +71,7 @@ export async function loadProductContext(
         care: enrichment.care_instructions,
         sustainability: enrichment.sustainability_notes,
         faq: enrichment.faq ?? [],
+        aiDraft: enrichment.ai_generated === true,
       },
       training: training && {
         whoItsFor: training.who_its_for,

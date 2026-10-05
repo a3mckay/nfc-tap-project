@@ -50,6 +50,7 @@ describe("loadAnswerContext", () => {
       description: "Suede chukka Price: $245.00", variants: ["9 / Brown", "10 / Brown"],
     });
     expect(loaded!.context.answers.map((a) => a.scope)).toEqual(["product", "store"]);
+    expect(loaded!.context.enrichment?.aiDraft).toBe(false);
     expect(loaded!.context.policies).toEqual([{ label: "Returns and exchanges", text: "30 days." }]);
     expect(loaded!.context.reviews).toEqual([{ rating: 4, text: "Comfy" }, { rating: 5, text: "Great" }]);
   });

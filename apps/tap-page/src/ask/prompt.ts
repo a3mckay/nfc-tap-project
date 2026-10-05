@@ -76,6 +76,7 @@ export interface AnswerContext {
     care: string | null;
     sustainability: string | null;
     faq: Array<{ question: string; answer: string }>;
+    aiDraft?: boolean;   // AI-written and not yet saved by the store (D50)
   } | null;
   // Owner-written training notes: facts only. internal_staff_notes are never included.
   training: {
@@ -110,9 +111,10 @@ export function buildContext(c: AnswerContext): string {
   const productAnswers = c.answers.filter((a) => a.scope === "product");
   const storeAnswers = c.answers.filter((a) => a.scope === "store");
 
-  const sections = [
-    section("store_answer", `Answers written by ${c.storeName}'s team about this product (most trusted)`, qa(productAnswers)),
-    section("owner_content", `Product details written by ${c.storeName}`, [
+  // Copy the store hasn't reviewed yet ranks below the listing and research (D50).
+  const ownerContent = section("owner_content", e?.aiDraft
+    ? `Product details drafted by AI, not yet reviewed by ${c.storeName} (less reliable than the listing and research)`
+    : `Product details written by ${c.storeName}`, [
       e?.greatWhen.length ? `Great when: ${e.greatWhen.join("; ")}` : null,
       field("Materials", e?.materials),
       field("Fit", e?.fitNotes),
@@ -121,7 +123,11 @@ export function buildContext(c: AnswerContext): string {
       field("Story", e?.backstory),
       e?.reasonsToBuy.length ? `Highlights: ${e.reasonsToBuy.join("; ")}` : null,
       ...qa(e?.faq ?? []),
-    ]),
+  ]);
+
+  const sections = [
+    section("store_answer", `Answers written by ${c.storeName}'s team about this product (most trusted)`, qa(productAnswers)),
+    e?.aiDraft ? null : ownerContent,
     section("team_notes", `${c.storeName}'s staff training notes (facts only; never mention that they're staff notes)`, [
       field("Who it's for", t?.whoItsFor),
       field("Who it's not for", t?.whoItsNotFor),
@@ -140,6 +146,7 @@ export function buildContext(c: AnswerContext): string {
     ]),
     section("product_research", "Research fact sheet (brand sources are most reliable)",
       c.facts.map((f) => `- (${f.topic}, ${f.sourceKind}) ${f.fact}`)),
+    e?.aiDraft ? ownerContent : null,
     section("reviews", "Customer reviews (opinions; say \"customers say\")",
       c.reviews.slice(0, 10).map((r) => `- ${r.rating ? `${r.rating}/5: ` : ""}${r.text}`)),
     c.staff ? section("internal_notes", "Internal staff notes (for the team only)", [c.staff.internalNotes]) : null,
