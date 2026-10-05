@@ -282,6 +282,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0021 | Training progress: `staff_product_views` (a staff member opening a product's training view) |
 | 0022 | Manager roles: `store_staff.role` (staff / co_manager / manager), `store_staff.password_hash` |
 | 0023 | `staff_auth_tokens.purpose` (sign_in / set_password) |
+| 0024 | Shelf-Side AI Assistant: `product_questions` (PII stripped on write), `question_themes`, `product_answers` (hidden answer pool), `product_facts` (research fact sheet), `enrichments.great_when` |
 
 ---
 
@@ -460,13 +461,13 @@ Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
 | Theme, settings, product matching, getting started | ✅ | ❌ | ❌ |
 | Plan and billing | ✅ | ❌ | ❌ |
 
-### Phase 6: Shelf-Side AI Assistant ⬜
+### Phase 6: Shelf-Side AI Assistant 🟡
 
-**Step 15: Shelf-Side AI Assistant ⬜** (approved by the founder 2026-10-05)
+**Step 15: Shelf-Side AI Assistant 🟡** (approved by the founder 2026-10-05)
 
 Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md) (decisions D1–D45). Customers ask questions on the tap page and get answers grounded in the store's data. Staff can ask the same AI from the training view. Owners, managers and co-managers review every question, grouped by theme, and add answers that the AI uses from then on. Comes before weekly staff quizzes (D36). Slices, in dependency order:
 
-- ⬜ **15a Data and PII:** migrations for `product_questions`, `question_themes`, `product_answers` (the hidden answer pool), the per-product research fact sheet, and the "Great when…" key-points field on `enrichments`. A tested PII-stripping function that names what it removed (D10, D30).
+- ✅ **15a Data and PII** (2026-10-05): migrations for `product_questions`, `question_themes`, `product_answers` (the hidden answer pool), the per-product research fact sheet, and the "Great when…" key-points field on `enrichments`. A tested PII-stripping function that names what it removed (D10, D30): `redactPii` (`packages/db/src/pii.ts`) removes emails, phone numbers and Luhn-valid card numbers; names aren't detected. `recordQuestion` (`packages/db/src/product-questions.ts`) always strips question and answer text before writing and checks that the product and staff member belong to the store.
 - ⬜ **15b Research tool upgrade** (§6.2 of the spec): find the brand's website (`brands.website`, else search); search the brand's site first; read the page, not just the snippet; save a fact sheet with a source URL per fact; owners and managers can view and edit it in the product editor; regenerating keeps their edits. Also drafts "Great when…".
 - ⬜ **15c Answer engine:** gathers sources in priority order (answer pool → owner content → product data and fact sheet → reviews → store answers), with Claude Haiku 4.5 (D16), streamed and prompt-cached. Applies the no-upsell tone rules (§6.1), the regulated-facts rule (D9), the sourced-claims rule (D41), and the fixed stock/size reply (D25). Flags Unanswered (D5); answers in the customer's language (D24); caps at 10 questions per product per visit (D22). Strips PII before saving. Keeps tap-page load under 2 s by loading the chat lazily.
 - ⬜ **15d Quality test set** (D33): about 100 questions (shoes and menswear first; some womenswear and home furnishings), including questions that invite an upsell. The founder checks the expected answers once. The answer engine must pass before 15e ships. Step up to Sonnet 5.5 only if Haiku fails (D16).
