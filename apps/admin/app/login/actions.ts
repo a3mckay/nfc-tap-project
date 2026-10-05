@@ -48,7 +48,7 @@ export async function loginAction(formData: FormData): Promise<void> {
     const shopDomain = store!.shopify_shop_domain;
     const destination = welcome
       ? `/onboarding?shop=${encodeURIComponent(shopDomain)}&welcome=1`
-      : `/tags?shop=${encodeURIComponent(shopDomain)}`;
+      : `/?shop=${encodeURIComponent(shopDomain)}`;   // the admin home page (Step 15i, D45)
     // Also sign the owner in on the tap page, so they see the staff training
     // view when they tap their own products (PRD v4 §7 Step 13c).
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

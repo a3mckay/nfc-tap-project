@@ -69,9 +69,9 @@ describe("permissionForPath", () => {
 
 describe("adminHomePath", () => {
   it("sends each role to a page they can open", () => {
-    expect(adminHomePath(owner)).toBe("/tags?shop=d");
-    expect(adminHomePath(manager)).toBe("/tags?shop=d");
-    expect(adminHomePath(coManager)).toBe("/enrichment?shop=d");
+    expect(adminHomePath(owner)).toBe("/?shop=d");
+    expect(adminHomePath(manager)).toBe("/?shop=d");
+    expect(adminHomePath(coManager)).toBe("/?shop=d");
   });
 });
 
@@ -88,7 +88,7 @@ describe("accessRedirect (layout re-check with the live role)", async () => {
 
   it("sends a manager demoted to co-manager away from pages they can't use any more", () => {
     const demoted = { ...manager, level: "co_manager" } as const;
-    expect(accessRedirect(manager, demoted, "/tags")).toBe("/enrichment?shop=d");
+    expect(accessRedirect(manager, demoted, "/tags")).toBe("/?shop=d");
     expect(accessRedirect(manager, demoted, "/enrichment/p-1/training")).toBeNull();
   });
 

@@ -91,9 +91,9 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
       minHeight: "100vh",
     }}>
       {/* Brand */}
-      <div style={{ padding: "1.25rem 1.25rem 1rem", fontWeight: 700, fontSize: "0.95rem", borderBottom: "1px solid #eee" }}>
+      <Link href={s ? `/?shop=${encodeURIComponent(s)}` : "/"} style={{ display: "block", padding: "1.25rem 1.25rem 1rem", fontWeight: 700, fontSize: "0.95rem", borderBottom: "1px solid #eee", color: "#111", textDecoration: "none" }}>
         TapShelf Admin
-      </div>
+      </Link>
 
       {/* Store indicator */}
       <div style={{ borderBottom: "1px solid #eee" }}>

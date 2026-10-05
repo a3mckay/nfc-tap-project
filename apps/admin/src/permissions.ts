@@ -70,10 +70,10 @@ export function permissionForPath(pathname: string): Permission | null {
   return null;
 }
 
-// Where to send an owner, manager or co-manager who opens a page they can't use.
+// The admin home page (PRD v4 §7 Step 15i, D45): where owners, managers and
+// co-managers land after sign-in, and where they're sent from a page they can't use.
 export function adminHomePath(session: Extract<AdminSession, { storeDomain: string }>): string {
-  const shop = encodeURIComponent(session.storeDomain);
-  return can(session, "catalog") ? `/tags?shop=${shop}` : `/enrichment?shop=${shop}`;
+  return `/?shop=${encodeURIComponent(session.storeDomain)}`;
 }
 
 // The layout re-checks a manager's live role on every page (the middleware only
