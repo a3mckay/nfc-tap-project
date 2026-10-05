@@ -36,7 +36,8 @@ export interface RecordInput {
   productId: string;
   tagId: string;
   sessionId: string | null;
-  askedBy: "customer";
+  askedBy: "customer" | "staff";
+  staffId: string | null;
   questionText: string;
   answerText: string | null;
   sources: QuestionSource[];
@@ -57,6 +58,8 @@ export interface AskInput {
   history: HistoryTurn[];
   sessionId: string | null;
   isTeam: boolean;   // the store's own staff or owner previewing the customer page
+  audience?: "customer" | "staff";   // staff: the training view's Ask box (Step 15h)
+  staffId?: string | null;
 }
 
 export type AskEvent =
@@ -109,8 +112,9 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
   const loaded = await deps.loadContext(input.tagUuid);
   if (!loaded) { yield { type: "error", message: "This product isn't available" }; return; }
 
-  const recording = !input.isTeam;
-  if (recording && input.sessionId) {
+  const staff = input.audience === "staff";
+  const recording = staff || !input.isTeam;   // staff questions are recorded; previews aren't
+  if (!staff && recording && input.sessionId) {
     const asked = await deps.countRecent(input.sessionId, loaded.productId, VISIT_HOURS);
     if (asked >= MAX_QUESTIONS_PER_VISIT) { yield { type: "limit", text: LIMIT_REPLY }; return; }
   }
@@ -201,7 +205,8 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
         productId: loaded.productId,
         tagId: loaded.tagId,
         sessionId: input.sessionId,
-        askedBy: "customer",
+        askedBy: staff ? "staff" : "customer",
+        staffId: staff ? input.staffId ?? null : null,
         questionText: raw,   // recordQuestion strips personal details again on write
         answerText: status === "unanswered" ? null : answer.trim(),
         sources,

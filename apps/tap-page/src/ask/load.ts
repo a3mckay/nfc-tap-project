@@ -3,7 +3,7 @@
 // loaded for customers.
 import {
   getTagByUuid, getProductById, getStoreById, getEnrichmentByProductId, getProductTraining,
-  getProductFacts, getActiveAnswers, getApprovedReviewsByProduct, getStorePolicies,
+  getProductFacts, getActiveAnswers, getApprovedReviewsByProduct, getStorePolicies, getRecentQuestions,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
 import type { LoadedContext } from "./handle.js";
@@ -21,10 +21,10 @@ function variantLabels(variants: unknown): { options: string[]; price: string | 
   return { options: [...new Set(options)].slice(0, 40), price };
 }
 
-export async function loadAnswerContext(pool: Pool, tagUuid: string): Promise<LoadedContext | null> {
+export async function loadAnswerContext(pool: Pool, tagUuid: string, audience: "customer" | "staff" = "customer"): Promise<LoadedContext | null> {
   const state = resolveTagState(await getTagByUuid(pool, tagUuid));
   if (state.kind !== "active") return null;
-  return loadProductContext(pool, state.storeId, state.productId, state.tagId);
+  return loadProductContext(pool, state.storeId, state.productId, state.tagId, audience);
 }
 
 // The same context for a product, without a tag (used by the quality test set).
@@ -33,6 +33,7 @@ export async function loadProductContext(
   storeId: string,
   productId: string,
   tagId: string,
+  audience: "customer" | "staff" = "customer",
 ): Promise<LoadedContext | null> {
 
   const [product, store, enrichment, training, facts, answers, reviews, policies] = await Promise.all([
@@ -86,6 +87,12 @@ export async function loadProductContext(
         ...(enrichment?.reviews ?? []).map((r) => ({ rating: r.rating, text: r.text })),
       ].filter((r) => r.text),
       policies: policies.map((p) => ({ label: p.label, text: p.text })),
+      ...(audience === "staff" ? {
+        staff: {
+          internalNotes: enrichment?.internal_staff_notes ?? null,
+          recentQuestions: (await getRecentQuestions(pool, storeId, productId, 20)).map((q) => ({ question: q.question_text, answer: q.answer_text })),
+        },
+      } : {}),
     },
   };
 }
