@@ -140,3 +140,6 @@ Things we consciously deferred during the build, with enough context to pick the
 **What exists:** The admin app is accessible to anyone who knows the URL.
 **Why deferred:** Running locally or behind a private URL for V1.
 **What's needed:** Add authentication (e.g. NextAuth with a magic-link email provider, or Shopify session tokens) before exposing the admin publicly.
+
+
+**Also (2026-10-05):** the tap page's `POST /api/ask` (AI assistant) is capped at 10 questions per product per visit by session cookie (D22), but has no per-IP limit. Someone who clears cookies can keep asking, and each question is a paid Claude call. Add a per-IP limit (e.g. an Upstash or Postgres token bucket) before public launch.

@@ -70,3 +70,40 @@ export async function recordQuestion(pool: Pool, q: NewQuestion): Promise<Produc
   );
   return rows[0] ?? null;
 }
+
+// How many questions this customer session has asked about the product in the
+// last `hours` — the per-visit cap (D22).
+export async function countRecentSessionQuestions(
+  pool: Pool,
+  sessionId: string,
+  productId: string,
+  hours: number,
+): Promise<number> {
+  const { rows } = await pool.query<{ n: number }>(
+    `select count(*)::int as n from product_questions
+      where session_id = $1 and product_id = $2 and asked_by = 'customer'
+        and created_at > now() - ($3 || ' hours')::interval`,
+    [sessionId, productId, hours],
+  );
+  return rows[0]?.n ?? 0;
+}
+
+// ── The hidden answer pool (D11, D12) ─────────────────────────────────────
+
+export interface PoolAnswer {
+  id: string;
+  product_id: string | null;   // null = store-wide (includes store policies)
+  question: string;
+  answer: string;
+}
+
+// Answers written by the store's team: this product's first, then store-wide.
+export async function getActiveAnswers(pool: Pool, storeId: string, productId: string): Promise<PoolAnswer[]> {
+  const { rows } = await pool.query<PoolAnswer>(
+    `select id, product_id, question, answer from product_answers
+      where store_id = $1 and retired_at is null and (product_id = $2 or product_id is null)
+      order by (product_id is null), updated_at desc`,
+    [storeId, productId],
+  );
+  return rows;
+}

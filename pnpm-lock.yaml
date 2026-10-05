@@ -54,6 +54,9 @@ importers:
 
   apps/tap-page:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.92.0
+        version: 0.92.0
       '@nfc/db':
         specifier: workspace:*
         version: link:../../packages/db
