@@ -14,18 +14,19 @@ export type Permission =
   | "marketing"          // offers and customer notifications
   | "analytics"
   | "policies"           // store policies the AI assistant answers from (D48)
+  | "questions"          // the Questions tab: customer questions, answers (D7, D11)
   | "store_settings"     // theme, settings, product matching, getting started
   | "billing"            // plan and billing
   | "all_stores";        // super admin: every store
 
 const OWNER: Permission[] = [
   "training", "content", "progress", "staff", "assign_co_manager", "assign_manager",
-  "catalog", "marketing", "analytics", "policies", "store_settings", "billing",
+  "catalog", "marketing", "analytics", "policies", "questions", "store_settings", "billing",
 ];
 const MANAGER: Permission[] = [
-  "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics", "policies",
+  "training", "content", "progress", "staff", "assign_co_manager", "catalog", "marketing", "analytics", "policies", "questions",
 ];
-const CO_MANAGER: Permission[] = ["training", "content", "progress"];
+const CO_MANAGER: Permission[] = ["training", "content", "progress", "questions"];
 
 function permissionsOf(session: AdminSession | null): Permission[] {
   switch (session?.role) {
@@ -51,6 +52,7 @@ const PAGES: [string, Permission][] = [
   ["/notifications", "marketing"],
   ["/analytics", "analytics"],
   ["/policies", "policies"],
+  ["/questions", "questions"],
   ["/theme", "store_settings"],
   ["/settings", "store_settings"],
   ["/canonical", "store_settings"],

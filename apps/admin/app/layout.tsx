@@ -33,6 +33,7 @@ function Divider() {
 // it needs; empty groups are dropped.
 const MAIN_NAV: [string, string, Permission][][] = [
   [
+    ["/questions", "Questions", "questions"],
     ["/products", "Products", "catalog"],
     ["/enrichment", "Content", "content"],
     ["/tags", "Tags", "catalog"],
