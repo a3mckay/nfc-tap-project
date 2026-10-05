@@ -6,7 +6,9 @@ import {
   getEnrichmentByProductId,
   getProductFacts,
   getBrandWebsite,
+  getReviewFlags,
 } from "@nfc/db";
+import { ReviewFlags } from "./ReviewFlags.js";
 import { EnrichmentPageClient } from "./EnrichmentPageClient.js";
 import { FactSheet } from "./FactSheet.js";
 import { ProductTabs } from "@/ProductTabs.js";
@@ -44,10 +46,11 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     );
   }
 
-  const [product, enrichment, facts] = await Promise.all([
+  const [product, enrichment, facts, flags] = await Promise.all([
     getProductById(pool, product_id),
     getEnrichmentByProductId(pool, product_id),
     getProductFacts(pool, store.id, product_id),
+    getReviewFlags(pool, store.id, product_id),
   ]);
 
   if (!product || product.store_id !== store.id) {
@@ -96,6 +99,7 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         {product.title}
       </h1>
       <ProductTabs shop={shop} productId={product_id} current="customer" />
+      <ReviewFlags flags={flags} />
 
       <EnrichmentPageClient
         shop={shop}

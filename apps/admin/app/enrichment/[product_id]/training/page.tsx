@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getPool, getStoreByDomain, getProductById, getProductTraining } from "@nfc/db";
+import { getPool, getStoreByDomain, getProductById, getProductTraining, getReviewFlags } from "@nfc/db";
+import { ReviewFlags } from "../ReviewFlags.js";
 import { ProductTabs } from "@/ProductTabs.js";
 import { TrainingForm } from "../TrainingForm.js";
 
@@ -17,9 +18,10 @@ export default async function TrainingNotesPage({ params, searchParams }: PagePr
   const store = await getStoreByDomain(pool, shop);
   if (!store) return <main><p style={{ color: "#c00" }}>Store not found.</p></main>;
 
-  const [product, training] = await Promise.all([
+  const [product, training, flags] = await Promise.all([
     getProductById(pool, product_id),
     getProductTraining(pool, product_id, store.id),
+    getReviewFlags(pool, store.id, product_id),
   ]);
   if (!product || product.store_id !== store.id) {
     return <main><p style={{ color: "#c00" }}>Product not found.</p></main>;
@@ -32,6 +34,7 @@ export default async function TrainingNotesPage({ params, searchParams }: PagePr
       </p>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, margin: "0 0 1rem" }}>{product.title}</h1>
       <ProductTabs shop={shop} productId={product_id} current="training" />
+      <ReviewFlags flags={flags} />
 
       <TrainingForm
         shop={shop}

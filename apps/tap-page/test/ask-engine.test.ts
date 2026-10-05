@@ -46,6 +46,14 @@ describe("buildContext", () => {
     expect(customer).not.toContain("[internal_notes]");
   });
 
+  it("ranks AI-drafted copy the store hasn't reviewed below the listing and research (D50)", () => {
+    const draft = buildContext(ctx({ enrichment: { ...ctx().enrichment!, aiDraft: true } }));
+    expect(draft).toContain("drafted by AI, not yet reviewed");
+    expect(draft.indexOf("[product_research]")).toBeLessThan(draft.indexOf("[owner_content]"));
+    const reviewed = buildContext(ctx());
+    expect(reviewed.indexOf("[owner_content]")).toBeLessThan(reviewed.indexOf("[product_details]"));
+  });
+
   it("puts staff training notes after the store's customer-facing content (D49)", () => {
     const text = buildContext(ctx());
     expect(text.indexOf("[owner_content]")).toBeLessThan(text.indexOf("[team_notes]"));

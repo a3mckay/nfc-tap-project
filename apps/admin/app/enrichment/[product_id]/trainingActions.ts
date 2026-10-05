@@ -8,6 +8,7 @@ import { getActionStore } from "@/current-store.js";
 import { normalizeTrainingForm, type TrainingFormData } from "@/training-utils.js";
 import { draftTraining, type TrainingDraft } from "@/lib/training-draft.js";
 import { revalidatePath } from "next/cache";
+import { checkProductNotes } from "@/lib/check-product.js";
 
 export async function saveTrainingAction(
   shop: string,
@@ -20,6 +21,7 @@ export async function saveTrainingAction(
 
   const saved = await saveProductTraining(pool, store.id, productId, normalizeTrainingForm(form));
   if (!saved) return { error: "Product not found" };
+  await checkProductNotes(pool, store.id, productId);   // Step 15k (D49)
   revalidatePath(`/enrichment/${productId}/training`);
   return {};
 }
