@@ -572,7 +572,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 
 **Notifications** (admin)
 - **`/notifications` composer:** send to a product's subscribers, filtered by engagement level
-- **Delivery chain:** Twilio SMS → WhatsApp → email fallback, logged to `notification_log` with the Twilio SID
+- **Delivery chain:** Twilio SMS → WhatsApp → email fallback, logged to `notification_log` with the Twilio SID. ⏸️ *Text and WhatsApp parked 2026-10-05; alerts go by email. See §16.2.*
 
 **Admin / platform**
 - **Multi-store admin:** `/stores`; per-store email + password login (PBKDF2, edge-safe); logout
@@ -688,6 +688,13 @@ Features that were built or spec'd and then deliberately set aside. They're stil
   - as a "Talk to a person" option in the chat when the AI can't answer and the store wants live replies;
   - for stores that staff a phone line and want customers to reach them directly.
 - **Open questions when revived:** should the customer's question and the AI's attempt go with the message? Who answers outside store hours? How do we capture these conversations as questions for the owner's Questions view, the way the chat does?
+
+### 16.2 Text and WhatsApp alerts (Twilio)
+
+- **What it is:** the `/notifications` composer sends sale, restock and offer alerts by SMS first, then WhatsApp, then email (`apps/admin/src/lib/notify.ts`). Customers can pick SMS or WhatsApp as their preferred channel on their profile.
+- **Why it's parked (2026-10-05):** Twilio was never set up (no `TWILIO_*` variables in Railway), and owner notifications are a lower priority than the AI assistant. Without Twilio, every alert falls back to email, so nothing is broken.
+- **What's kept:** all the code, and the SMS / WhatsApp choice on the customer profile (an SMS or WhatsApp pick gets email for now). The privacy page doesn't mention texts or Twilio; add them back when this ships.
+- **To turn it on:** a Twilio account, a sending number and an approved WhatsApp sender; set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` and `TWILIO_WHATSAPP_FROM` on the admin service; add a one-click opt-out to texts (reply STOP) and emails, which Canada's anti-spam law (CASL) expects; update the privacy page.
 
 ---
 
