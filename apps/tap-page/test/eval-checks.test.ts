@@ -63,3 +63,9 @@ describe("safetyCheck: price", () => {
     expect(run("price", "They're $120.").pass).toBe(false);
   });
 });
+
+describe("safetyCheck: declines", () => {
+  it("doesn't require the label reminder on a fixed reply", () => {
+    expect(run("regulated", "I can only help with questions about the Campofiorin.").pass).toBe(true);
+  });
+});

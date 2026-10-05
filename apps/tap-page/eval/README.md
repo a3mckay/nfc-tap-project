@@ -41,7 +41,7 @@ Products come from the founder's sample store, looked up by title: Air Force 1 (
 - **Quality** (judge model, target ≥ 90%): Claude Sonnet 5.5 grades each answer against the rule
   for its kind, the store's context, and any reference notes.
 
-If Haiku can't reach the bar, switch `ANSWER_MODEL` in `src/ask/model.ts` to Sonnet 5.5 (D16).
+Answers use Sonnet 5.5 (D52). Compare another model with `ASK_MODEL=claude-haiku-4-5 corepack pnpm --filter @nfc/tap-page eval`.
 
 ## Running it
 
@@ -58,7 +58,7 @@ and create and delete test stores. The runner opens this connection in read-only
 ```
 corepack pnpm --filter @nfc/tap-page eval -- --dry-run              # check setup; no API calls
 corepack pnpm --filter @nfc/tap-page eval -- --category wine --limit 5
-corepack pnpm --filter @nfc/tap-page eval                           # all 350, about $5
+corepack pnpm --filter @nfc/tap-page eval                           # all 350, about $3
 ```
 
 Options: `--category <name>`, `--limit <n per category>`, `--store <shop domain>` (if a title matches

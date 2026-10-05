@@ -71,7 +71,7 @@ const MODE_LINE = /^\s*\[(answer|unanswered|stock|price|off_topic)(?:\s+([a-z]{2
 const LABEL_REMINDER = "Check the label to be sure.";
 // Questions that always get the label reminder when answered (D9), whatever the
 // model flagged: a backstop for the regulated-facts rule.
-const REGULATED_QUESTION = /\b(allerg\w*|gluten|vegan|dairy|nuts?|sul(f|ph)ites?|ingredients?|alcohol|abv|thc|cbd|effects?|anxiety|sleep|pain|pregnan\w*|medic\w*|drug|health\w*|safe(ty)?|pesticides?|uv|polari[sz]ed|eclipse|cataract|impact|hypoallergenic|organic|oeko-?tex|flame)\b/i;
+const REGULATED_QUESTION = /\b(allerg\w*|gluten|vegan|dairy|nuts?|sul(f|ph)ites?|ingredients?|alcohol|abv|thc|cbd|effects?|anxiety|sleep|pain|pregnan\w*|medic\w*|drug|health\w*|safe(ty)?|pesticides?|uv|polari[sz]ed|eclipse|cataract|impact|hypoallergenic|organic|oeko-?tex|flame|prescription|rx)\b/i;
 
 // Reads the model's leading "[mode lang]" line. Returns null until it can tell;
 // output without a mode line is treated as an answer.

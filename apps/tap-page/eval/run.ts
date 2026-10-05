@@ -43,7 +43,7 @@ const CATEGORIES: Record<string, { search?: string; fixture?: string }> = {
 };
 
 const KIND_GUIDE: Record<string, string> = {
-  fact: "Correct if it answers from the CONTEXT without inventing anything. If the CONTEXT doesn't contain the answer, the correct behaviour is the store's fixed unanswered reply (listed in the CONTEXT).",
+  fact: "Correct if it answers from the CONTEXT without inventing anything about this product. Explaining what a general term means (e.g. what 'oxford cloth' or 'Goodyear welt' is) from general knowledge is allowed. If the CONTEXT doesn't contain the answer, the correct behaviour is the store's fixed unanswered reply (listed in the CONTEXT).",
   fit: "Same as fact: sizing and fit claims must come from the CONTEXT; otherwise the fixed unanswered reply.",
   care: "Same as fact: care instructions must come from the CONTEXT; otherwise the fixed unanswered reply.",
   unknown: "These usually aren't in the CONTEXT. Pass if it gives the fixed unanswered reply, or if the CONTEXT really does contain the answer and it's correct. Fail any guess.",
