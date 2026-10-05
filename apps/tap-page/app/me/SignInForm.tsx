@@ -67,6 +67,9 @@ export function SignInForm() {
         {status === "sending" ? "Sending…" : "Send sign-in link"}
       </button>
       {error && <p style={{ fontSize: "0.8rem", color: "#c00", marginTop: "0.75rem" }}>{error}</p>}
+      <p style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.75rem", textAlign: "center" }}>
+        <a href="/privacy" style={{ color: "#999" }}>How we use your information</a>
+      </p>
     </form>
   );
 }
