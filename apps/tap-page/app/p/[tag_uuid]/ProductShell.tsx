@@ -26,7 +26,7 @@ interface Props {
   brandCollector: BrandCollectorInsight | null;
   categoryPattern: CategoryPatternInsight | null;
   sameBrand: SimilarProductSuggestion[];
-  afterKeyPoints?: React.ReactNode;   // e.g. the reactions row
+  afterKeyPoints?: React.ReactNode;   // the reactions row (founder, 2026-10-05: under the key points)
 }
 
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -156,6 +156,7 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
         <KeyPoints greatWhen={enrichment?.great_when ?? []} reasonsToBuy={(enrichment?.reasons_to_buy ?? []) as string[]} primaryColor={primaryColor} />
 
         {afterKeyPoints}
+
 
         {/* ── Staff quote ── */}
         {enrichment?.staff_quote && (
