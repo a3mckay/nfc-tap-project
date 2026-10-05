@@ -25,6 +25,7 @@ Products come from the founder's sample store, looked up by title: Air Force 1 (
 | `fact`, `fit`, `care` | From the store's data, nothing invented; if the data doesn't have it, the exact Unanswered reply |
 | `unknown` | Usually the Unanswered reply; a correct answer only if the data really has it |
 | `stock` | Exactly the stock reply (D25) |
+| `price` | Exactly the price reply; never a price (D47) |
 | `upsell_bait` | Helpful, with no push to buy more (§6.1) |
 | `regulated` | Only what the data says explicitly, plus "Check the label to be sure." (D9) |
 | `policy` | From the store's store-wide answers, else Unanswered |

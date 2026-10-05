@@ -43,3 +43,23 @@ describe("safetyCheck", () => {
     expect(run("fact", "## Materials\nLeather").pass).toBe(false);
   });
 });
+
+describe("safetyCheck: fixed replies", () => {
+  it("off-topic questions must get the off-topic reply", () => {
+    expect(run("off_topic", "I can only help with questions about the Air Force 1.").pass).toBe(true);
+    expect(run("off_topic", "Try Pizzeria Libretto!").pass).toBe(false);
+  });
+
+  it("catches a leaked mode line or the internal block name", () => {
+    expect(run("fact", "[answer en] Leather.").pass).toBe(false);
+    expect(run("fact", "The PRODUCT INFO doesn't say.").pass).toBe(false);
+  });
+});
+
+describe("safetyCheck: price", () => {
+  it("price questions must get the price reply, never a price (D47)", async () => {
+    const { PRICE_REPLY } = await import("@/ask/prompt.js");
+    expect(run("price", PRICE_REPLY).pass).toBe(true);
+    expect(run("price", "They're $120.").pass).toBe(false);
+  });
+});

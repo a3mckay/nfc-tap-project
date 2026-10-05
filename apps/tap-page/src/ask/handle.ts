@@ -4,7 +4,7 @@
 // store's own team is previewing the page. Dependencies are injected so this
 // has no database or network access of its own.
 import { redactPii, type PiiType, type QuestionSource } from "@nfc/db";
-import { SYSTEM_PROMPT, buildContext, SOURCE_LABELS, type AnswerContext } from "./prompt.js";
+import { SYSTEM_PROMPT, buildContext, SOURCE_LABELS, STOCK_REPLY, PRICE_REPLY, unansweredReply, offTopicReply, type AnswerContext } from "./prompt.js";
 import { MetaSplitter } from "./meta.js";
 
 export const MAX_QUESTIONS_PER_VISIT = 10;
@@ -66,6 +66,24 @@ export type AskEvent =
   | { type: "limit"; text: string }
   | { type: "error"; message: string };
 
+type Mode = "answer" | "unanswered" | "stock" | "price" | "off_topic";
+const MODE_LINE = /^\s*\[(answer|unanswered|stock|price|off_topic)(?:\s+([a-z]{2}))?\]\s*\n?/i;
+const LABEL_REMINDER = "Check the label to be sure.";
+// Questions that always get the label reminder when answered (D9), whatever the
+// model flagged: a backstop for the regulated-facts rule.
+const REGULATED_QUESTION = /\b(allerg\w*|gluten|vegan|dairy|nuts?|sul(f|ph)ites?|ingredients?|alcohol|abv|thc|cbd|effects?|anxiety|sleep|pain|pregnan\w*|medic\w*|drug|health\w*|safe(ty)?|pesticides?|uv|polari[sz]ed|eclipse|cataract|impact|hypoallergenic|organic|oeko-?tex|flame)\b/i;
+
+// Reads the model's leading "[mode lang]" line. Returns null until it can tell;
+// output without a mode line is treated as an answer.
+function readModeLine(buffer: string, final: boolean): { mode: Mode; language: string | null; rest: string } | null {
+  const m = MODE_LINE.exec(buffer);
+  if (m && (m[0].endsWith("\n") || final)) {
+    return { mode: m[1]!.toLowerCase() as Mode, language: m[2]?.toLowerCase() ?? null, rest: buffer.slice(m[0].length) };
+  }
+  if (!final && /^\s*\[?[a-z_ ]{0,20}\]?\s*$/i.test(buffer)) return null;   // could still be a mode line
+  return { mode: "answer", language: null, rest: buffer };
+}
+
 function cleanHistory(history: HistoryTurn[]): ModelMessage[] {
   const valid = (Array.isArray(history) ? history : [])
     .filter((t) => (t?.role === "user" || t?.role === "assistant") && typeof t.text === "string" && t.text.trim())
@@ -96,12 +114,43 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
   if (question.removed.length) yield { type: "pii", removed: question.removed };
 
   const messages = [...cleanHistory(input.history), { role: "user" as const, content: question.text }];
+  const ctx = loaded.context;
+  const fixed: Record<Exclude<Mode, "answer">, string> = {
+    unanswered: unansweredReply(ctx.storeName),
+    stock: STOCK_REPLY,
+    price: PRICE_REPLY,
+    off_topic: offTopicReply(ctx.product.title),
+  };
+
   const splitter = new MetaSplitter();
-  let answer = "";
+  let head = "";
+  let mode: { mode: Mode; language: string | null } | null = null;
+  let answer = "";        // what the customer was shown
+  let translated = "";    // a fixed reply the model translated (non-English only)
+  const take = (text: string) => {
+    const out = splitter.push(text);
+    if (mode!.mode === "answer") { answer += out; return out; }
+    translated += out;
+    return "";
+  };
   try {
-    for await (const chunk of deps.streamModel({ rules: SYSTEM_PROMPT, context: buildContext(loaded.context) }, messages)) {
-      const text = splitter.push(chunk);
-      if (text) { answer += text; yield { type: "delta", text }; }
+    for await (const chunk of deps.streamModel({ rules: SYSTEM_PROMPT, context: buildContext(ctx) }, messages)) {
+      let text = chunk;
+      if (!mode) {
+        head += chunk;
+        const read = readModeLine(head, false);
+        if (!read) continue;
+        mode = read;
+        text = read.rest;
+      }
+      const out = take(text);
+      if (out) yield { type: "delta", text: out };
+    }
+    if (!mode) {   // the whole reply was shorter than a mode line could be
+      const read = readModeLine(head, true)!;
+      mode = read;
+      const out = take(read.rest);
+      if (out) yield { type: "delta", text: out };
     }
   } catch (err) {
     console.error("[ask] model failed:", err);
@@ -109,14 +158,35 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
     return;
   }
   const { text: tail, meta } = splitter.end();
-  if (tail) { answer += tail; yield { type: "delta", text: tail }; }
+  const english = !mode.language || mode.language === "en";
 
-  const labels = [...new Set(meta.sources.map((s) => SOURCE_LABELS[s]).filter((l): l is string => !!l))];
-  yield { type: "done", status: meta.status, sources: labels };
+  if (mode.mode === "answer" && !(answer + tail).trim()) {   // e.g. the model declined to respond
+    yield { type: "error", message: "Something went wrong. Try again in a moment." };
+    return;
+  }
+  if (mode.mode === "answer") {
+    let rest = tail;
+    if ((meta.regulated || REGULATED_QUESTION.test(raw)) && english && (answer + rest).trim() && !/check the label/i.test(answer + rest)) {
+      rest = `${rest}${(answer + rest).trim() ? " " : ""}${LABEL_REMINDER}`;
+    }
+    if (rest) { answer += rest; yield { type: "delta", text: rest }; }
+  } else {
+    translated += tail;
+    answer = english || !translated.trim() ? fixed[mode.mode] : translated.trim();
+    yield { type: "delta", text: answer };
+  }
+
+  const status = mode.mode === "unanswered" ? "unanswered" : "answered";
+  const labels = mode.mode === "answer"
+    ? [...new Set(meta.sources.map((s) => SOURCE_LABELS[s]).filter((l): l is string => !!l))]
+    : [];
+  yield { type: "done", status, sources: labels };
 
   if (recording) {
-    const sources: QuestionSource[] = meta.topic === "stock"
-      ? [{ kind: "stock_reply" }]
+    const sources: QuestionSource[] =
+      mode.mode === "stock" ? [{ kind: "stock_reply" }]
+      : mode.mode === "price" ? [{ kind: "price_reply" }]
+      : mode.mode === "off_topic" ? [{ kind: "off_topic" }]
       : meta.sources.filter((s) => s in SOURCE_LABELS).map((kind) => ({ kind }));
     try {
       await deps.record({
@@ -126,10 +196,10 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
         sessionId: input.sessionId,
         askedBy: "customer",
         questionText: raw,   // recordQuestion strips personal details again on write
-        answerText: meta.status === "unanswered" ? null : answer.trim(),
+        answerText: status === "unanswered" ? null : answer.trim(),
         sources,
-        status: meta.status,
-        language: meta.language,
+        status,
+        language: mode.language,
       });
     } catch (err) {
       console.error("[ask] recording the question failed:", err);

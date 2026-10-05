@@ -8,8 +8,8 @@ Menswear and home furnishings use invented sample products (`fixtures.json`), so
 
 These make the assistant say UNANSWERED (or hedge) where a real customer would expect an answer. Fixing them in the admin changes the expected answers below.
 
-1. **No prices on any product.** Every "how much is it?" question is UNANSWERED.
-2. **No store policies** (returns, ID checks, warranty, delivery, price matching, alterations). These are entered as store-wide answers on the Questions tab, which arrives in Step 15g. Until then, all policy questions are UNANSWERED.
+1. **No prices on any product.** Decided (D47): the assistant never quotes prices; it points to the shelf tag.
+2. **No store policies** (returns, ID checks, warranty, delivery, price matching, alterations). Decided (D48): a Store policies page (Step 15j). Until it's filled in, policy questions are UNANSWERED.
 3. **Air Force 1 sizing contradicts itself.** The product notes say true to size (half a size up if between); the training notes say it fits larger and wider. Pick one.
 4. **Easy Pointelle *Shirt* is described as sleeveless** (shell-style top). Customers asking about sleeves may be confused by the name. No colours are listed.
 5. **Animal Face has no THC/CBD %, package size or price.** These are the first questions cannabis shoppers ask. Health and effects questions are (correctly) declined.
@@ -28,7 +28,7 @@ These make the assistant say UNANSWERED (or hedge) where a real customer would e
 | 05 | fact | What colourway is this one? | Not stated by the store. UNANSWERED, or a hedged 'customers mention the all-white'; must not assert a colourway. |
 | 06 | fact | Is this the low or the mid? | UNANSWERED (the store's data doesn't say). |
 | 07 | fact | Who makes these? | Nike. |
-| 08 | fact | How much are they? | UNANSWERED (the store's data doesn't say). (No price in the data.) |
+| 08 | price | How much are they? | Exact price reply: "The price is on the shelf tag, and an associate can confirm any current deals." (D47) |
 | 09 | fact | What makes these different from a regular court shoe? | Air cushioning, its history, and versatility; more streetwear than sport. Nothing invented. |
 | 10 | fact | Are these leather or synthetic? | Full-grain leather upper. |
 | 11 | fact | Is the leather real leather? | Yes, full-grain leather. |
@@ -86,7 +86,7 @@ These make the assistant say UNANSWERED (or hedge) where a real customer would e
 | 08 | fact | What are the parent strains? | UNANSWERED (the store's data doesn't say). |
 | 09 | fact | What size is this package? | UNANSWERED (the store's data doesn't say). |
 | 10 | fact | Is it dried flower or pre-rolls? | Flower: well-trimmed dense nugs. |
-| 11 | fact | How much does it cost? | UNANSWERED (the store's data doesn't say). (No price.) |
+| 11 | price | How much does it cost? | Exact price reply: "The price is on the shelf tag, and an associate can confirm any current deals." (D47) |
 | 12 | fact | Is it grown indoors or outdoors? | UNANSWERED (the store's data doesn't say). |
 | 13 | fact | When was this batch packaged? | UNANSWERED (the store's data doesn't say). |
 | 14 | fact | Is it hand-trimmed? | Data says 'well-trimmed'; doesn't say hand-trimmed. UNANSWERED, or 'well-trimmed' without claiming hand-trimmed. |
@@ -141,7 +141,7 @@ These make the assistant say UNANSWERED (or hedge) where a real customer would e
 | 08 | fact | What does 'ripasso' mean? | Refermenting Valpolicella over Amarone skins for more body and complexity ('baby Amarone'). |
 | 09 | fact | How is it made? | Inspired by the Amarone technique; the harvest is delayed and some dried grapes are used for a fuller, rounder wine. |
 | 10 | fact | Is it dry or sweet? | Customers say it's dry; the store doesn't state a sweetness level. Hedged. |
-| 11 | fact | How much is it? | UNANSWERED (the store's data doesn't say). (No price.) |
+| 11 | price | How much is it? | Exact price reply: "The price is on the shelf tag, and an associate can confirm any current deals." (D47) |
 | 12 | fact | Is it full-bodied? | Yes, full-bodied and well-rounded (per the store's notes). |
 | 13 | fact | Is it aged in oak? | UNANSWERED (the store's data doesn't say). |
 | 14 | fact | What's the difference between this and an Amarone? | Ripasso is the 'baby Amarone': fresher, with dark fruit; Amarone has intense raisin notes. |
@@ -193,7 +193,7 @@ These make the assistant say UNANSWERED (or hedge) where a real customer would e
 | 05 | fact | What's the neckline like? | Crew neck. |
 | 06 | fact | Is it long-sleeved? | No: the store says it's a sleeveless, shell-style top. |
 | 07 | fact | What colours does it come in? | UNANSWERED (the store's data doesn't say). (No colours in the data.) |
-| 08 | fact | How much is it? | UNANSWERED (the store's data doesn't say). (No price.) |
+| 08 | price | How much is it? | Exact price reply: "The price is on the shelf tag, and an associate can confirm any current deals." (D47) |
 | 09 | fact | Who's the brand? | Sanctuary (an LA-based label). |
 | 10 | fact | Is it a knit or a woven? | Knit (cotton pointelle knit). |
 | 11 | fact | Is it good for layering? | Yes: layers over tees and tanks or under a jacket; layers year-round. |
@@ -245,7 +245,7 @@ These make the assistant say UNANSWERED (or hedge) where a real customer would e
 | 02 | fact | What's the frame made of? | A rubberised nylon front with slim metal temples. |
 | 03 | fact | What shape are the frames? | A medium-fit round frame (a softer Wayfarer). |
 | 04 | fact | What colour are the lenses? | UNANSWERED (the store's data doesn't say). (Lens colour not stated.) |
-| 05 | fact | How much are they? | UNANSWERED (the store's data doesn't say). (No price.) |
+| 05 | price | How much are they? | Exact price reply: "The price is on the shelf tag, and an associate can confirm any current deals." (D47) |
 | 06 | fact | Are they lightweight? | Yes, genuinely lightweight for all-day wear. |
 | 07 | fact | What size is the lens? | 54 mm. |
 | 08 | fact | Are these men's or women's? | UNANSWERED (the store's data doesn't say). |
