@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
 import { notFound } from "next/navigation";
 import {
@@ -23,11 +24,34 @@ import { PicksBar, type LocalTap } from "./PicksBar.js";
 import { AskBar } from "./AskBar.js";
 import { suggestedQuestions } from "@/ask/client.js";
 import { isAutomatedVisit } from "@/link-preview-bots.js";
+import { shareMetadata } from "@/share-meta.js";
 import { NotifyMe } from "./NotifyMe.js";
 
 interface Props {
   params: Promise<{ tag_uuid: string }>;
   searchParams: Promise<{ view?: string }>;
+}
+
+// The title and preview shown when the link is shared, and in the browser tab.
+export async function generateMetadata({ params }: Pick<Props, "params">): Promise<Metadata> {
+  const { tag_uuid } = await params;
+  const pool = getPool({ connectionString: process.env.DATABASE_URL });
+  const state = resolveTagState(await getTagByUuid(pool, tag_uuid));
+  if (state.kind !== "active") return { title: "TapShelf" };
+  const [product, store, enrichment] = await Promise.all([
+    getProductById(pool, state.productId),
+    getStoreById(pool, state.storeId),
+    getEnrichmentByProductId(pool, state.productId),
+  ]);
+  if (!product) return { title: "TapShelf" };
+  return shareMetadata({
+    title: product.title,
+    vendor: product.vendor,
+    images: (product.images ?? []) as Array<{ url: string }>,
+    storeName: store?.name ?? store?.shopify_shop_domain ?? "",
+    greatWhen: enrichment?.great_when ?? [],
+    reasonsToBuy: enrichment?.reasons_to_buy ?? [],
+  });
 }
 
 export default async function TapPage({ params, searchParams }: Props) {
@@ -164,7 +188,7 @@ export default async function TapPage({ params, searchParams }: Props) {
           tapCount={tapCount}
           scarcityThreshold={scarcityThreshold}
           tagUuid={tag_uuid}
-          storeName={store?.shopify_shop_domain ?? ""}
+          storeName={store?.name ?? store?.shopify_shop_domain ?? ""}
           isAuthenticated={!!customer}
           externalReviews={externalReviews}
           reviewAggregate={reviewAggregate}
