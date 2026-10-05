@@ -53,3 +53,18 @@ export const DISCLOSURE = (storeName: string) =>
 // The chat and the floating picks pill share the bottom of the screen (D37):
 // the pill hides while the chat is open.
 export const CHAT_EVENT = "tapshelf:chat";
+
+// Phone keyboards cover the bottom of the screen without moving fixed
+// elements (Android Chrome's default, and iPhones), so the open chat measures
+// the visible area above the keyboard and sits on top of it.
+const KEYBOARD_MIN_PX = 120;   // smaller gaps are browser toolbars, not a keyboard
+
+export function sheetPosition(
+  layoutHeight: number,
+  visible: { height: number; offsetTop: number } | null,
+  expanded: boolean,
+): { bottom: number; height: string } {
+  const covered = visible ? Math.round(layoutHeight - visible.height - visible.offsetTop) : 0;
+  if (!visible || covered < KEYBOARD_MIN_PX) return { bottom: 0, height: expanded ? "92vh" : "60vh" };
+  return { bottom: covered, height: `${Math.round(visible.height * 0.92)}px` };
+}

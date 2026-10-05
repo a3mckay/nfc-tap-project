@@ -26,7 +26,8 @@ describe("staff cookie", () => {
     const [payload, sig] = signStaffCookie(staff).split(".");
     const forged = Buffer.from(JSON.stringify({ ...staff, storeId: "store-2", exp: Date.now() + 1e9 })).toString("base64url");
     expect(verifyStaffCookie(`${forged}.${sig}`)).toBeNull();
-    expect(verifyStaffCookie(`${payload}.x${sig!.slice(1)}`)).toBeNull();
+    // Change the signature's first character (to something it isn't already).
+    expect(verifyStaffCookie(`${payload}.${sig![0] === "x" ? "y" : "x"}${sig!.slice(1)}`)).toBeNull();
     expect(verifyStaffCookie(undefined)).toBeNull();
     expect(verifyStaffCookie("garbage")).toBeNull();
   });

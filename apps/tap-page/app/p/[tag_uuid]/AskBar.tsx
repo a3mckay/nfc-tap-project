@@ -1,11 +1,12 @@
 "use client";
 
 // PRD v4 §7 Step 15e: "Ask about this ✦". A full-width bar at the bottom of the
-// tap page (D4, D37) that opens a half-screen chat. The chat can be expanded
-// and minimized back to the bar, and the conversation is kept for the visit.
+// tap page (D4, D37) that opens a half-screen chat. The chat grows once the
+// conversation starts, can be minimized back to the bar, stays above the phone
+// keyboard, and the conversation is kept for the visit.
 // Answers stream from POST /api/ask (src/ask/handle.ts).
 import { useEffect, useRef, useState } from "react";
-import { NdjsonReader, piiNotice, DISCLOSURE, CHAT_EVENT } from "@/ask/client.js";
+import { NdjsonReader, piiNotice, DISCLOSURE, CHAT_EVENT, sheetPosition } from "@/ask/client.js";
 
 interface Props {
   tagUuid: string;
@@ -42,7 +43,7 @@ function saveMessages(tagUuid: string, endpoint: string, messages: Message[]) {
 
 export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggestions, endpoint = "/api/ask" }: Props) {
   const [open, setOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [visible, setVisible] = useState<{ height: number; offsetTop: number; layoutHeight: number } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -54,7 +55,19 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
   useEffect(() => { saveMessages(tagUuid, endpoint, messages); }, [tagUuid, endpoint, messages]);
   useEffect(() => { window.dispatchEvent(new CustomEvent(CHAT_EVENT, { detail: { open } })); }, [open]);
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight }); }, [messages, open]);
-  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
+  // With a mouse, type straight away. On a phone, wait for a tap so the
+  // keyboard doesn't cover the suggested questions.
+  useEffect(() => { if (open && matchMedia("(pointer: fine)").matches) inputRef.current?.focus(); }, [open]);
+  // Track the area above the on-screen keyboard while the chat is open.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!open || !vv) return;
+    const update = () => setVisible({ height: vv.height, offsetTop: vv.offsetTop, layoutHeight: window.innerHeight });
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => { vv.removeEventListener("resize", update); vv.removeEventListener("scroll", update); };
+  }, [open]);
 
   async function ask(question: string) {
     const q = question.trim();
@@ -110,17 +123,12 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
 
   if (!open) return bar;
 
+  const position = sheetPosition(visible?.layoutHeight ?? 0, visible, messages.length > 0);
+
   return (
     <div role="dialog" aria-label={`Questions about the ${productTitle}`}
-      style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, height: expanded ? "92vh" : "60vh", background: "#fff", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", boxShadow: "0 -8px 30px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", transition: "height 0.2s" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1rem", borderBottom: "1px solid #f0f0f0" }}>
-        <span aria-hidden="true" style={{ color: primaryColor, fontWeight: 700 }}>✦</span>
-        <p style={{ flex: 1, margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{productTitle}</p>
-        <button type="button" onClick={() => setExpanded(!expanded)} aria-label={expanded ? "Shrink chat" : "Expand chat"}
-          style={{ background: "none", border: "none", fontSize: "1.1rem", color: "#888", cursor: "pointer", padding: "0.25rem 0.5rem" }}>{expanded ? "▾" : "▴"}</button>
-        <button type="button" onClick={() => setOpen(false)} aria-label="Minimize chat"
-          style={{ background: "none", border: "none", fontSize: "0.85rem", color: "#666", cursor: "pointer", padding: "0.25rem 0.5rem" }}>Minimize</button>
-      </div>
+      style={{ position: "fixed", left: 0, right: 0, bottom: position.bottom, zIndex: 60, height: position.height, background: "#fff", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", boxShadow: "0 -8px 30px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", transition: "height 0.2s" }}>
+      <ChatHeader productTitle={productTitle} primaryColor={primaryColor} onMinimize={() => setOpen(false)} />
 
       <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {messages.length === 0 && (
@@ -175,5 +183,18 @@ export function ChatDisclosure({ storeName }: { storeName: string }) {
       {DISCLOSURE(storeName)}{" "}
       <a href="/privacy" target="_blank" rel="noopener" style={{ color: "#999", textDecoration: "underline" }}>Privacy</a>
     </p>
+  );
+}
+
+export function ChatHeader({ productTitle, primaryColor, onMinimize }: { productTitle: string; primaryColor: string; onMinimize: () => void }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.5rem 0.4rem 1rem", borderBottom: "1px solid #f0f0f0" }}>
+      <span aria-hidden="true" style={{ color: primaryColor, fontWeight: 700 }}>✦</span>
+      <p style={{ flex: 1, margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{productTitle}</p>
+      <button type="button" onClick={onMinimize} aria-label="Minimize chat"
+        style={{ display: "flex", alignItems: "center", gap: "0.3rem", minHeight: "44px", padding: "0 0.75rem", background: "none", border: "none", borderRadius: "999px", fontSize: "0.88rem", fontWeight: 500, color: "#444", fontFamily: "inherit", cursor: "pointer" }}>
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>Minimize
+      </button>
+    </div>
   );
 }

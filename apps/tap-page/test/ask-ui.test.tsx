@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { NdjsonReader, suggestedQuestions, piiNotice, keyPoints, DISCLOSURE } from "@/ask/client.js";
 import { KeyPoints } from "../app/p/[tag_uuid]/KeyPoints.js";
-import { AskBar } from "../app/p/[tag_uuid]/AskBar.js";
+import { AskBar, ChatHeader } from "../app/p/[tag_uuid]/AskBar.js";
 
 describe("NdjsonReader", () => {
   it("returns complete events and keeps a partial line until the rest arrives", () => {
@@ -88,5 +88,39 @@ describe("StaffShell: Customers are asking (D13, Step 15h)", async () => {
 
   it("hides the section until there's a question", () => {
     expect(render([], 0)).not.toContain("Customers are asking");
+  });
+});
+
+describe("sheetPosition: the chat stays above the on-screen keyboard", async () => {
+  const { sheetPosition } = await import("@/ask/client.js");
+
+  it("sits at the bottom at its normal height when there's no keyboard", () => {
+    expect(sheetPosition(800, null, false)).toEqual({ bottom: 0, height: "60vh" });
+    expect(sheetPosition(800, { height: 800, offsetTop: 0 }, true)).toEqual({ bottom: 0, height: "92vh" });
+  });
+
+  it("ignores small differences such as a browser toolbar sliding away", () => {
+    expect(sheetPosition(800, { height: 740, offsetTop: 0 }, false)).toEqual({ bottom: 0, height: "60vh" });
+  });
+
+  it("lifts above the keyboard and fills most of the space left (Android)", () => {
+    expect(sheetPosition(800, { height: 420, offsetTop: 0 }, false)).toEqual({ bottom: 380, height: "386px" });
+  });
+
+  it("allows for the page being panned while the keyboard is up (iPhone)", () => {
+    expect(sheetPosition(800, { height: 420, offsetTop: 100 }, true)).toEqual({ bottom: 280, height: "386px" });
+  });
+});
+
+describe("ChatHeader", () => {
+  const html = renderToStaticMarkup(<ChatHeader productTitle="Air Force 1" primaryColor="#000" onMinimize={() => {}} />);
+
+  it("has one Minimize button with its chevron beside the word and a full-size tap target", () => {
+    expect(html).toMatch(/<button[^>]*aria-label="Minimize chat"[^>]*min-height:44px[^>]*><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>Minimize<\/button>/);
+  });
+
+  it("has no separate expand arrow: the sheet grows once the conversation starts", () => {
+    expect(html).not.toContain("Expand chat");
+    expect(html).not.toContain("▴");
   });
 });
