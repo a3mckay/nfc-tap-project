@@ -289,7 +289,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 
 Steps are ordered by dependency. Steps 8a–8c run alongside Phase 3.
 
-> **Phase 5 (staff experience) is complete: Step 13 (staff logins & training view, 2026-09-29) and Step 14 (manager and co-manager roles, 2026-09-29).** The founder had moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Next planned feature (founder, 2026-09-29): weekly training quizzes for staff — not started; see `docs/staff-experience.md`, "Later: weekly quizzes".
+> **Phase 5 (staff experience) is complete: Step 13 (staff logins & training view, 2026-09-29) and Step 14 (manager and co-manager roles, 2026-09-29).** The founder had moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Next planned feature (founder, 2026-10-05): the **Shelf-Side AI Assistant** ([`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md), still in discovery), then weekly training quizzes for staff (not started; see `docs/staff-experience.md`, "Later: weekly quizzes").
 
 ### Phase 1: Foundation
 
