@@ -70,6 +70,16 @@ Round 4 (2026-10-05):
 | D36 | **Build order:** the AI assistant comes before weekly staff quizzes. |
 | D37 | **Bottom of the screen: option A.** The Ask bar spans the full width at the bottom. "Your picks (N)" is a small floating pill just above it on the right. The pill appears only after the customer reacts to something and hides while the chat is open. |
 
+Round 5 (2026-10-05):
+
+| # | Decision |
+|---|---|
+| D38 | **Owner answers apply going forward only.** When owners, managers or co-managers answer an Unanswered question, the answer goes into the answer pool for *future* questions. The customer who asked is never contacted later: no notification and no "My questions" history. They've usually left the store by then. |
+| D39 | **Thumbs up/down: parked.** Owner and manager review covers answer quality for now. |
+| D40 | **Weekly owner email and a dashboard card are in scope.** They're built as the last step of this phase, before staff quizzes, on the existing Resend setup (`@nfc/email`). Contents are to be defined (§9.9). |
+| D41 | **Claims need a source.** Product-specific facts must come from a source in §6: the answer pool, owner content, product data, the research fact sheet, or reviews (phrased as "customers say"). The model's own unsourced knowledge is used only to explain terms. |
+| D42 | **Brand/vendor pages are the most trusted research source.** The AI research tool must be updated to do this (§6.2); that's a build step. |
+
 
 Today, a tap tells us a customer was curious. It doesn't tell us *why*. And when a customer has a question, the only path is **Ask Us**, which sends them to a human over WhatsApp or SMS. That only works when someone is free to answer, and we capture nothing from it.
 
@@ -197,11 +207,19 @@ The AI answers only from these sources, **in priority order**. When two sources 
 
 `internal_staff_notes` are used by the **staff** Ask box only.
 
-**Claims vs. definitions (proposed, revised 2026-10-05):** the AI may state product-specific facts only when one of the sources above supports them; reviews are phrased as "customers say." It may use its own general knowledge, with no source, only to explain terms (what "Goodyear welt" or "merino" means), never to describe this product.
+**Claims vs. definitions (D41):** the AI may state product-specific facts only when one of the sources above supports them; reviews are phrased as "customers say." It may use its own general knowledge, with no source, only to explain terms (what "Goodyear welt" or "merino" means), never to describe this product.
 
 **Using the existing AI research tool (founder's preference):** there won't be a seed list of real questions at launch, so the product data has to carry the answers. The existing Brave-grounded "Generate" tool (Step 5) already researches each product to fill enrichment fields. **Proposal:** extend it to also save a short **product fact sheet** (materials, fit, care, sizing, origin, certifications, with the source URL for each fact). The AI uses the fact sheet at priority 3, alongside imported data. It never searches the web while a customer waits, because that would be too slow and impossible to vet.
 
 It never invents allergens, materials, certifications or medical claims. In regulated categories (food allergens, alcohol, supplements, cannabis) it defaults to "Check the label / ask staff" unless the fact is explicitly in the data (Q6.4). Each answer can show "Based on: product details · staff notes" so the customer knows where it came from.
+
+### 6.2 Research tool changes (D42)
+Today the Generate action (`apps/admin/app/enrichment/[product_id]/actions.ts`) runs one Brave query, `"{vendor} {title} materials features review"`. It passes the top 6 result *snippets* (title + description) to the copy prompt, then **discards** them: no URLs and no facts are saved, and no source is preferred. To build the fact sheet:
+1. **Find the brand's site:** use `brands.website` when set (the column exists, mostly empty); otherwise run a `"{vendor} official site"` search and keep the top result's domain. The owner can correct the domain.
+2. **Search the brand's site first** (`site:{domain} {title}`), then the general web. Rank brand/vendor results above retailers, then reviews.
+3. **Read the page, not just the snippet:** fetch the top brand result's page text for materials, care, fit and sizing.
+4. **Save a fact sheet per product:** each fact keeps its source URL and a type (brand / retailer / review). Owners and managers can see and edit it in the product editor. Regenerating replaces only facts the owner hasn't edited.
+5. **Copy drafting** keeps working as today, now reading from the saved fact sheet.
 
 ### 6.1 Customer-facing tone (D14)
 - **Answer the question that was asked.** Mention another product only when the customer's question calls for it ("is there a wider version?"), and phrase it as information, not a recommendation to buy more.
@@ -246,7 +264,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 ### 9.0 Round 2: new questions raised by the round 1 answers (★ = blocks build)
 1. ✅ *Resolved: the staff experience already exists (Step 13).* ~~**Staff accounts.**~~
 2. ✅ *Resolved, D11: owner, manager and co-manager can all view and answer.* ~~**Who can see the Questions tab?**~~
-3. ⏸ *Parked (§9.9): notifying customers when a question is answered.*
+3. ✅ *Resolved, D38: no.*
 4. ✅ *Resolved, D26.*
 5. ✅ *Resolved: opening a product clears its "new" badge; Unanswered questions stay flagged until an owner/manager answers or dismisses them.*
 6. ✅ *Resolved, D13.*
@@ -269,7 +287,7 @@ Each question has a **proposed default** so you can answer "agree," or override 
 5. ✅ *Resolved, D14 / §6.1: only when the question calls for it, phrased as information.*
 6. ✅ *Resolved, D5.* ~~**Human handoff:**~~ when the AI can't answer, what do we offer? WhatsApp or SMS (existing), "find an associate" (no tech needed), or both? Should the handoff message include the customer's question and the AI's attempt?
 7. ➡️ *Merged into Q0.3.*
-8. ⏸ *Parked (§9.9): a "My questions" history.*
+8. ✅ *Resolved, D38: dropped.*
 9. ✅ *Resolved, D27.*
 10. ✅ *Resolved, D24.*
 11. ✅ *Resolved, D25.*
@@ -300,21 +318,21 @@ Each question has a **proposed default** so you can answer "agree," or override 
 
 ### 9.5 Question Insights (admin): functionality & UI
 1. ✅ *Resolved, D7.* ~~**Where does it go in the nav?**~~ A top-level "Questions" item, or a tab in Analytics? Proposed: top-level. It's an action list, not just a chart.
-2. ⏸ *Parked (§9.9): dashboard card.*
+2. ✅ *In scope, D40; contents in §9.9.*
 3. ✅ *Resolved, D8.* ~~**Grouping:**~~ fully automatic, or owner-curated? Proposed: automatic, with rename, merge and split. How fine-grained? One theme per product ("Does the Weekend Boot run small?") or across products ("Sizing")? Proposed: both levels. Product-level questions roll up into store-level themes.
 4. ✅ *Resolved, D32: no badge.*
-5. ⏸ *Parked (§9.9): weekly email digest.*
+5. ✅ *In scope, D40; contents in §9.9.*
 6. ✅ *Resolved, D11: owners, managers and co-managers. Staff see grouped themes and approved answers.*
 7. ✅ *Resolved, D12: the hidden answer pool.*
 8. ✅ *Resolved: manager and co-manager roles exist (Step 14, PR #12).*
 9. ✅ *Resolved, D32: no export.*
 
 ### 9.6 Grounding, content & quality
-1. 🟡 *Proposal revised (§6): the AI may make claims from any **sourced** data (research fact sheet, reviews framed as "customers say"). Its own unsourced memory is used only for definitions.* Awaiting confirmation.
+1. ✅ *Resolved, D41.*
 2. ✅ *Resolved, D18.*
 3. ⏸ *Parked (§9.9): problem-first framing for AI copy.*
 4. ✅ *Resolved, D9.* ~~**Regulated categories:**~~ for allergens, alcohol, supplements, cannabis and health claims, do we refuse unless the fact is explicitly in the data? Proposed: yes, and always add "check the label."
-5. 🟡 *Proposed: yes. The AI research tool ranks the brand's or vendor's own product page as the top source for the fact sheet.* Awaiting confirmation.
+5. ✅ *Resolved, D42 (§6.2).*
 6. ✅ *Resolved, D33.*
 
 ### 9.7 Privacy & data
@@ -329,13 +347,12 @@ Each question has a **proposed default** so you can answer "agree," or override 
 2. ✅ *Resolved, D16.*
 3. ⏸ *Parked, D35.*
 
-### 9.9 Parked for discussion (founder, 2026-10-05)
-1. **Customer follow-up** (old Q0.3 and Q2.8): should signed-in customers be notified when an unanswered question gets an answer, or see a "My questions" history? Leaning no for this version.
-2. **Thumbs up/down** on answers (Q4.8), or rely on owner and manager review instead.
-3. **Dashboard card** (Q5.2).
-4. **Weekly email digest** (Q5.5). No weekly owner email exists today.
-5. **Problem-first framing for the existing AI copy generation** (Q6.3).
-6. Other founder questions to come back to before build.
+### 9.9 Still to discuss before build
+1. **Weekly owner email (D40):** who gets it (owner only, or managers too), what day it goes out, and what's in it. Proposed contents: questions this week vs. last, top 3 themes, Unanswered questions needing an answer (with a link to the Questions tab), and the most-asked product.
+2. **Dashboard card (D40):** same data as the email, in short form, on the admin home or the Questions tab.
+3. **Thumbs up/down** (D39): parked.
+4. **Problem-first framing for the existing AI copy prompt** (Q6.3): parked. It changes future drafts only, not existing copy.
+5. Other founder questions to come back to before build.
 
 ---
 
