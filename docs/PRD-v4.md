@@ -20,7 +20,7 @@
 4. **Section 12** brings in the known gaps from `DEFERRED.md` and the human to-dos from `ACTION_ITEMS.md`.
 5. **Section 11** lists places where the code and the spec disagree (for example, pricing tiers).
 6. **Staff logins and the staff training view** moved from the V2 roadmap into the build order as the **next priority** (§7 Phase 5, Step 13). Decided 2026-09-28. The design is in [`docs/staff-experience.md`](staff-experience.md).
-7. **2026-10-02:** added the Shelf-Side AI Assistant (customer Ask, staff Ask in the existing training view, question insights) as a discovery item. Spec draft: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md). See §9 and §11.5.
+7. **2026-10-02 → 2026-10-05:** the Shelf-Side AI Assistant (customer Ask, staff Ask in the existing training view, question insights) was specified and approved as §7 Phase 6, Step 15. Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md).
 
 ### Status legend
 
@@ -289,7 +289,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 
 Steps are ordered by dependency. Steps 8a–8c run alongside Phase 3.
 
-> **Phase 5 (staff experience) is complete: Step 13 (staff logins & training view, 2026-09-29) and Step 14 (manager and co-manager roles, 2026-09-29).** The founder had moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Next planned feature (founder, 2026-10-05): the **Shelf-Side AI Assistant** ([`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md), still in discovery), then weekly training quizzes for staff (not started; see `docs/staff-experience.md`, "Later: weekly quizzes").
+> **Phase 5 (staff experience) is complete: Step 13 (staff logins & training view, 2026-09-29) and Step 14 (manager and co-manager roles, 2026-09-29).** The founder had moved it ahead of the remaining Phase 3–4 gaps on 2026-09-28. Next planned feature (founder, 2026-10-05): the **Shelf-Side AI Assistant**, §7 Phase 6, Step 15 (approved; spec in [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md)), then weekly training quizzes for staff (not started; see `docs/staff-experience.md`, "Later: weekly quizzes").
 
 ### Phase 1: Foundation
 
@@ -444,7 +444,7 @@ Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
 **Step 14: Manager and co-manager roles ✅** (founder, 2026-09-29)
 - The owner can make anyone on the Staff list a **manager** or **co-manager**; a manager can make someone a co-manager (or back to staff) but can't make or change managers.
 - Managers and co-managers get an emailed "Set your password" link (single-use, 3 days) and then sign in on the normal admin login with their own password; demoting someone to staff removes their password.
-- One permission table (`apps/admin/src/permissions.ts`) is enforced by the middleware (pages), `getActionStore(pool, shop, permission)` (every server action, with the manager's role re-read from the database) the layout (live role re-check; the sidebar shows only allowed areas), and the tag CSV export. A manager's cookie is re-checked against the database at least once a minute: the middleware sends a stale cookie through `/api/session/refresh`, which re-signs it with the current role or signs the person out (`apps/admin/src/session-refresh.ts`). So demotions, removals and promotions reach client-side navigation and route handlers too:
+- One permission table (`apps/admin/src/permissions.ts`) is enforced by the middleware (pages), `getActionStore(pool, shop, permission)` (every server action, with the manager's role re-read from the database), the layout (live role re-check; the sidebar shows only allowed areas), and the tag CSV export. A manager's cookie is re-checked against the database at least once a minute: the middleware sends a stale cookie through `/api/session/refresh`, which re-signs it with the current role or signs the person out (`apps/admin/src/session-refresh.ts`). So demotions, removals and promotions reach client-side navigation and route handlers too:
 
 | Area | Owner | Manager | Co-manager |
 |---|---|---|---|
@@ -459,6 +459,25 @@ Deferred: Tap-to-Edit and live stock data in the staff view (see §12).
 | Analytics | ✅ | ✅ | ❌ |
 | Theme, settings, product matching, getting started | ✅ | ❌ | ❌ |
 | Plan and billing | ✅ | ❌ | ❌ |
+
+### Phase 6: Shelf-Side AI Assistant ⬜
+
+**Step 15: Shelf-Side AI Assistant ⬜** (approved by the founder 2026-10-05)
+
+Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md) (decisions D1–D45). Customers ask questions on the tap page and get answers grounded in the store's data. Staff can ask the same AI from the training view. Owners, managers and co-managers review every question, grouped by theme, and add answers that the AI uses from then on. Comes before weekly staff quizzes (D36). Slices, in dependency order:
+
+- ⬜ **15a Data and PII:** migrations for `product_questions`, `question_themes`, `product_answers` (the hidden answer pool), the per-product research fact sheet, and the "Great when…" key-points field on `enrichments`. A tested PII-stripping function that names what it removed (D10, D30).
+- ⬜ **15b Research tool upgrade** (§6.2 of the spec): find the brand's website (`brands.website`, else search); search the brand's site first; read the page, not just the snippet; save a fact sheet with a source URL per fact; owners and managers can view and edit it in the product editor; regenerating keeps their edits. Also drafts "Great when…".
+- ⬜ **15c Answer engine:** gathers sources in priority order (answer pool → owner content → product data and fact sheet → reviews → store answers), with Claude Haiku 4.5 (D16), streamed and prompt-cached. Applies the no-upsell tone rules (§6.1), the regulated-facts rule (D9), the sourced-claims rule (D41), and the fixed stock/size reply (D25). Flags Unanswered (D5); answers in the customer's language (D24); caps at 10 questions per product per visit (D22). Strips PII before saving. Keeps tap-page load under 2 s by loading the chat lazily.
+- ⬜ **15d Quality test set** (D33): about 100 questions (shoes and menswear first; some womenswear and home furnishings), including questions that invite an upsell. The founder checks the expected answers once. The answer engine must pass before 15e ships. Step up to Sonnet 5.5 only if Haiku fails (D16).
+- ⬜ **15e Customer Ask on the tap page:** header carousel kept; "Great when…" key points (D21) above long details collapsed behind "More details"; full-width Ask bar with a floating "Your picks" pill (option A, D37); half-sheet chat that can minimize (D4, D28); suggested-question chips (D23); "Sources" tap (D29); one-line AI disclosure (D19, §7.1).
+- ⬜ **15f Theme grouping:** a background job groups questions into product themes and store-wide themes (D8). Stock and size questions get their own theme (D25).
+- ⬜ **15g Questions tab (admin):** a new nav item for owners, managers and co-managers (new `questions` permission). Products appear automatically once they have a question; grouped summaries by default, with a Verbatim toggle; an Unanswered filter; answering adds to the answer pool (D12, D38); explicit "Show on product page" and "Add to training Q&A" buttons. Store policies (returns, exchanges, alterations, price match, gift wrap, D18) are entered here as store-wide answers, because Settings is owner-only.
+- ⬜ **15h Staff side:** "Customers are asking" under the one-line sell in the training view, and a staff Ask box that can also use training notes and internal notes (D6, D13, D31). Staff questions appear on the Questions tab with a "Staff" label and name.
+- ⬜ **15i Admin home page:** `/` becomes a real home page with tap activity and customer questions at a glance (D44), and it's where owners, managers and co-managers land after sign-in (D45).
+- 🧍 Privacy Policy and store Terms of Service updates for saved questions and the founder's cross-store access (D19, D20); part of the existing legal review.
+
+Out of scope for this phase: weekly owner email (D43, `DEFERRED.md`), thumbs up/down (D39), problem-first framing of the existing copy prompt, live stock answers (D25).
 
 ---
 
@@ -502,7 +521,7 @@ The SaaS tool is how TapShelf gets to market. The dataset is the long-term defen
 | Feature | Status |
 |---|---|
 | Staff view layer (same tap; staff see inventory, notes, talking points) | ➡️ **Moved into V1** as §7 Phase 5, Step 13 (current priority). Live inventory in the staff view stays deferred. |
-| **Shelf-Side AI Assistant**: customers ask questions on the tap page; staff can ask the same AI and see "common questions" in the Step 13 training view; owners and managers see questions grouped into themes. Builds on Step 13. | 🔍 **Discovery.** Draft spec and open questions in [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md). Not approved for build. |
+| **Shelf-Side AI Assistant**: customers ask questions on the tap page; staff can ask the same AI and see "common questions" in the Step 13 training view; owners and managers see questions grouped into themes. Builds on Step 13. | ➡️ **Moved into V1** as §7 Phase 6, Step 15 (approved 2026-10-05). Spec: [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md). |
 | Post-purchase "product passport" | ⬜ |
 | Email capture on OOS | ✅ **Pulled into V1.** Done via NotifyMe subscriptions and restock notifications |
 | PWA / add to home screen | ✅ **Pulled into V1.** Hand-rolled service worker, manifest, 192/512 icons, install prompt with manual fallback |
@@ -564,7 +583,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 2. **Tap-page performance gate.** The spec says to enforce it in CI from day one; the Lighthouse job was removed. Decide whether to restore it.
 3. **PII rule vs. customer accounts.** `tap_events` remains PII-free. Customer identity (email, phone) now lives in `customers` / `customer_taps` / `notification_*`. The privacy policy and PIPEDA review must cover this. v3 assumed no customer identity at all.
 4. **"No cross-sell" principle vs. offers and the picks bar.** Offers and the picks bar are arguably engagement, not cross-sell. Confirm they're in the spirit of §4.3.
-5. **Shelf-Side AI Assistant vs. the current tap page.** The blocking questions are resolved (decisions D1–D21 in [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md)): keep the header carousel; 3 "Great when…" key points; a sticky Ask bar alongside the picks bar; AI answers drawn from a hidden pool of answers written by owners and managers; first pilot is shoes/menswear. §5.4 changes once that spec is approved for build.
+5. **Shelf-Side AI Assistant vs. the current tap page.** Decided (D1–D45 in [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md)). §5.4 will be updated when Step 15e lands.
 
 ## 12. Known Gaps & Human To-Dos
 
