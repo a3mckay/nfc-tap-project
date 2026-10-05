@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| Status | **Draft v0.2 — in discovery.** Priority: full build once approved (decision D2). Open questions are in §9; decisions so far are in §0. |
+| Status | **Approved for build (v1.0, 2026-10-05).** Build plan: PRD-v4 §7 Phase 6, Step 15. The decisions in §0 override earlier wording elsewhere in this doc. |
 | Parent spec | [`docs/PRD-v4.md`](PRD-v4.md) (roadmap §9, decision §11.5). Builds on the staff experience: [`docs/staff-experience.md`](staff-experience.md) (PRD-v4 §7 Step 13, built) and manager roles (Step 14, [PR #12](https://github.com/a3mckay/nfc-tap-project/pull/12), open). |
 | Origin | Advisory conversation with Sarah Young (Servizio Group), 2026-10-01 |
-| Updated | 2026-10-02 (round 1 answers) |
+| Updated | 2026-10-05 (approved) |
 
-> **For a Claude session:** this is a discovery draft. Don't build from it until §9 is resolved and the status above says *Approved*. When it's approved, its build steps move into PRD-v4 §7.
+> **For a Claude session:** this spec is approved. Build it in the slice order in PRD-v4 §7 Step 15 (15a → 15i), one slice per session, TDD as usual. Where §0's decisions and later sections disagree, §0 wins.
 
 ---
 
@@ -81,6 +81,7 @@ Round 5 (2026-10-05):
 | D42 | **Brand/vendor pages are the most trusted research source.** The AI research tool must be updated to do this (§6.2); that's a build step. |
 | D43 | **Weekly owner email moves out of this phase** (supersedes the email part of D40). It's a broader piece of work that needs its own design, so it'll be scoped after this feature ships, still ahead of staff quizzes. |
 | D44 | **The dashboard card goes on the admin home page**, which should put tap activity and customer questions front and centre. |
+| D45 | **Admin home page:** `/` becomes a real home page with tap activity and questions at a glance. Owners, managers and co-managers all land there after sign-in. |
 
 
 Today, a tap tells us a customer was curious. It doesn't tell us *why*. And when a customer has a question, the only path is **Ask Us**, which sends them to a human over WhatsApp or SMS. That only works when someone is free to answer, and we capture nothing from it.
@@ -349,15 +350,16 @@ Each question has a **proposed default** so you can answer "agree," or override 
 2. ✅ *Resolved, D16.*
 3. ⏸ *Parked, D35.*
 
-### 9.9 Still to discuss before build
-1. **Admin home page (D44):** today `/` is a placeholder list of links, and nobody lands on it: owners go to Tags after sign-in, managers to Tags, co-managers to Content. Should `/` become a real home page (taps + questions at a glance) and the default landing page after sign-in for all three roles?
-2. **Thumbs up/down** (D39): parked.
-3. **Problem-first framing for the existing AI copy prompt** (Q6.3): parked.
-4. The founder's own questions, still to be raised.
+### 9.9 Parked (not part of this build)
+1. **Thumbs up/down** on answers (D39).
+2. **Problem-first framing for the existing AI copy prompt** (Q6.3).
+3. **Weekly owner email** (D43; see `DEFERRED.md`).
+4. **Pricing** (D35).
 
+Every other open item in §9.0–9.8 is either resolved by a decision in §0 or covered by the defaults in §3–§7.
 ---
 
 ## 10. Next steps
-1. Work through §9 together, starting with the ★ items.
-2. Turn the answers into the final spec (§3–§8) and low-fi wireframes for: the tap-page Ask sheet, staff mode, and the admin Questions page.
-3. Split the work into build steps and add them to PRD-v4 §7, where the build plan lives.
+1. ~~Work through §9.~~ Done, 2026-10-05.
+2. Build in the slice order in PRD-v4 §7 Step 15, starting with 15a (data and PII) and 15b (research tool).
+3. When 15e lands, update PRD-v4 §5.4 (tap page structure) to match.
