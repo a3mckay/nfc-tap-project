@@ -62,6 +62,12 @@ Things we consciously deferred during the build, with enough context to pick the
 
 ## Tag Lifecycle
 
+### Demo seed provisions and assigns a tag in two steps
+**File:** `packages/db/seeds/demo.ts`
+**What exists:** For each untagged demo product the seed calls `provisionTags` (numbered, unassigned), then `assignTagToProduct`. A re-run skips products that already have a tag.
+**Why deferred:** Reusing the two existing functions keeps the tag-numbering logic in one place. The gap only matters if the seed crashes between the two calls, and this is demo data.
+**What's needed:** If it ever bites, a crash leaves an extra unassigned tag and the next run provisions a fresh one. Delete the stray tag, or give `provisionTags` an optional product to assign inside its transaction.
+
 ### `encoded_at`, `shipped_at`, `deployed_at` have no UI to set them
 **Files:** `apps/admin/app/tags/`
 **What exists:** The three timestamp columns exist in the schema and are displayed read-only on the tag edit page.
