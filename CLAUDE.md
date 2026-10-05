@@ -8,6 +8,7 @@
 - features built after v3 (§10)
 - places where the spec and code disagree (§11)
 - known gaps (§12)
+- parked features: still wanted, not now (§16)
 - the working protocol (§15)
 
 **Current priority:** Phase 5 (staff logins, training view, manager roles) is complete. The next planned feature is weekly staff training quizzes (not started; open questions in [`docs/staff-experience.md`](docs/staff-experience.md)). Ask before starting new work.

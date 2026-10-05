@@ -1,7 +1,6 @@
 import { getPool, getStoreByDomain } from "@nfc/db";
 import { ConsentToggle } from "./ConsentToggle.js";
 import { PlatformPicker } from "./PlatformPicker.js";
-import { ContactSettings } from "./ContactSettings.js";
 import { IndustryPicker } from "./IndustryPicker.js";
 
 interface PageProps {
@@ -45,21 +44,6 @@ export default async function SettingsPage({ searchParams }: PageProps) {
           Tells us how to manage your products. Shopify gets full automation; other platforms use manual workflows.
         </p>
         <PlatformPicker shop={shop} initialPlatform={store.platform} />
-      </section>
-
-      <section style={{ marginBottom: "2.5rem" }}>
-        <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
-          Customer contact
-        </p>
-        <p style={{ fontSize: "0.875rem", color: "#555", marginBottom: "1rem", lineHeight: 1.5 }}>
-          When a customer taps a product and wants to ask a question, they can message you instantly.
-          Add the number(s) you want to receive these messages on — only channels you configure will appear on the tap page.
-        </p>
-        <ContactSettings
-          shop={shop}
-          initialWhatsapp={store.whatsapp_number ?? ""}
-          initialSms={store.sms_number ?? ""}
-        />
       </section>
 
       <section style={{ marginBottom: "2.5rem" }}>
