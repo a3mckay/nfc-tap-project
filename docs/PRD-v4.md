@@ -576,7 +576,7 @@ These were built in May 2026. The migrations number them as expansion sections �
 
 **Admin / platform**
 - **Multi-store admin:** `/stores`; per-store email + password login (PBKDF2, edge-safe); logout
-- **Settings:** platform picker, main industry, data-sharing toggle (the store contact numbers section was removed 2026-10-05; see §16)
+- **Settings:** store name (shown to customers on tap pages, in the chat and in link previews; added 2026-10-05), platform picker, main industry, data-sharing toggle (the store contact numbers section was removed 2026-10-05; see §16)
 - **Analytics additions:** customer segments, offer performance, curiosity gap, dead zones
 - **`/offers` management**
 - **Product import:** CSV import and manual product creation

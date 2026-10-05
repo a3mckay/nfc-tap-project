@@ -2,6 +2,7 @@ import { getPool, getStoreByDomain } from "@nfc/db";
 import { ConsentToggle } from "./ConsentToggle.js";
 import { PlatformPicker } from "./PlatformPicker.js";
 import { IndustryPicker } from "./IndustryPicker.js";
+import { StoreNameField } from "./StoreNameField.js";
 
 interface PageProps {
   searchParams: Promise<{ shop?: string }>;
@@ -35,6 +36,16 @@ export default async function SettingsPage({ searchParams }: PageProps) {
     <main style={{ maxWidth: "560px" }}>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Settings</h1>
       <p style={{ color: "#666", marginBottom: "2rem", fontSize: "0.9rem" }}>{shop}</p>
+
+      <section style={{ marginBottom: "2.5rem" }}>
+        <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+          Store name
+        </p>
+        <p style={{ fontSize: "0.875rem", color: "#555", marginBottom: "1rem", lineHeight: 1.5 }}>
+          What customers see on your product pages, in the chat, and when someone shares a product link.
+        </p>
+        <StoreNameField shop={shop} initial={store.name ?? ""} />
+      </section>
 
       <section style={{ marginBottom: "2.5rem" }}>
         <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
