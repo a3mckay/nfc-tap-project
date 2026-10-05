@@ -58,8 +58,8 @@ To run migrations by hand instead: copy `DATABASE_PUBLIC_URL` from the Railway P
 ### Email settings on the admin service
 Staff invite and sign-in emails are sent by the admin. In Railway, check the **admin** service's **Variables** include `RESEND_API_KEY` (the same key the tap page uses). Without it, the emails are only written to the logs and never sent. They're sent from `TapShelf <hello@tapshelf.co>` unless `RESEND_FROM` says otherwise.
 
-### Confirm what triggers the scheduled jobs
-The admin has two cron routes, `api/cron/brand-refresh` (every 2 weeks) and `api/cron/reviews-refresh` (daily). Something external has to call them, and the repo doesn't record what. Check for a Railway cron service or a cron-job.org account; if neither exists, these jobs aren't running.
+### Decide whether to schedule the review and brand refreshes
+The admin has two more cron routes, `api/cron/brand-refresh` (every 2 weeks) and `api/cron/reviews-refresh` (daily). Nothing calls them: `CRON_SECRET` wasn't set in Railway, and until 2026-10-05 the admin's login check redirected them to the login page anyway (fixed). To turn them on, add a job for each to `.github/workflows/scheduled-jobs.yml`, the same way as `retention`. Public web reviews use Brave Search, so watch the free tier's 2,000 searches a month.
 
 ---
 
@@ -98,7 +98,12 @@ The Privacy Policy / PIPEDA review (below) must also cover storing customers' ty
 - **Privacy page:** a plain-language draft is live at `tapshelf.store/privacy`, linked from the chat's disclosure line and the sign-in form. It names "TapShelf" (no legal name yet) and `hello@tapshelf.co` for requests. To do:
   - set up `hello@tapshelf.co` forwarding at Namecheap so privacy requests reach you;
   - have the legal review revise it (add the legal name once there is one);
-  - make the 24-month promise true: the page says taps, reactions and questions are kept up to 24 months, but the monthly deletion job (PRD v4 §7, Phase 3) isn't built yet.
+  - turn on the 24-month deletion job (built; it needs `CRON_SECRET`, below).
+- **`CRON_SECRET`** (turns on the daily deletion of data older than 24 months that the privacy page promises):
+  1. Make a random secret: run `openssl rand -hex 32` in Terminal.
+  2. Railway → admin service (`nfc-tap-project`) → Variables → add `CRON_SECRET` with that value.
+  3. GitHub → the repo → Settings → Secrets and variables → Actions → New repository secret → `CRON_SECRET`, same value.
+  4. GitHub → Actions → "Scheduled jobs" → Run workflow. A green run whose log ends in `{"deleted":…}` means it works. It then runs daily by itself.
 - **Check on a phone:** the floating "Your picks" pill only shows after two products have been tapped in a visit; it hasn't been checked on a real device yet.
 
 ## Needed before public launch

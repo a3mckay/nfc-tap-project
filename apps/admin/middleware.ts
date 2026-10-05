@@ -15,7 +15,13 @@ const STAFF_HOME = "/training";
 const STAFF_ALLOWED = [STAFF_HOME, "/api/logout"];
 
 
+// Scheduled jobs are called by a scheduler, not a signed-in person; each route
+// checks the shared CRON_SECRET itself.
+const CRON_PREFIX = "/api/cron/";
+
 export async function middleware(request: NextRequest): Promise<NextResponse> {
+  if (request.nextUrl.pathname.startsWith(CRON_PREFIX)) return NextResponse.next();
+
   const adminCookie = request.cookies.get(COOKIE_NAME)?.value;
   const session = await verifySession(adminCookie);
 

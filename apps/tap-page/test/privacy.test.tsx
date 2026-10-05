@@ -26,8 +26,13 @@ describe("privacy page", () => {
     expect(html).toContain("across all stores");
   });
 
+  it("doesn't mention text or WhatsApp alerts, which aren't set up (PRD v4 §16)", () => {
+    expect(html).not.toContain("Twilio");
+    expect(html).not.toContain("WhatsApp");
+  });
+
   it("covers accounts, alerts, providers, retention and the right to complain", () => {
-    for (const s of ["nfc_customer", "Resend", "Twilio", "Railway", "24 months", "outside Canada", "Privacy Commissioner of Canada", "sell personal information"]) {
+    for (const s of ["nfc_customer", "Resend", "Railway", "24 months", "outside Canada", "Privacy Commissioner of Canada", "sell personal information"]) {
       expect(html, s).toContain(s);
     }
   });

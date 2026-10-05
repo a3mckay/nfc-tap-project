@@ -99,4 +99,11 @@ describe("middleware for staff sessions", () => {
     const res = await requestAs("/training");
     expect(new URL(res.headers.get("location")!).pathname).toBe("/login");
   });
+
+  it("lets scheduled jobs through without a login: each checks its own CRON_SECRET", async () => {
+    for (const path of ["/api/cron/retention", "/api/cron/reviews-refresh", "/api/cron/brand-refresh"]) {
+      expect((await requestAs(path)).headers.get("location"), path).toBeNull();
+    }
+    expect(new URL((await requestAs("/api/cronjob")).headers.get("location")!).pathname).toBe("/login");
+  });
 });

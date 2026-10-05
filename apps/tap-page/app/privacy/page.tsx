@@ -45,7 +45,7 @@ export default function PrivacyPage() {
       <ul style={ul}>
         <li>You sign in with your email address. We email you a one-time link; there&apos;s no password.</li>
         <li>We keep your email address, plus a display name, phone number and preferred contact method if you add them, the products you&apos;ve tapped, and your reactions. A cookie called <code>nfc_customer</code> keeps you signed in for up to a year.</li>
-        <li>If you ask to hear about a sale, restock or offer, we save that request and the contact details to use. The store can then send you those alerts by email, text message or WhatsApp. You can change these settings on your profile page at any time.</li>
+        <li>If you ask to hear about a sale, restock or offer, we save that request and the contact details to use. The store can then send you those alerts by email. You can change these settings on your profile page at any time.</li>
       </ul>
 
       <h2 style={h2}>Who sees your information</h2>
@@ -61,7 +61,6 @@ export default function PrivacyPage() {
         <li><strong>Railway</strong> hosts our servers and database.</li>
         <li><strong>Anthropic</strong> writes the chat answers.</li>
         <li><strong>Resend</strong> sends sign-in links and email alerts.</li>
-        <li><strong>Twilio</strong> sends text message and WhatsApp alerts.</li>
       </ul>
       <p style={p}>Some of these companies are in the United States, so your information may be stored or processed outside Canada.</p>
 
