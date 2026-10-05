@@ -32,7 +32,7 @@ describe("middleware for managers and co-managers", () => {
   it("keeps a manager out of settings, theme, billing and all-stores", async () => {
     const c = await managerCookie("manager");
     for (const path of ["/settings?shop=own.myshopify.com", "/theme?shop=own.myshopify.com", "/plan?shop=own.myshopify.com", "/stores"]) {
-      expect(await to(path, c), path).toBe("/tags?shop=own.myshopify.com");
+      expect(await to(path, c), path).toBe("/?shop=own.myshopify.com");
     }
   });
 
@@ -42,7 +42,7 @@ describe("middleware for managers and co-managers", () => {
       expect(await to(path, c), path).toBeNull();
     }
     for (const path of ["/tags?shop=own.myshopify.com", "/offers?shop=own.myshopify.com", "/analytics?shop=own.myshopify.com"]) {
-      expect(await to(path, c), path).toBe("/enrichment?shop=own.myshopify.com");
+      expect(await to(path, c), path).toBe("/?shop=own.myshopify.com");
     }
   });
 
@@ -70,7 +70,7 @@ describe("middleware for managers and co-managers", () => {
 
   it("still keeps owners out of all-stores", async () => {
     const owner = await signSession({ role: "store", storeId: "store-1", storeDomain: "own.myshopify.com" });
-    expect(await to("/stores", owner)).toBe("/tags?shop=own.myshopify.com");
+    expect(await to("/stores", owner)).toBe("/?shop=own.myshopify.com");
   });
 });
 

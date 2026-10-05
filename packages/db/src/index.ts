@@ -12,6 +12,7 @@ export * from "./product-facts.js";
 export * from "./store-policies.js";
 export * from "./question-themes.js";
 export * from "./question-insights.js";
+export * from "./home-summary.js";
 export * from "./reactions.js";
 export * from "./products.js";
 export * from "./tags.js";

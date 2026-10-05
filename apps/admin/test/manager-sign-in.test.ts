@@ -52,14 +52,14 @@ describe("setPasswordAction", () => {
     expect(db.setStaffPassword).toHaveBeenCalledWith(expect.anything(), "m-1", "store-1", "hashed:correct horse");
     expect(await cookieSet()).toMatchObject({ role: "manager", level: "manager", staffId: "m-1", storeId: "store-1" });
     expect(jar.set.mock.calls.at(-1)![2]).toMatchObject({ httpOnly: true, maxAge: 30 * 24 * 60 * 60 });
-    expect(startTapHandoff).toHaveBeenCalledWith(expect.anything(), { kind: "staff", staffId: "m-1", storeId: "store-1" }, "/tags?shop=own.myshopify.com");
+    expect(startTapHandoff).toHaveBeenCalledWith(expect.anything(), { kind: "staff", staffId: "m-1", storeId: "store-1" }, "/?shop=own.myshopify.com");
     expect(to.startsWith("https://tapshelf.store/staff/handoff")).toBe(true);
   });
 
-  it("sends a co-manager to the content list", async () => {
+  it("sends a co-manager to the admin home page too", async () => {
     db.consumeSetPasswordToken.mockResolvedValue({ ...manager, role: "co_manager" });
     await run(() => setPasswordAction(form({ token: "tok", password: "correct horse", confirm: "correct horse" })));
-    expect(startTapHandoff.mock.calls[0]![2]).toBe("/enrichment?shop=own.myshopify.com");
+    expect(startTapHandoff.mock.calls[0]![2]).toBe("/?shop=own.myshopify.com");
   });
 
   it("checks the password before using up the link", async () => {
@@ -90,7 +90,7 @@ describe("loginAction for managers", () => {
     db.getManagerLoginsByEmail.mockResolvedValue([login]);
     const to = await run(() => loginAction(form({ email: "Morgan@Example.com", password: "their password" })));
     expect(await cookieSet()).toMatchObject({ role: "manager", level: "co_manager", staffId: "m-1", storeDomain: "own.myshopify.com" });
-    expect(startTapHandoff).toHaveBeenCalledWith(expect.anything(), { kind: "staff", staffId: "m-1", storeId: "store-1" }, "/enrichment?shop=own.myshopify.com");
+    expect(startTapHandoff).toHaveBeenCalledWith(expect.anything(), { kind: "staff", staffId: "m-1", storeId: "store-1" }, "/?shop=own.myshopify.com");
     expect(to.startsWith("https://tapshelf.store/staff/handoff")).toBe(true);
   });
 

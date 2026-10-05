@@ -38,10 +38,10 @@ beforeEach(() => {
 });
 
 describe("loginAction for store owners", () => {
-  it("hands the sign-in to the tap page, then returns to the tags page", async () => {
+  it("hands the sign-in to the tap page, then returns to the admin home page", async () => {
     const to = await run(() => loginAction(form({ email: "owner@example.com", password: "pw" })));
     expect(to.startsWith("https://tapshelf.store/staff/handoff")).toBe(true);
-    expect(startTapHandoff).toHaveBeenCalledWith(expect.anything(), { kind: "owner", storeAdminId: "admin-1", storeId: "store-1" }, "/tags?shop=own.myshopify.com");
+    expect(startTapHandoff).toHaveBeenCalledWith(expect.anything(), { kind: "owner", storeAdminId: "admin-1", storeId: "store-1" }, "/?shop=own.myshopify.com");
     expect(jar.set).toHaveBeenCalled();
   });
 
