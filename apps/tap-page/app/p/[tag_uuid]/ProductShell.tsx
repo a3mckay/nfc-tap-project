@@ -5,6 +5,7 @@ import { AuthPromptCard } from "./AuthPromptCard.js";
 import { OfferReveal } from "./OfferReveal.js";
 import { ForYou } from "./ForYou.js";
 import { MediaGallery } from "./MediaGallery.js";
+import { KeyPoints } from "./KeyPoints.js";
 
 interface ShopifyImage { url: string; altText: string | null }
 interface ShopifyVariant { id: string; sku: string | null; price: string; inventoryQuantity: number }
@@ -25,6 +26,7 @@ interface Props {
   brandCollector: BrandCollectorInsight | null;
   categoryPattern: CategoryPatternInsight | null;
   sameBrand: SimilarProductSuggestion[];
+  afterKeyPoints?: React.ReactNode;   // e.g. the reactions row
 }
 
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -62,7 +64,7 @@ function FaqAccordion({ items, primaryColor }: { items: FaqItem[]; primaryColor:
   );
 }
 
-export function ProductShell({ product, theme, enrichment, tapCount, scarcityThreshold, tagUuid, storeName, isAuthenticated, externalReviews, reviewAggregate, externalAwards, offer, brandCollector, categoryPattern, sameBrand }: Props) {
+export function ProductShell({ product, theme, enrichment, tapCount, scarcityThreshold, tagUuid, storeName, isAuthenticated, externalReviews, reviewAggregate, externalAwards, offer, brandCollector, categoryPattern, sameBrand, afterKeyPoints }: Props) {
   const images = product.images as ShopifyImage[];
   const variants = product.variants as ShopifyVariant[];
   const primaryImage = images[0];
@@ -150,20 +152,10 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
           )}
         </div>
 
-        {/* ── Why We Love It ── */}
-        {enrichment && enrichment.reasons_to_buy.length > 0 && (
-          <section>
-            <h2 style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#999", marginBottom: "0.6rem" }}>Why We Love It</h2>
-            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {(enrichment.reasons_to_buy as string[]).map((reason, i) => (
-                <li key={i} style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", fontSize: "0.9rem", color: "#222" }}>
-                  <span style={{ color: primaryColor, flexShrink: 0, marginTop: "1px", fontWeight: 700 }}>✦</span>
-                  <span>{reason}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {/* ── Key points: Great when…, else reasons to buy (PRD v4 §7 Step 15e, D21) ── */}
+        <KeyPoints greatWhen={enrichment?.great_when ?? []} reasonsToBuy={(enrichment?.reasons_to_buy ?? []) as string[]} primaryColor={primaryColor} />
+
+        {afterKeyPoints}
 
         {/* ── Staff quote ── */}
         {enrichment?.staff_quote && (

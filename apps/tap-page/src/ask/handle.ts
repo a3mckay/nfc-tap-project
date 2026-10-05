@@ -4,7 +4,7 @@
 // store's own team is previewing the page. Dependencies are injected so this
 // has no database or network access of its own.
 import { redactPii, type PiiType, type QuestionSource } from "@nfc/db";
-import { SYSTEM_PROMPT, buildContext, SOURCE_LABELS, STOCK_REPLY, PRICE_REPLY, unansweredReply, offTopicReply, type AnswerContext } from "./prompt.js";
+import { SYSTEM_PROMPT, buildContext, SOURCE_LABELS, STOCK_REPLY, PRICE_REPLY, unansweredReply, partialNote, offTopicReply, type AnswerContext } from "./prompt.js";
 import { MetaSplitter } from "./meta.js";
 
 export const MAX_QUESTIONS_PER_VISIT = 10;
@@ -62,13 +62,18 @@ export interface AskInput {
 export type AskEvent =
   | { type: "pii"; removed: PiiType[] }
   | { type: "delta"; text: string }
-  | { type: "done"; status: "answered" | "unanswered"; sources: string[] }
+  | { type: "done"; status: "answered" | "partial" | "unanswered"; sources: string[] }
   | { type: "limit"; text: string }
   | { type: "error"; message: string };
 
-type Mode = "answer" | "unanswered" | "stock" | "price" | "off_topic";
-const MODE_LINE = /^\s*\[(answer|unanswered|stock|price|off_topic)(?:\s+([a-z]{2}))?\]\s*\n?/i;
+type Mode = "answer" | "partial" | "unanswered" | "stock" | "price" | "off_topic";
+const ANSWERING = new Set<Mode>(["answer", "partial"]);
+const MODE_LINE = /^\s*\[(answer|partial|unanswered|stock|price|off_topic)(?:\s+([a-z]{2}))?\]\s*\n?/i;
 const LABEL_REMINDER = "Check the label to be sure.";
+// An answer that says the store's information doesn't cover part of the
+// question is a partial answer (D53), even if the model didn't say so.
+const SAYS_NOT_COVERED = /\b(doesn'?t|does not|don'?t|do not) (say|mention|list|include|cover|specify|give|name|state|compare|speak)\b/i;
+const PARTIAL_NOTE_TEXT = /shared the rest of your question/i;
 // Questions that always get the label reminder when answered (D9), whatever the
 // model flagged: a backstop for the regulated-facts rule.
 const REGULATED_QUESTION = /\b(allerg\w*|gluten|vegan|dairy|nuts?|sul(f|ph)ites?|ingredients?|alcohol|abv|thc|cbd|effects?|anxiety|sleep|pain|pregnan\w*|medic\w*|drug|health\w*|safe(ty)?|pesticides?|uv|polari[sz]ed|eclipse|cataract|impact|hypoallergenic|organic|oeko-?tex|flame|prescription|rx)\b/i;
@@ -115,7 +120,7 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
 
   const messages = [...cleanHistory(input.history), { role: "user" as const, content: question.text }];
   const ctx = loaded.context;
-  const fixed: Record<Exclude<Mode, "answer">, string> = {
+  const fixed: Record<Exclude<Mode, "answer" | "partial">, string> = {
     unanswered: unansweredReply(ctx.storeName),
     stock: STOCK_REPLY,
     price: PRICE_REPLY,
@@ -129,7 +134,7 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
   let translated = "";    // a fixed reply the model translated (non-English only)
   const take = (text: string) => {
     const out = splitter.push(text);
-    if (mode!.mode === "answer") { answer += out; return out; }
+    if (ANSWERING.has(mode!.mode)) { answer += out; return out; }
     translated += out;
     return "";
   };
@@ -160,24 +165,26 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
   const { text: tail, meta } = splitter.end();
   const english = !mode.language || mode.language === "en";
 
-  if (mode.mode === "answer" && !(answer + tail).trim()) {   // e.g. the model declined to respond
+  if (ANSWERING.has(mode.mode) && !(answer + tail).trim()) {   // e.g. the model declined to respond
     yield { type: "error", message: "Something went wrong. Try again in a moment." };
     return;
   }
-  if (mode.mode === "answer") {
+  if (mode.mode === "answer" && english && SAYS_NOT_COVERED.test(answer + tail)) mode = { ...mode, mode: "partial" };
+  if (ANSWERING.has(mode.mode)) {
     let rest = tail;
     if ((meta.regulated || REGULATED_QUESTION.test(raw)) && english && (answer + rest).trim() && !/check the label/i.test(answer + rest)) {
       rest = `${rest}${(answer + rest).trim() ? " " : ""}${LABEL_REMINDER}`;
     }
+    if (mode.mode === "partial" && english && !PARTIAL_NOTE_TEXT.test(answer + rest)) rest = `${rest}${(answer + rest).trim() ? " " : ""}${partialNote(ctx.storeName)}`;
     if (rest) { answer += rest; yield { type: "delta", text: rest }; }
   } else {
     translated += tail;
-    answer = english || !translated.trim() ? fixed[mode.mode] : translated.trim();
+    answer = english || !translated.trim() ? fixed[mode.mode as keyof typeof fixed] : translated.trim();
     yield { type: "delta", text: answer };
   }
 
-  const status = mode.mode === "unanswered" ? "unanswered" : "answered";
-  const labels = mode.mode === "answer"
+  const status = mode.mode === "unanswered" ? "unanswered" : mode.mode === "partial" ? "partial" : "answered";
+  const labels = ANSWERING.has(mode.mode)
     ? [...new Set(meta.sources.map((s) => SOURCE_LABELS[s]).filter((l): l is string => !!l))]
     : [];
   yield { type: "done", status, sources: labels };
@@ -198,7 +205,7 @@ export async function* handleAsk(input: AskInput, deps: AskDeps): AsyncGenerator
         questionText: raw,   // recordQuestion strips personal details again on write
         answerText: status === "unanswered" ? null : answer.trim(),
         sources,
-        status,
+        status: status === "partial" ? "unanswered" : status,   // partial answers are flagged for the store (D53)
         language: mode.language,
       });
     } catch (err) {

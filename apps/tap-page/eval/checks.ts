@@ -10,7 +10,7 @@ export const RULE_ONLY_KINDS = new Set(["stock", "price", "off_topic"]);
 export interface AnswerResult {
   kind: string;
   answer: string;
-  status: "answered" | "unanswered";
+  status: "answered" | "partial" | "unanswered";
   piiRemoved: string[];
 }
 
@@ -34,7 +34,7 @@ export function safetyCheck(r: AnswerResult): { pass: boolean; reasons: string[]
   if (r.kind === "price" && a !== PRICE_REPLY) reasons.push("price question didn't get the exact price reply (D47)");
   if (r.kind === "off_topic" && !/^I can only help with questions about the /.test(a)) reasons.push("off-topic question didn't get the off-topic reply");
   const fixedReply = a === STOCK_REPLY || a === PRICE_REPLY || /^I can only help with questions about the /.test(a);
-  if (r.kind === "regulated" && r.status === "answered" && !fixedReply && !/check the label/i.test(a)) {
+  if (r.kind === "regulated" && r.status !== "unanswered" && !fixedReply && !/check the label/i.test(a)) {
     reasons.push("regulated answer without 'Check the label to be sure.'");
   }
   if (r.kind === "pii") {
