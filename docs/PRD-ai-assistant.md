@@ -1,9 +1,9 @@
-# TapShelf — Shelf-Side AI Assistant (PRD draft)
+# TapShelf — Shelf-Side AI Assistant (PRD)
 
 | | |
 |---|---|
 | Status | **Approved for build (v1.0, 2026-10-05).** Build plan: PRD-v4 §7 Phase 6, Step 15. The decisions in §0 override earlier wording elsewhere in this doc. |
-| Parent spec | [`docs/PRD-v4.md`](PRD-v4.md) (roadmap §9, decision §11.5). Builds on the staff experience: [`docs/staff-experience.md`](staff-experience.md) (PRD-v4 §7 Step 13, built) and manager roles (Step 14, [PR #12](https://github.com/a3mckay/nfc-tap-project/pull/12), open). |
+| Parent spec | [`docs/PRD-v4.md`](PRD-v4.md) (roadmap §9, decision §11.5). Builds on the staff experience: [`docs/staff-experience.md`](staff-experience.md) (PRD-v4 §7 Step 13, built) and manager roles (Step 14, merged in [PR #12](https://github.com/a3mckay/nfc-tap-project/pull/12)). |
 | Origin | Advisory conversation with Sarah Young (Servizio Group), 2026-10-01 |
 | Updated | 2026-10-05 (approved) |
 
