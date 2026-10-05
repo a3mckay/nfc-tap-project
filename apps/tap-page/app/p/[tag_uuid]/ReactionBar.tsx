@@ -42,51 +42,42 @@ export function ReactionBar({ tagId, sessionId, primaryColor, customerId }: Prop
   }
 
   return (
-    // Inline under the key points, so the bottom of the screen belongs to the Ask
-    // bar and the picks pill (PRD v4 §7 Step 15e, D37).
-    <div style={{
-      border: "1px solid #eee",
-      borderRadius: "12px",
-      background: "#fff",
-      padding: "0.75rem 1rem",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexWrap: "wrap",
-      gap: "0.6rem",
-    }}>
+    // Under the key points, above Product details (founder, 2026-10-05); the
+    // bottom of the screen belongs to the Ask bar and the picks pill (D37).
+    <div aria-label="What do you think?">
       {done ? (
-        <p style={{ fontSize: "0.85rem", color: "#444", margin: 0, fontWeight: 500 }}>
+        <p style={{ fontSize: "0.85rem", color: "#444", margin: "0.4rem 0", fontWeight: 500, textAlign: "center" }}>
           {proof ?? "Thanks for your feedback"}
         </p>
       ) : (
         <>
-          <span style={{ fontSize: "0.75rem", color: "#aaa", marginRight: "0.25rem" }}>
-            What do you think?
-          </span>
-          {OPTIONS.map(({ value, label }) => {
-            const isSelected = selected === value;
-            return (
-              <button
-                key={value}
-                onClick={() => handleSelect(value)}
-                style={{
-                  padding: "0.4rem 1.1rem",
-                  fontSize: "0.85rem",
-                  fontWeight: 500,
-                  fontFamily: "inherit",
-                  borderRadius: "999px",
-                  border: `1px solid ${isSelected ? primaryColor : "#ddd"}`,
-                  background: isSelected ? primaryColor : "transparent",
-                  color: isSelected ? "#fff" : "#444",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
+          <p style={{ fontSize: "0.72rem", color: "#999", margin: "0 0 0.4rem" }}>What do you think?</p>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            {OPTIONS.map(({ value, label }) => {
+              const isSelected = selected === value;
+              return (
+                <button
+                  key={value}
+                  onClick={() => handleSelect(value)}
+                  style={{
+                    flex: 1,
+                    padding: "0.55rem 0",
+                    fontSize: "0.88rem",
+                    fontWeight: 500,
+                    fontFamily: "inherit",
+                    borderRadius: "999px",
+                    border: `1px solid ${isSelected ? primaryColor : "#ddd"}`,
+                    background: isSelected ? primaryColor : "#fff",
+                    color: isSelected ? "#fff" : "#333",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </>
       )}
     </div>
