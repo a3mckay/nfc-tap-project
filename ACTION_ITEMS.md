@@ -94,14 +94,18 @@ The Privacy Policy / PIPEDA review (below) must also cover storing customers' ty
 ## AI assistant go-live (PRD v4 §7 Step 15)
 
 - **Railway tap-page service:** add `ANTHROPIC_API_KEY` (the chat returns "Questions aren't available right now" without it). The admin service needs `BRAVE_SEARCH_API_KEY` for Generate's brand-first research.
-- **Privacy page:** the chat's disclosure line should link to a privacy policy, and there isn't one yet (tapshelf.co has no privacy page). Part of the legal review below.
+- **Railway tap-page service** is the one named `romantic-kindness` (serves tapshelf.store); the admin service is `nfc-tap-project`. Renaming them to `tap-page` / `admin` in each service's Settings is optional.
+- **Privacy page:** a plain-language draft is live at `tapshelf.store/privacy`, linked from the chat's disclosure line and the sign-in form. It names "TapShelf" (no legal name yet) and `hello@tapshelf.co` for requests. To do:
+  - set up `hello@tapshelf.co` forwarding at Namecheap so privacy requests reach you;
+  - have the legal review revise it (add the legal name once there is one);
+  - make the 24-month promise true: the page says taps, reactions and questions are kept up to 24 months, but the monthly deletion job (PRD v4 §7, Phase 3) isn't built yet.
 - **Check on a phone:** the floating "Your picks" pill only shows after two products have been tapped in a visit; it hasn't been checked on a real device yet.
 
 ## Needed before public launch
 
 ### Legal review
 The PRD flags two documents that need external legal review before launch:
-- **Privacy Policy** — covering tap event data collection, retention (24-month), and store owner obligations
+- **Privacy Policy** — covering tap event data collection, retention (24-month), and store owner obligations. A draft to start from is at `apps/tap-page/app/privacy/page.tsx` (live at `tapshelf.store/privacy`). Also ask about: the alert emails and texts have no one-click unsubscribe link (customers change alerts on their profile page), which may matter under CASL.
 - **Terms of Service** — disclosing the aggregated data use (the data intelligence layer)
 PIPEDA compliance (Canada) is a hard requirement per the PRD. Do not launch without legal sign-off.
 

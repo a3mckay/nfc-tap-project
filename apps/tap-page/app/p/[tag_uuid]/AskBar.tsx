@@ -162,8 +162,18 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
           <button type="submit" disabled={busy || !draft.trim()} aria-label="Send"
             style={{ padding: "0 1rem", border: "none", borderRadius: "999px", background: primaryColor, color: "#fff", fontSize: "0.9rem", fontWeight: 600, fontFamily: "inherit", opacity: busy || !draft.trim() ? 0.5 : 1, cursor: "pointer" }}>Send</button>
         </div>
-        <p style={{ fontSize: "0.68rem", color: "#999", margin: "0.4rem 0 0", textAlign: "center" }}>{DISCLOSURE(storeName)}</p>
+        <ChatDisclosure storeName={storeName} />
       </form>
     </div>
+  );
+}
+
+// The one-line AI disclosure under the input, with a link to the privacy page (§7.1).
+export function ChatDisclosure({ storeName }: { storeName: string }) {
+  return (
+    <p style={{ fontSize: "0.68rem", color: "#999", margin: "0.4rem 0 0", textAlign: "center" }}>
+      {DISCLOSURE(storeName)}{" "}
+      <a href="/privacy" target="_blank" rel="noopener" style={{ color: "#999", textDecoration: "underline" }}>Privacy</a>
+    </p>
   );
 }
