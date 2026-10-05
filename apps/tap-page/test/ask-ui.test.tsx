@@ -59,3 +59,28 @@ describe("AskBar", () => {
     expect(DISCLOSURE("Queen West Shoes")).toBe("Answers are AI-generated. Questions are saved anonymously to help Queen West Shoes improve.");
   });
 });
+
+describe("StaffShell: Customers are asking (D13, Step 15h)", async () => {
+  const { StaffShell } = await import("../app/p/[tag_uuid]/StaffShell.js");
+  const product = { id: "p", title: "Weekend Chukka", vendor: "Northfield", images: [], variants: [] } as never;
+  const render = (asking: Array<{ label: string; count: number; answer: string | null }>, total: number) => renderToStaticMarkup(
+    <StaffShell product={product} storeName="Queen West Shoes" primaryColor="#000" hasOwnerNotes stockNoteAge={null} tagUuid="abc"
+      sections={[{ title: "The one-line sell", kind: "text", text: "One boot, office to bar." }, { title: "Who it's for", kind: "text", text: "Everyone" }]}
+      customersAsking={asking} totalQuestions={total} />,
+  );
+
+  it("shows the top themes with counts right after the one-line sell, and the staff Ask bar", () => {
+    const html = render([{ label: "Does it run small?", count: 14, answer: "True to size." }], 20);
+    expect(html.indexOf("One boot, office to bar.")).toBeLessThan(html.indexOf("Customers are asking"));
+    expect(html.indexOf("Customers are asking")).toBeLessThan(html.indexOf("Who it&#x27;s for"));
+    expect(html).toContain("20 questions so far");
+    expect(html).toContain("Does it run small?");
+    expect(html).toContain("14");
+    expect(html).toContain("True to size.");
+    expect(html).toContain("Ask about this");
+  });
+
+  it("hides the section until there's a question", () => {
+    expect(render([], 0)).not.toContain("Customers are asking");
+  });
+});

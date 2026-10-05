@@ -35,6 +35,17 @@ describe("buildContext", () => {
     expect(section.indexOf("Returns and exchanges")).toBeLessThan(section.indexOf("Return policy?"));
   });
 
+  it("gives staff internal notes and recent customer questions, and never gives them to customers (D31)", () => {
+    const staff = buildContext(ctx({ staff: { internalNotes: "Fragile clasp", recentQuestions: [{ question: "Does it run small?", answer: "True to size." }] } }));
+    expect(staff).toContain("AUDIENCE: staff");
+    expect(staff).toContain("[internal_notes]");
+    expect(staff).toContain("Fragile clasp");
+    expect(staff).toContain("[recent_questions]");
+    const customer = buildContext(ctx());
+    expect(customer).not.toContain("AUDIENCE: staff");
+    expect(customer).not.toContain("[internal_notes]");
+  });
+
   it("puts staff training notes after the store's customer-facing content (D49)", () => {
     const text = buildContext(ctx());
     expect(text.indexOf("[owner_content]")).toBeLessThan(text.indexOf("[team_notes]"));
@@ -195,6 +206,13 @@ describe("handleAsk", () => {
     expect(events).toEqual([{ type: "limit", text: expect.stringMatching(/associate/i) }]);
     expect(d.streamModel).not.toHaveBeenCalled();
     expect(d.record).not.toHaveBeenCalled();
+  });
+
+  it("records a staff question as asked by staff, with no per-visit cap", async () => {
+    const d = deps({ countRecent: vi.fn(async () => 99) });
+    await run(d, { audience: "staff", staffId: "st-1", sessionId: null, isTeam: true });
+    expect(d.countRecent).not.toHaveBeenCalled();
+    expect(d.record).toHaveBeenCalledWith(expect.objectContaining({ askedBy: "staff", staffId: "st-1", sessionId: null }));
   });
 
   it("doesn't record questions from the store's own team previewing the page", async () => {

@@ -15,6 +15,7 @@ const db = vi.hoisted(() => ({
   ]),
   getApprovedReviewsByProduct: vi.fn(async () => [{ rating: "4.0", body: "Comfy" }]),
   getStorePolicies: vi.fn(async () => [{ key: "returns", label: "Returns and exchanges", text: "30 days." }]),
+  getRecentQuestions: vi.fn(async () => [{ question_text: "Does it run small?", answer_text: "True to size." }]),
 }));
 vi.mock("@nfc/db", () => db);
 
@@ -55,6 +56,12 @@ describe("loadAnswerContext", () => {
 
   it("never includes internal staff notes or the stock note", async () => {
     expect(JSON.stringify(await loadAnswerContext({} as never, "u"))).not.toContain("SECRET");
+  });
+
+  it("adds internal notes and recent questions for staff only", async () => {
+    const staff = await loadAnswerContext({} as never, "u", "staff");
+    expect(staff!.context.staff).toEqual({ internalNotes: "SECRET: margin is 60%", recentQuestions: [{ question: "Does it run small?", answer: "True to size." }] });
+    expect((await loadAnswerContext({} as never, "u"))!.context.staff).toBeUndefined();
   });
 
   it("returns null for tags that aren't live", async () => {

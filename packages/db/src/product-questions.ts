@@ -107,3 +107,19 @@ export async function getActiveAnswers(pool: Pool, storeId: string, productId: s
   );
   return rows;
 }
+
+// Recent customer questions about a product, for the staff Ask box (D31).
+export async function getRecentQuestions(
+  pool: Pool,
+  storeId: string,
+  productId: string,
+  limit: number,
+): Promise<Array<{ question_text: string; answer_text: string | null }>> {
+  const { rows } = await pool.query<{ question_text: string; answer_text: string | null }>(
+    `select question_text, answer_text from product_questions
+      where store_id = $1 and product_id = $2 and asked_by = 'customer' and status <> 'dismissed'
+      order by created_at desc limit $3`,
+    [storeId, productId, limit],
+  );
+  return rows;
+}

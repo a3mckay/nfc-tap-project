@@ -13,6 +13,7 @@ interface Props {
   storeName: string;
   primaryColor: string;
   suggestions: string[];
+  endpoint?: string;   // "/api/staff-ask" in the staff training view (Step 15h)
 }
 
 interface Message {
@@ -23,11 +24,11 @@ interface Message {
   muted?: boolean;          // errors and limits
 }
 
-const storageKey = (tagUuid: string) => `tapshelf_chat_${tagUuid}`;
+const storageKey = (tagUuid: string, endpoint: string) => `tapshelf_chat_${endpoint === "/api/ask" ? "" : "staff_"}${tagUuid}`;
 
-function loadMessages(tagUuid: string): Message[] {
+function loadMessages(tagUuid: string, endpoint: string): Message[] {
   try {
-    const raw = sessionStorage.getItem(storageKey(tagUuid));
+    const raw = sessionStorage.getItem(storageKey(tagUuid, endpoint));
     const parsed = raw ? (JSON.parse(raw) as Message[]) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -35,11 +36,11 @@ function loadMessages(tagUuid: string): Message[] {
   }
 }
 
-function saveMessages(tagUuid: string, messages: Message[]) {
-  try { sessionStorage.setItem(storageKey(tagUuid), JSON.stringify(messages.slice(-20))); } catch { /* storage unavailable */ }
+function saveMessages(tagUuid: string, endpoint: string, messages: Message[]) {
+  try { sessionStorage.setItem(storageKey(tagUuid, endpoint), JSON.stringify(messages.slice(-20))); } catch { /* storage unavailable */ }
 }
 
-export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggestions }: Props) {
+export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggestions, endpoint = "/api/ask" }: Props) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -49,8 +50,8 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setMessages(loadMessages(tagUuid)); }, [tagUuid]);
-  useEffect(() => { saveMessages(tagUuid, messages); }, [tagUuid, messages]);
+  useEffect(() => { setMessages(loadMessages(tagUuid, endpoint)); }, [tagUuid, endpoint]);
+  useEffect(() => { saveMessages(tagUuid, endpoint, messages); }, [tagUuid, endpoint, messages]);
   useEffect(() => { window.dispatchEvent(new CustomEvent(CHAT_EVENT, { detail: { open } })); }, [open]);
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight }); }, [messages, open]);
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
@@ -66,7 +67,7 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
       setMessages((prev) => [...prev.slice(0, -1), fn(prev[prev.length - 1]!)]);
 
     try {
-      const res = await fetch("/api/ask", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tagUuid, question: q, history }),

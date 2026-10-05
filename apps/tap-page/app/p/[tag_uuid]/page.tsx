@@ -6,7 +6,7 @@ import {
   upsertCustomerTap, getApprovedReviewsByProduct, getReviewAggregateByProduct,
   getApprovedAwardsByProduct, getApplicableOffer, recordOfferDelivery,
   getBrandCollectorForCustomer, getCategoryPatternForCustomer, getUntappedSameBrandProducts,
-  getProductTraining, recordStaffProductView,
+  getProductTraining, recordStaffProductView, getProductQuestionView,
   type BrandCollectorInsight, type CategoryPatternInsight, type SimilarProductSuggestion,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
@@ -61,11 +61,12 @@ export default async function TapPage({ params, searchParams }: Props) {
     if (viewed) {
       void recordStaffProductView(pool, viewed).catch((err) => console.error("[tap] recordStaffProductView failed:", err));
     }
-    const [product, store, enrichment, training] = await Promise.all([
+    const [product, store, enrichment, training, questions] = await Promise.all([
       getProductById(pool, state.productId),
       getStoreById(pool, state.storeId),
       getEnrichmentByProductId(pool, state.productId),
       getProductTraining(pool, state.productId, state.storeId),
+      getProductQuestionView(pool, state.storeId, state.productId),
     ]);
     if (!product) notFound();
     const { sections, hasOwnerNotes } = trainingSections(training, enrichment);
@@ -79,6 +80,8 @@ export default async function TapPage({ params, searchParams }: Props) {
         hasOwnerNotes={hasOwnerNotes}
         stockNoteAge={stockNoteAge(training?.stock_note_updated_at ?? null)}
         tagUuid={tag_uuid}
+        customersAsking={(questions?.themes ?? []).filter((t) => t.id).slice(0, 5).map((t) => ({ label: t.label, count: t.count, answer: t.latest_answer }))}
+        totalQuestions={(questions?.themes ?? []).reduce((n, t) => n + t.count, 0)}
       />
     );
   }

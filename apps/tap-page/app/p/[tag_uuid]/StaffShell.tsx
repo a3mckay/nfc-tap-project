@@ -1,6 +1,8 @@
+import { Fragment } from "react";
 import type { Product } from "@nfc/db";
 import type { TrainingSection } from "@/staff-view.js";
 import { StaffViewToggle } from "./StaffViewToggle.js";
+import { AskBar } from "./AskBar.js";
 
 // PRD v4 §7 Step 13d: the training view staff and owners see when they tap.
 
@@ -12,6 +14,28 @@ interface Props {
   hasOwnerNotes: boolean;
   stockNoteAge: string | null;
   tagUuid: string;
+  // Step 15h: the most-asked customer question themes, with counts (D13, D31).
+  customersAsking: Array<{ label: string; count: number; answer: string | null }>;
+  totalQuestions: number;
+}
+
+const STAFF_SUGGESTIONS = ["Who is this best for?", "How does it compare with similar products?", "What do customers ask most?"];
+
+function CustomersAsking({ items, total, primaryColor }: { items: Props["customersAsking"]; total: number; primaryColor: string }) {
+  if (!total) return null;
+  return (
+    <section style={{ padding: "0.9rem 1rem", border: "1px solid #eee", borderRadius: "8px" }}>
+      <h2 style={label}>Customers are asking <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>· {total} question{total === 1 ? "" : "s"} so far</span></h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+        {items.map((t) => (
+          <div key={t.label}>
+            <p style={{ ...body, fontWeight: 600 }}>{t.label} <span style={{ fontWeight: 400, color: primaryColor }}>· {t.count}</span></p>
+            {t.answer && <p style={{ ...body, color: "#444" }}>{t.answer}</p>}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 const label: React.CSSProperties = {
@@ -19,13 +43,13 @@ const label: React.CSSProperties = {
 };
 const body: React.CSSProperties = { fontSize: "0.95rem", color: "#222", lineHeight: 1.55, margin: 0, whiteSpace: "pre-line" };
 
-export function StaffShell({ product, storeName, primaryColor, sections, hasOwnerNotes, stockNoteAge, tagUuid }: Props) {
+export function StaffShell({ product, storeName, primaryColor, sections, hasOwnerNotes, stockNoteAge, tagUuid, customersAsking, totalQuestions }: Props) {
   const image = (product.images as Array<{ url?: string; src?: string; altText?: string | null }>)[0];
   const imageUrl = image?.url ?? image?.src ?? null;
   const price = (product.variants as Array<{ price?: string }>)[0]?.price ?? null;
 
   return (
-    <main style={{ maxWidth: "32rem", margin: "0 auto", paddingBottom: "3rem" }}>
+    <main style={{ maxWidth: "32rem", margin: "0 auto", paddingBottom: "7rem" }}>
       <StaffViewToggle current="training" tagUuid={tagUuid} storeName={storeName} />
 
       <div style={{ display: "flex", gap: "0.9rem", alignItems: "center", padding: "1rem" }}>
@@ -47,8 +71,9 @@ export function StaffShell({ product, storeName, primaryColor, sections, hasOwne
       )}
 
       <div style={{ padding: "0 1rem", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-        {sections.map((s, i) => (
-          <section key={s.title} style={i === 0 && hasOwnerNotes ? { padding: "0.9rem 1rem", borderLeft: `4px solid ${primaryColor}`, background: "#fafafa", borderRadius: "4px" } : undefined}>
+        {sections.length === 0 && <CustomersAsking items={customersAsking} total={totalQuestions} primaryColor={primaryColor} />}
+        {sections.map((s, i) => (<Fragment key={s.title}>
+          <section style={i === 0 && hasOwnerNotes ? { padding: "0.9rem 1rem", borderLeft: `4px solid ${primaryColor}`, background: "#fafafa", borderRadius: "4px" } : undefined}>
             <h2 style={label}>
               {s.title}
               {s.title === "Stock note" && stockNoteAge && <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}> · {stockNoteAge}</span>}
@@ -70,8 +95,11 @@ export function StaffShell({ product, storeName, primaryColor, sections, hasOwne
               </div>
             )}
           </section>
-        ))}
+          {i === 0 && <CustomersAsking items={customersAsking} total={totalQuestions} primaryColor={primaryColor} />}
+        </Fragment>))}
       </div>
+      <AskBar tagUuid={tagUuid} productTitle={product.title} storeName={storeName} primaryColor={primaryColor}
+        suggestions={STAFF_SUGGESTIONS} endpoint="/api/staff-ask" />
     </main>
   );
 }
