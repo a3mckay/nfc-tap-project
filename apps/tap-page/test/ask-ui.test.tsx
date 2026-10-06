@@ -93,22 +93,27 @@ describe("StaffShell: Customers are asking (D13, Step 15h)", async () => {
 
 describe("sheetPosition: the chat stays above the on-screen keyboard", async () => {
   const { sheetPosition } = await import("@/ask/client.js");
+  const view = (height: number, offsetTop = 0) => ({ height, offsetTop });
 
   it("sits at the bottom at its normal height when there's no keyboard", () => {
-    expect(sheetPosition(800, null, false)).toEqual({ bottom: 0, height: "60vh" });
-    expect(sheetPosition(800, { height: 800, offsetTop: 0 }, true)).toEqual({ bottom: 0, height: "92vh" });
+    expect(sheetPosition(800, null, false, false)).toEqual({ bottom: 0, height: "60vh" });
+    expect(sheetPosition(800, view(800), true, false)).toEqual({ bottom: 0, height: "92vh" });
   });
 
   it("ignores small differences such as a browser toolbar sliding away", () => {
-    expect(sheetPosition(800, { height: 740, offsetTop: 0 }, false)).toEqual({ bottom: 0, height: "60vh" });
+    expect(sheetPosition(800, view(740), false, false)).toEqual({ bottom: 0, height: "60vh" });
   });
 
-  it("lifts above the keyboard and fills most of the space left (Android)", () => {
-    expect(sheetPosition(800, { height: 420, offsetTop: 0 }, false)).toEqual({ bottom: 380, height: "386px" });
+  it("Android: the page already shrinks above the keyboard, so while typing it fills the space left", () => {
+    expect(sheetPosition(420, view(420), false, true)).toEqual({ bottom: 0, height: "386px" });
   });
 
-  it("allows for the page being panned while the keyboard is up (iPhone)", () => {
-    expect(sheetPosition(800, { height: 420, offsetTop: 100 }, true)).toEqual({ bottom: 280, height: "386px" });
+  it("lifts above a keyboard the page doesn't shrink for, and fills most of the space left", () => {
+    expect(sheetPosition(800, view(420), false, false)).toEqual({ bottom: 380, height: "386px" });
+  });
+
+  it("iPhone: allows for the page being panned while the keyboard is up", () => {
+    expect(sheetPosition(800, view(420, 100), true, true)).toEqual({ bottom: 280, height: "386px" });
   });
 });
 
@@ -122,5 +127,12 @@ describe("ChatHeader", () => {
   it("has no separate expand arrow: the sheet grows once the conversation starts", () => {
     expect(html).not.toContain("Expand chat");
     expect(html).not.toContain("▴");
+  });
+});
+
+describe("viewport", () => {
+  it("asks Android browsers to shrink the page above the keyboard (iPhones ignore it)", async () => {
+    const { viewport } = await import("../app/layout.js");
+    expect(viewport).toMatchObject({ width: "device-width", initialScale: 1, interactiveWidget: "resizes-content" });
   });
 });

@@ -44,6 +44,7 @@ function saveMessages(tagUuid: string, endpoint: string, messages: Message[]) {
 export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggestions, endpoint = "/api/ask" }: Props) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState<{ height: number; offsetTop: number; layoutHeight: number } | null>(null);
+  const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,7 +63,9 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
   useEffect(() => {
     const vv = window.visualViewport;
     if (!open || !vv) return;
-    const update = () => setVisible({ height: vv.height, offsetTop: vv.offsetTop, layoutHeight: window.innerHeight });
+    // The height fixed elements are laid out in. Some browsers shrink
+    // innerHeight with the keyboard, so take the larger of the two measures.
+    const update = () => setVisible({ height: vv.height, offsetTop: vv.offsetTop, layoutHeight: Math.max(window.innerHeight, document.documentElement.clientHeight) });
     update();
     vv.addEventListener("resize", update);
     vv.addEventListener("scroll", update);
@@ -123,7 +126,7 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
 
   if (!open) return bar;
 
-  const position = sheetPosition(visible?.layoutHeight ?? 0, visible, messages.length > 0);
+  const position = sheetPosition(visible?.layoutHeight ?? 0, visible, messages.length > 0, typing);
 
   return (
     <div role="dialog" aria-label={`Questions about the ${productTitle}`}
@@ -165,6 +168,7 @@ export function AskBar({ tagUuid, productTitle, storeName, primaryColor, suggest
         style={{ borderTop: "1px solid #f0f0f0", padding: "0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom))" }}>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <input ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={500}
+            onFocus={() => setTyping(true)} onBlur={() => setTyping(false)}
             placeholder="Ask about this" aria-label="Your question" enterKeyHint="send"
             style={{ flex: 1, padding: "0.65rem 0.9rem", border: "1px solid #ddd", borderRadius: "999px", fontSize: "16px", fontFamily: "inherit" }} />
           <button type="submit" disabled={busy || !draft.trim()} aria-label="Send"
