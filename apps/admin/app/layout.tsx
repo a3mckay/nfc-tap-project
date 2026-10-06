@@ -8,7 +8,8 @@ import { StoreSwitcher } from "../src/StoreSwitcher.js";
 import { AdminNav } from "../src/AdminNav.js";
 import "./admin-shell.css";
 import { getAdminSession, getCurrentAdminSession } from "../src/current-store.js";
-import { can, accessRedirect, type Permission } from "../src/permissions.js";
+import { accessRedirect } from "../src/permissions.js";
+import { mainNavFor, footerNavFor } from "../src/nav-items.js";
 import { getPool, getAllStores, getStoreByDomain } from "@nfc/db";
 
 export const metadata: Metadata = { title: "TapShelf Admin" };
@@ -30,34 +31,6 @@ const dimLinkStyle: React.CSSProperties = {
 function Divider() {
   return <div style={{ height: "1px", background: "#eee", margin: "0.4rem 0" }} />;
 }
-
-// Sidebar links in groups, each link shown only to roles with the permission
-// it needs; empty groups are dropped.
-const MAIN_NAV: [string, string, Permission][][] = [
-  [
-    ["/questions", "Questions", "questions"],
-    ["/products", "Products", "catalog"],
-    ["/enrichment", "Content", "content"],
-    ["/tags", "Tags", "catalog"],
-    ["/staff", "Staff", "progress"],
-    ["/policies", "Store policies", "policies"],
-  ],
-  [
-    ["/reviews", "Reviews", "content"],
-    ["/offers", "Offers", "marketing"],
-  ],
-  [
-    ["/notifications", "Notifications", "marketing"],
-    ["/analytics", "Analytics", "analytics"],
-    ["/theme", "Theme", "store_settings"],
-    ["/canonical", "Product Matching", "store_settings"],
-  ],
-];
-const FOOTER_NAV: [string, string, Permission][] = [
-  ["/plan", "Plan", "billing"],
-  ["/settings", "Settings", "store_settings"],
-  ["/onboarding", "Getting Started", "store_settings"],
-];
 
 async function Sidebar({ session }: { session: AdminSession | null }) {
   if (!session) return null;
@@ -119,10 +92,7 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
       {s && (
         <>
           <div style={{ flex: 1, paddingTop: "0.35rem", paddingBottom: "0.35rem" }}>
-            {MAIN_NAV
-              .map((group) => group.filter((item) => can(session, item[2])))
-              .filter((group) => group.length > 0)
-              .map((group, k) => (
+            {mainNavFor(session).map((group, k) => (
                 <div key={group[0]![0]}>
                   {k > 0 && <Divider />}
                   {group.map((item) => (
@@ -133,7 +103,7 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
           </div>
 
           <div style={{ borderTop: "1px solid #eee", paddingTop: "0.35rem", paddingBottom: "0.35rem" }}>
-            {FOOTER_NAV.filter((item) => can(session, item[2])).map((item) => (
+            {footerNavFor(session).map((item) => (
               <Link key={item[0]} href={`${item[0]}?shop=${s}`} style={dimLinkStyle}>{item[1]}</Link>
             ))}
             {role === "super" && (
