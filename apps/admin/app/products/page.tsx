@@ -130,7 +130,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         </p>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+          <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr>
                 <th style={thStyle}>Product</th>
@@ -159,14 +159,14 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                     </div>
                     {p.vendor && <div style={{ fontSize: "0.78rem", color: "#888", marginTop: "2px" }}>{p.vendor}</div>}
                   </td>
-                  <td style={tdStyle}><InfoCell p={p} shop={shop} /></td>
-                  <td style={tdStyle}><TagIdCell p={p} shop={shop} /></td>
+                  <td data-label="Product information" style={tdStyle}><InfoCell p={p} shop={shop} /></td>
+                  <td data-label="Tag ID" style={tdStyle}><TagIdCell p={p} shop={shop} /></td>
                   {isNonShopify && (
-                    <td style={tdStyle}>
+                    <td data-label="Stock" style={tdStyle}>
                       <InventoryCell productId={p.id} shop={shop} initialQty={p.inventory_quantity} />
                     </td>
                   )}
-                  <td style={tdStyle}>
+                  <td data-label="Preview" style={tdStyle}>
                     {p.active_tag_uuid
                       ? <PreviewButton tagUuid={p.active_tag_uuid} tapPageUrl={TAP_PAGE_URL} />
                       : <span style={{ fontSize: "0.78rem", color: "#bbb" }}>No active tag</span>}

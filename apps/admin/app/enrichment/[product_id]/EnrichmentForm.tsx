@@ -239,7 +239,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
               <StarRating value={r.rating} onChange={(v) => updateReview(i, { rating: v })} />
               <button type="button" onClick={() => removeReview(i)} style={removeBtnStyle}>Remove</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <div className="admin-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
               <div style={fieldStyle}>
                 <label style={labelStyle}>Customer name</label>
                 <input style={inputStyle} value={r.author} onChange={(e) => updateReview(i, { author: e.target.value })} placeholder="Sarah M." />
@@ -291,7 +291,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
       {/* Staff */}
       <div style={sectionStyle}>
         <p style={sectionHeadingStyle}>Staff Perspective</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+        <div className="admin-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
           <div style={fieldStyle}>
             <label style={labelStyle}>Staff quote</label>
             <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.staff_quote}

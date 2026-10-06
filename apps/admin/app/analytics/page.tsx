@@ -26,7 +26,7 @@ interface PageProps {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div style={{ border: "1px solid #eee", borderRadius: "8px", padding: "1rem 1.25rem", flex: 1, minWidth: "140px" }}>
+    <div className="admin-stat" style={{ border: "1px solid #eee", borderRadius: "8px", padding: "1rem 1.25rem", flex: 1, minWidth: "140px" }}>
       <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.35rem" }}>{label}</p>
       <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1 }}>{value}</p>
       {sub && <p style={{ fontSize: "0.8rem", color: "#999", marginTop: "0.25rem" }}>{sub}</p>}
@@ -112,7 +112,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
     <main style={{ maxWidth: "720px" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: "1rem", marginBottom: "1.5rem" }}>
         <h1 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Analytics</h1>
-        <span style={{ fontSize: "0.85rem", color: "#888" }}>{shop}</span>
+        <span style={{ fontSize: "0.85rem", color: "#888" }}>{store?.name || shop}</span>
         <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem", fontSize: "0.8rem" }}>
           <a href={`?shop=${shop}&days=7`} style={{ color: days === 7 ? "#111" : "#888", fontWeight: days === 7 ? 700 : 400, textDecoration: "none" }}>7d</a>
           <a href={`?shop=${shop}&days=30`} style={{ color: days === 30 ? "#111" : "#888", fontWeight: days === 30 ? 700 : 400, textDecoration: "none" }}>30d</a>

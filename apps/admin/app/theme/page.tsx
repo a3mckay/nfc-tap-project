@@ -56,7 +56,7 @@ export default async function ThemePage({ searchParams }: PageProps) {
     <main>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Theme Settings</h1>
       <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
-        {store ? `Editing ${shop}` : <span style={{ color: "#c00" }}>Store not found — connect it via Shopify OAuth first.</span>}
+        {store ? `Editing ${store.name || shop}` : <span style={{ color: "#c00" }}>Store not found — connect it via Shopify OAuth first.</span>}
       </p>
       <ThemeForm initial={initial} tapPageUrl={tapPageUrl} pendingSuggestion={pendingSuggestion} />
     </main>

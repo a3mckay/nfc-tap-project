@@ -191,7 +191,7 @@ export default async function OnboardingPage({ searchParams }: PageProps) {
       )}
 
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Getting Started</h1>
-      <p style={{ color: "#888", marginBottom: "1.5rem", fontSize: "0.85rem" }}>{shop}</p>
+      <p style={{ color: "#888", marginBottom: "1.5rem", fontSize: "0.85rem" }}>{store?.name || shop}</p>
 
       {/* Progress bar */}
       <div style={{ marginBottom: "1.5rem" }}>

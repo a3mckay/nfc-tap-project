@@ -35,7 +35,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
       {rows.length === 0 ? (
         <p style={{ color: "#888", fontSize: "0.9rem" }}>No questions yet. Products appear here as soon as a customer asks about one.</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr><th style={th}>Product</th><th style={th}>Questions</th><th style={th}>Top theme</th><th style={th}>Last asked</th></tr>
           </thead>
@@ -45,13 +45,13 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
                 <td style={td}>
                   <Link href={`/questions/${r.product_id}?shop=${encodeURIComponent(shop)}`} style={{ color: "#111", fontWeight: 600, textDecoration: "none" }}>{r.title}</Link>
                 </td>
-                <td style={td}>
+                <td data-label="Questions" style={td}>
                   <span style={{ marginRight: "0.5rem" }}>{r.total}</span>
                   {r.new_count > 0 && <span style={{ ...badge("#e0f2fe", "#0369a1"), marginRight: "0.35rem" }}>{r.new_count} new</span>}
                   {r.unanswered > 0 && <span style={badge("#fef3c7", "#92400e")}>{r.unanswered} unanswered</span>}
                 </td>
-                <td style={{ ...td, color: r.top_theme ? "#333" : "#aaa" }}>{r.top_theme ?? "Not grouped yet"}</td>
-                <td style={{ ...td, color: "#888" }}>{ago(r.last_asked)}</td>
+                <td data-label="Top theme" style={{ ...td, color: r.top_theme ? "#333" : "#aaa" }}>{r.top_theme ?? "Not grouped yet"}</td>
+                <td data-label="Last asked" style={{ ...td, color: "#888" }}>{ago(r.last_asked)}</td>
               </tr>
             ))}
           </tbody>

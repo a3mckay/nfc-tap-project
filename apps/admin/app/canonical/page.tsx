@@ -41,7 +41,7 @@ export default async function CanonicalPage({ searchParams }: PageProps) {
     <main style={{ maxWidth: "800px" }}>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Canonical Matching</h1>
       <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
-        {shop} &mdash; {products.length} product{products.length !== 1 ? "s" : ""}:{" "}
+        {store?.name || shop} &mdash; {products.length} product{products.length !== 1 ? "s" : ""}:{" "}
         {matched.length} confirmed, {unreviewed.length} pending review, {unmatched.length} unmatched
       </p>
 
@@ -50,7 +50,7 @@ export default async function CanonicalPage({ searchParams }: PageProps) {
           <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem", background: "#fef3c7", padding: "0.4rem 0.75rem", borderRadius: "4px", display: "inline-block" }}>
             {unreviewed.length} pending review
           </p>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #eee" }}>
                 <th style={th}>Product</th>
@@ -63,8 +63,8 @@ export default async function CanonicalPage({ searchParams }: PageProps) {
               {unreviewed.map((p) => (
                 <tr key={p.product_id} style={{ borderBottom: "1px solid #f4f4f4" }}>
                   <td style={td}>{p.product_title}</td>
-                  <td style={{ ...td, fontFamily: "monospace", fontSize: "0.8rem", color: "#555" }}>{p.canonical_name}</td>
-                  <td style={td}>{p.brand_name}</td>
+                  <td data-label="Matched to" style={{ ...td, fontFamily: "monospace", fontSize: "0.8rem", color: "#555" }}>{p.canonical_name}</td>
+                  <td data-label="Brand" style={td}>{p.brand_name}</td>
                   <td style={{ ...td, paddingLeft: "0.75rem" }}>
                     <ConfirmButton shop={shop} mapId={p.map_id!} />
                   </td>
@@ -93,7 +93,7 @@ export default async function CanonicalPage({ searchParams }: PageProps) {
           <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
             {matched.length} confirmed
           </p>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #eee" }}>
                 <th style={th}>Product</th>
@@ -105,8 +105,8 @@ export default async function CanonicalPage({ searchParams }: PageProps) {
               {matched.map((p) => (
                 <tr key={p.product_id} style={{ borderBottom: "1px solid #f4f4f4" }}>
                   <td style={td}>{p.product_title}</td>
-                  <td style={{ ...td, fontFamily: "monospace", fontSize: "0.8rem", color: "#555" }}>{p.canonical_name}</td>
-                  <td style={td}>{p.brand_name}</td>
+                  <td data-label="Canonical name" style={{ ...td, fontFamily: "monospace", fontSize: "0.8rem", color: "#555" }}>{p.canonical_name}</td>
+                  <td data-label="Brand" style={td}>{p.brand_name}</td>
                 </tr>
               ))}
             </tbody>
