@@ -54,17 +54,21 @@ export const DISCLOSURE = (storeName: string) =>
 // the pill hides while the chat is open.
 export const CHAT_EVENT = "tapshelf:chat";
 
-// Phone keyboards cover the bottom of the screen without moving fixed
-// elements (Android Chrome's default, and iPhones), so the open chat measures
-// the visible area above the keyboard and sits on top of it.
+// Keeping the open chat above the phone keyboard. Android browsers shrink the
+// page above the keyboard (the layout's interactive-widget setting), so a
+// fixed sheet stays visible on its own; iPhones don't, so the chat measures
+// the visible area and sits on top of the keyboard. While the customer is
+// typing, the sheet fills most of the space that's left.
 const KEYBOARD_MIN_PX = 120;   // smaller gaps are browser toolbars, not a keyboard
 
 export function sheetPosition(
   layoutHeight: number,
   visible: { height: number; offsetTop: number } | null,
   expanded: boolean,
+  typing: boolean,
 ): { bottom: number; height: string } {
   const covered = visible ? Math.round(layoutHeight - visible.height - visible.offsetTop) : 0;
-  if (!visible || covered < KEYBOARD_MIN_PX) return { bottom: 0, height: expanded ? "92vh" : "60vh" };
-  return { bottom: covered, height: `${Math.round(visible.height * 0.92)}px` };
+  const keyboard = covered >= KEYBOARD_MIN_PX;
+  if (!visible || (!keyboard && !typing)) return { bottom: 0, height: expanded ? "92vh" : "60vh" };
+  return { bottom: keyboard ? covered : 0, height: `${Math.round(visible.height * 0.92)}px` };
 }
