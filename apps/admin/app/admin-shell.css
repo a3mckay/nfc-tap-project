@@ -1,0 +1,198 @@
+/* Admin page frame: sidebar + main. Tablets and computers keep the sidebar
+   beside the page; phones get a ☰ top bar and a slide-over drawer (AdminNav). */
+
+.admin-body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  font-family: system-ui, sans-serif;
+}
+
+.admin-sidebar {
+  position: relative;
+  width: 210px;
+  flex-shrink: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #eee;
+  background: #fafafa;
+}
+
+.admin-main {
+  flex: 1;
+  min-width: 0;          /* lets wide tables scroll inside the page, not widen it */
+  max-width: 900px;
+  padding: 2rem;
+}
+
+.admin-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #222;
+  cursor: pointer;
+}
+
+/* Phone-only pieces (after .admin-icon-button, which would otherwise show the ✕). */
+.admin-topbar,
+.admin-nav-close,
+.admin-backdrop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .admin-body {
+    display: block;
+  }
+
+  .admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 52px;
+    padding: 0 0.5rem;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+  }
+
+  .admin-topbar-store {
+    overflow: hidden;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    width: 85vw;
+    max-width: 340px;
+    min-height: 0;
+    overflow-y: auto;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+  }
+
+  .admin-sidebar[data-open="true"] {
+    transform: none;
+  }
+
+  .admin-nav-close {
+    display: inline-flex;
+    position: absolute;
+    top: 0.45rem;
+    right: 0.4rem;
+  }
+
+  /* Bigger tap targets in the drawer. */
+  .admin-sidebar a,
+  .admin-sidebar button[type="submit"] {
+    padding-top: 0.7rem !important;
+    padding-bottom: 0.7rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  .admin-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .admin-main {
+    max-width: none;
+    padding: 1.25rem 1rem 2rem;
+  }
+}
+
+/* ── Phone layouts for page content ──────────────────────────────────────
+   Pages style themselves inline; these classes adapt them on phones, so the
+   overrides need !important to beat the inline styles. */
+@media (max-width: 767px) {
+  /* Side-by-side form columns stack into one. */
+  .admin-cols {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tables become a card per row; each cell shows its column name from
+     data-label. A cell without a label (the row's title or its actions)
+     takes the full width. */
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    box-sizing: border-box;
+    width: 100% !important;
+  }
+
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tr {
+    margin-bottom: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid #eee !important;
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .admin-table td {
+    padding: 0.3rem 0 !important;
+    border: none !important;
+    text-align: left;
+  }
+
+  .admin-table td[data-label] {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: right;
+  }
+
+  .admin-table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #888;
+    text-align: left;
+  }
+
+  .admin-table td:first-child {
+    font-weight: 600;
+  }
+
+  /* Number cards (analytics) two per row instead of one. */
+  :has(> .admin-stat) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem !important;
+  }
+
+  .admin-stat {
+    min-width: 0 !important;
+    padding: 0.8rem 0.9rem !important;
+  }
+}

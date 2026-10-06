@@ -50,7 +50,7 @@ export function CreateStoreForm({ defaultOpen = false }: { defaultOpen?: boolean
   return (
     <form onSubmit={handleSubmit} style={{ padding: "1.25rem", border: "1px solid #eee", borderRadius: "8px", background: "#fff", marginTop: "1rem" }}>
       <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "1rem" }}>New store</p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1rem" }}>
+      <div className="admin-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1rem" }}>
         <div>
           <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "3px" }}>Domain</label>
           <input name="domain" required placeholder="mystore.myshopify.com" style={inputStyle} />

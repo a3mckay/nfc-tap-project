@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { AdminSession } from "../src/admin-auth.js";
 import { StoreSwitcher } from "../src/StoreSwitcher.js";
+import { AdminNav } from "../src/AdminNav.js";
+import "./admin-shell.css";
 import { getAdminSession, getCurrentAdminSession } from "../src/current-store.js";
 import { can, accessRedirect, type Permission } from "../src/permissions.js";
-import { getPool, getAllStores } from "@nfc/db";
+import { getPool, getAllStores, getStoreByDomain } from "@nfc/db";
 
 export const metadata: Metadata = { title: "TapShelf Admin" };
 
@@ -68,9 +70,9 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
   let currentShop = headersList.get("x-current-shop") ?? "";
 
   // Super-admin: full store switcher
+  const pool = getPool({ connectionString: process.env.DATABASE_URL });
   let stores: Awaited<ReturnType<typeof getAllStores>> = [];
   if (role === "super") {
-    const pool = getPool({ connectionString: process.env.DATABASE_URL });
     stores = await getAllStores(pool);
     // Auto-select the only store on first login
     if (!currentShop && stores.length === 1) {
@@ -79,17 +81,12 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
   }
 
   const s = currentShop;
+  // The store's display name (Settings → Store name), else its web address.
+  const current = s ? stores.find((st) => st.shopify_shop_domain === s) ?? await getStoreByDomain(pool, s) : null;
+  const storeLabel = current?.name || s || "TapShelf Admin";
 
   return (
-    <nav style={{
-      width: "210px",
-      flexShrink: 0,
-      borderRight: "1px solid #eee",
-      background: "#fafafa",
-      display: "flex",
-      flexDirection: "column",
-      minHeight: "100vh",
-    }}>
+    <AdminNav storeLabel={storeLabel}>
       {/* Brand */}
       <Link href={s ? `/?shop=${encodeURIComponent(s)}` : "/"} style={{ display: "block", padding: "1.25rem 1.25rem 1rem", fontWeight: 700, fontSize: "0.95rem", borderBottom: "1px solid #eee", color: "#111", textDecoration: "none" }}>
         TapShelf Admin
@@ -100,7 +97,7 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
         {role === "store" || role === "manager" ? (
           /* Owners and managers see their store name, no switcher */
           <div style={{ ...linkStyle, padding: "0.875rem 1.25rem", fontWeight: 500, color: "#333" }}>
-            {s}
+            {storeLabel}
             {role === "manager" && (
               <span style={{ display: "block", fontSize: "0.72rem", color: "#888", fontWeight: 400, marginTop: "2px" }}>
                 {session.level === "manager" ? "Manager" : "Co-manager"}
@@ -154,7 +151,7 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
           </button>
         </form>
       </div>
-    </nav>
+    </AdminNav>
   );
 }
 
@@ -172,9 +169,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en">
-      <body style={{ fontFamily: "system-ui, sans-serif", display: "flex", minHeight: "100vh", margin: 0 }}>
+      <body className="admin-body">
         <Sidebar session={session} />
-        <main style={{ flex: 1, padding: "2rem", maxWidth: "900px" }}>
+        <main className="admin-main">
           {children}
         </main>
       </body>

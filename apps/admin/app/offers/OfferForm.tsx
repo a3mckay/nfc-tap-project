@@ -53,7 +53,7 @@ export function OfferForm({ shop, offer, products, onSaved }: Props) {
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: "1.25rem", border: "1px solid #eee", borderRadius: "8px", background: "#fff", marginBottom: "1rem" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+      <div className="admin-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
         <div style={fieldStyle}>
           <label style={labelStyle}>Discount code</label>
           <input style={{ ...inputStyle, fontFamily: "monospace", textTransform: "uppercase" }}
@@ -75,7 +75,7 @@ export function OfferForm({ shop, offer, products, onSaved }: Props) {
         <input style={inputStyle} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="You found our exclusive offer." />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+      <div className="admin-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
         <div style={fieldStyle}>
           <label style={labelStyle}>Trigger</label>
           <select style={inputStyle} value={triggerKind} onChange={(e) => setTriggerKind(e.target.value as OfferTrigger)}>

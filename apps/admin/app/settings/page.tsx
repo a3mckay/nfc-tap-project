@@ -35,7 +35,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
   return (
     <main style={{ maxWidth: "560px" }}>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Settings</h1>
-      <p style={{ color: "#666", marginBottom: "2rem", fontSize: "0.9rem" }}>{shop}</p>
+      <p style={{ color: "#666", marginBottom: "2rem", fontSize: "0.9rem" }}>{store.name || shop}</p>
 
       <section style={{ marginBottom: "2.5rem" }}>
         <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>

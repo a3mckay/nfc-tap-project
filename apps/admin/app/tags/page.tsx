@@ -113,7 +113,7 @@ export default async function TagsPage({ searchParams }: PageProps) {
     <main>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Tag Management</h1>
       <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
-        {shop} &mdash; {counts.total} tag{counts.total !== 1 ? "s" : ""},{" "}
+        {store?.name || shop} &mdash; {counts.total} tag{counts.total !== 1 ? "s" : ""},{" "}
         {counts.active} active, {counts.unassigned} unassigned
       </p>
 
@@ -161,7 +161,7 @@ export default async function TagsPage({ searchParams }: PageProps) {
           {status ? "No tags match this filter." : "No tags yet. Use the form above to provision your first batch."}
         </p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+        <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #eee", textAlign: "left" }}>
               <th style={{ padding: "0.5rem 0.75rem 0.5rem 0", fontWeight: 600, width: "3.5rem" }}>
@@ -183,7 +183,7 @@ export default async function TagsPage({ searchParams }: PageProps) {
                 <td style={{ padding: "0.55rem 0.75rem 0.55rem 0", fontWeight: 700, fontSize: "0.82rem", color: "#111" }}>
                   #{tag.tag_number}
                 </td>
-                <td style={{ padding: "0.55rem 0.75rem", fontFamily: "monospace", fontSize: "0.78rem", color: "#555" }}>
+                <td data-label="Tag UUID" style={{ padding: "0.55rem 0.75rem", fontFamily: "monospace", fontSize: "0.78rem", color: "#555" }}>
                   <a
                     href={tagTapUrl(tapBase, tag.tag_uuid)}
                     target="_blank"
@@ -194,13 +194,13 @@ export default async function TagsPage({ searchParams }: PageProps) {
                     {formatTagUuid(tag.tag_uuid)}
                   </a>
                 </td>
-                <td style={{ padding: "0.55rem 0.75rem" }}>
+                <td data-label="Status" style={{ padding: "0.55rem 0.75rem" }}>
                   <Badge status={tag.status as TagStatus} />
                 </td>
-                <td style={{ padding: "0.55rem 0.75rem", color: tag.product_title ? "#111" : "#bbb" }}>
+                <td data-label="Product" style={{ padding: "0.55rem 0.75rem", color: tag.product_title ? "#111" : "#bbb" }}>
                   {tag.product_title ?? "—"}
                 </td>
-                <td style={{ padding: "0.55rem 0" }}>
+                <td data-label="Action" style={{ padding: "0.55rem 0" }}>
                   <Link href={`/tags/${tag.id}?shop=${shop}`} style={{ color: "#555", fontSize: "0.82rem" }}>
                     Edit →
                   </Link>

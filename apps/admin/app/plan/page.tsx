@@ -44,7 +44,7 @@ export default async function PlanPage({ searchParams }: PageProps) {
   return (
     <main style={{ maxWidth: "480px" }}>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Plan</h1>
-      <p style={{ color: "#666", marginBottom: "2rem", fontSize: "0.9rem" }}>{shop}</p>
+      <p style={{ color: "#666", marginBottom: "2rem", fontSize: "0.9rem" }}>{store?.name || shop}</p>
 
       <div style={{ display: "inline-block", padding: "0.4rem 1rem", background: tier === "free" ? "#f3f4f6" : "#dcfce7", borderRadius: "99px", fontSize: "0.9rem", fontWeight: 700, color: tier === "free" ? "#374151" : "#166534", marginBottom: "1.5rem" }}>
         {tierLabel(tier)}

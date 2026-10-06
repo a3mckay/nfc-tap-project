@@ -65,7 +65,7 @@ export function ThemeForm({ initial, tapPageUrl, pendingSuggestion: initialPendi
   const inputStyle: React.CSSProperties = { padding: "0.5rem", border: "1px solid #ddd", borderRadius: "4px", fontSize: "0.95rem" };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "start" }}>
+    <div className="admin-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "start" }}>
       {/* Form */}
       <form onSubmit={handleSubmit}>
         {pending && (

@@ -41,7 +41,7 @@ export default async function EnrichmentPage({ searchParams }: PageProps) {
     <main>
       <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>Content Enrichment</h1>
       <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
-        {shop} &mdash; {products.length} product{products.length !== 1 ? "s" : ""},{" "}
+        {store?.name || shop} &mdash; {products.length} product{products.length !== 1 ? "s" : ""},{" "}
         {enriched.length} enriched
       </p>
 
@@ -54,7 +54,7 @@ export default async function EnrichmentPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+      <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
         <thead>
           <tr style={{ borderBottom: "2px solid #eee", textAlign: "left" }}>
             <th style={{ padding: "0.5rem 0.75rem 0.5rem 0" }}>Product</th>
@@ -78,7 +78,7 @@ export default async function EnrichmentPage({ searchParams }: PageProps) {
                     <span style={{ color: "#888", marginLeft: "0.5rem", fontSize: "0.8rem" }}>{p.vendor}</span>
                   )}
                 </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
+                <td data-label="Status" style={{ padding: "0.6rem 0.75rem" }}>
                   <span style={{
                     display: "inline-block",
                     padding: "2px 8px",
