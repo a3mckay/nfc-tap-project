@@ -42,3 +42,30 @@ describe("withoutTestimonials", () => {
     expect(withoutTestimonials("cannabis", { ...page, enrichment: null }).enrichment).toBeNull();
   });
 });
+
+describe("age gate (19+)", async () => {
+  const { needsAgeGate, ageGateMetadata, AGE_COOKIE } = await import("@/cannabis.js");
+
+  it("gates cannabis pages for customers who haven't confirmed their age", () => {
+    expect(needsAgeGate("cannabis", undefined, false)).toBe(true);
+    expect(needsAgeGate("cannabis", "1", false)).toBe(false);
+  });
+
+  it("never gates other categories, or the store's own team", () => {
+    expect(needsAgeGate("wine", undefined, false)).toBe(false);
+    expect(needsAgeGate("cannabis", undefined, true)).toBe(false);
+  });
+
+  it("names the cookie for the age it confirms", () => {
+    expect(AGE_COOKIE).toContain("19");
+  });
+
+  it("shares only the store's name in link previews, and isn't indexed", () => {
+    const meta = ageGateMetadata("Gym Cannabis");
+    expect(meta.title).toBe("Gym Cannabis");
+    expect(meta.description).toBeUndefined();
+    expect(meta.openGraph).toBeUndefined();
+    expect(meta.robots).toEqual({ index: false, follow: false });
+    expect(ageGateMetadata("").title).toBe("TapShelf");
+  });
+});

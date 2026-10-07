@@ -26,7 +26,8 @@ import { suggestedQuestions } from "@/ask/client.js";
 import { isAutomatedVisit } from "@/link-preview-bots.js";
 import { shareMetadata } from "@/share-meta.js";
 import { NotifyMe } from "./NotifyMe.js";
-import { productCategory, withoutTestimonials } from "@/cannabis.js";
+import { productCategory, withoutTestimonials, needsAgeGate, ageGateMetadata, AGE_COOKIE, CANNABIS_MIN_AGE } from "@/cannabis.js";
+import { AgeGate } from "../../AgeGate.js";
 
 interface Props {
   params: Promise<{ tag_uuid: string }>;
@@ -45,6 +46,7 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
     getEnrichmentByProductId(pool, state.productId),
   ]);
   if (!product) return { title: "TapShelf" };
+  if (productCategory(product, store) === "cannabis") return ageGateMetadata(store?.name ?? "");
   return shareMetadata({
     title: product.title,
     vendor: product.vendor,
@@ -123,7 +125,12 @@ export default async function TapPage({ params, searchParams }: Props) {
     getApprovedAwardsByProduct(pool, state.productId),
   ]);
   if (!product) notFound();
-  const { enrichment, externalReviews, reviewAggregate } = withoutTestimonials(productCategory(product, store), {
+  const category = productCategory(product, store);
+  const cookieStore = await cookies();
+  if (needsAgeGate(category, cookieStore.get(AGE_COOKIE)?.value, isTeam)) {
+    return <AgeGate storeName={store?.name ?? ""} minAge={CANNABIS_MIN_AGE} />;
+  }
+  const { enrichment, externalReviews, reviewAggregate } = withoutTestimonials(category, {
     enrichment: rawEnrichment, externalReviews: rawExternalReviews, reviewAggregate: rawReviewAggregate,
   });
 
@@ -132,7 +139,6 @@ export default async function TapPage({ params, searchParams }: Props) {
   const primaryColor = (theme as { primaryColor?: string }).primaryColor ?? "#000000";
   const scarcityThreshold = (store as unknown as { scarcity_threshold?: number })?.scarcity_threshold ?? 5;
 
-  const cookieStore = await cookies();
   const sessionId = cookieStore.get("nfc_session")?.value ?? "unknown";
 
   // Check for any applicable discount offer for this product/customer/session.
