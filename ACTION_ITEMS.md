@@ -119,7 +119,7 @@ Licensed stores are covered by the Cannabis Act's promotion rules (s.17): no tes
 - **No customer reviews or staff quotes** on cannabis products (testimonials).
 - **"Great when…" is factual only** for cannabis (e.g. "you want lemon-and-cake terps"), no occasions or lifestyle.
 - **Effects tags (e.g. Calm, Energetic) are allowed until banned outright.** Note: Alberta's AGLC already bans claims of positive or negative effects, and Health Canada found Cannabis NB non-compliant for "Discover / Connect / Refresh" groupings.
-- **Age gate:** is an in-store tap enough (the store checks ID at the door)? Our tap page is a public link that can be revisited or shared later. Options: a one-tap "I'm 19 or older" gate on cannabis pages; or secure NFC tags (e.g. NTAG 424 DNA) that prove a physical tap, so only in-store taps skip the gate.
+- **Age gate:** a basic one-tap "I'm 19 or older" gate is now on cannabis pages (2026-10-07). Is that enough? Is an in-store tap enough (the store checks ID at the door)? Our tap page is a public link that can be revisited or shared later. Options: a one-tap "I'm 19 or older" gate on cannabis pages; or secure NFC tags (e.g. NTAG 424 DNA) that prove a physical tap, so only in-store taps skip the gate.
 - Also ask: awards (e.g. "KIND Awards Brand of the Year") — endorsement or fact? And whether showing prices on the tap page is fine.
 
 ---

@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
 import { getPool, getStoreByDomain, type Pool } from "@nfc/db";
 import { getCurrentCustomer } from "@/lib/auth.js";
+import { productCategory, needsAgeGate, AGE_COOKIE, CANNABIS_MIN_AGE } from "@/cannabis.js";
+import { AgeGate } from "../../AgeGate.js";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +14,8 @@ interface StoreProduct {
   id: string;
   title: string;
   vendor: string | null;
+  product_type: string | null;
+  spec_category: string | null;
   product_image_url: string | null;
   tag_uuid: string | null;
   tapped: boolean;
@@ -19,7 +24,7 @@ interface StoreProduct {
 
 async function getStoreProducts(pool: Pool, storeId: string, customerId: string | null): Promise<StoreProduct[]> {
   const { rows } = await pool.query<StoreProduct>(
-    `select p.id, p.title, p.vendor,
+    `select p.id, p.title, p.vendor, p.product_type, p.spec_category,
             coalesce(p.images->0->>'url', p.images->0->>'src', e.extra_images->>0) as product_image_url,
             (select t.tag_uuid from tags t
               where t.product_id = p.id and t.status = 'deployed'
@@ -60,6 +65,11 @@ export default async function StorePage({ params }: PageProps) {
   }
 
   const products = await getStoreProducts(pool, store.id, customer?.id ?? null);
+  // A store page listing cannabis products is behind the 19+ gate too.
+  const hasCannabis = products.some((p) => productCategory(p, store) === "cannabis");
+  if (needsAgeGate(hasCannabis ? "cannabis" : "other", (await cookies()).get(AGE_COOKIE)?.value, false)) {
+    return <AgeGate storeName={(store as { name?: string | null }).name ?? ""} minAge={CANNABIS_MIN_AGE} />;
+  }
   const tappedCount = products.filter((p) => p.tapped).length;
 
   return (
