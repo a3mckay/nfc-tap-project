@@ -114,6 +114,14 @@ The PRD flags two documents that need external legal review before launch:
 - **Terms of Service** — disclosing the aggregated data use (the data intelligence layer)
 PIPEDA compliance (Canada) is a hard requirement per the PRD. Do not launch without legal sign-off.
 
+### Cannabis marketing review (before selling to cannabis stores)
+Licensed stores are covered by the Cannabis Act's promotion rules (s.17): no testimonials or endorsements, no lifestyle associations, and online promotion only where minors are reasonably kept out. Provinces add their own rules (AGCO in Ontario, AGLC in Alberta). Founder decisions, 2026-10-07, for the lawyer to confirm:
+- **No customer reviews or staff quotes** on cannabis products (testimonials).
+- **"Great when…" is factual only** for cannabis (e.g. "you want lemon-and-cake terps"), no occasions or lifestyle.
+- **Effects tags (e.g. Calm, Energetic) are allowed until banned outright.** Note: Alberta's AGLC already bans claims of positive or negative effects, and Health Canada found Cannabis NB non-compliant for "Discover / Connect / Refresh" groupings.
+- **Age gate:** is an in-store tap enough (the store checks ID at the door)? Our tap page is a public link that can be revisited or shared later. Options: a one-tap "I'm 19 or older" gate on cannabis pages; or secure NFC tags (e.g. NTAG 424 DNA) that prove a physical tap, so only in-store taps skip the gate.
+- Also ask: awards (e.g. "KIND Awards Brand of the Year") — endorsement or fact? And whether showing prices on the tap page is fine.
+
 ---
 
 ## Done
