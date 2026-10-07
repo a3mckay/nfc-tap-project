@@ -63,7 +63,7 @@ beforeEach(() => {
   process.env.BRAVE_SEARCH_API_KEY = "test";
   db.getProductById.mockResolvedValue({ id: "p-1", store_id: "store-1", title: "Weekend Chukka", vendor: "Northfield", product_type: "Boots", description_html: null });
   braveSearch.mockImplementation(async (q: string) => {
-    if (q === "Northfield official site") return [hit("https://www.northfield.com/", "Northfield", "")];
+    if (q === "Northfield shoes") return [hit("https://www.northfield.com/", "Northfield | Handmade boots", "")];
     if (q.startsWith("site:northfield.com")) return [hit("https://northfield.com/chukka", "Weekend Chukka | Northfield", "brand snippet")];
     if (q.includes("site:youtube.com")) return [];
     return [hit("https://www.nordstrom.com/chukka", "Northfield Weekend Chukka", "retail snippet")];
@@ -74,6 +74,7 @@ beforeEach(() => {
 describe("generateEnrichmentAction research", () => {
   it("finds the brand's site, remembers it unconfirmed, and searches it first", async () => {
     await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(braveSearch).toHaveBeenCalledWith("Northfield shoes", 5, "CA");   // brand + category, from Canada first
     expect(db.setBrandWebsite).toHaveBeenCalledWith(expect.anything(), "store-1", "Northfield", "https://northfield.com", false);
     expect(braveSearch).toHaveBeenCalledWith("site:northfield.com Weekend Chukka", 3);
     expect(fetchPageText).toHaveBeenCalledWith("https://northfield.com/chukka");
@@ -85,7 +86,7 @@ describe("generateEnrichmentAction research", () => {
   it("uses a known brand website without searching for it", async () => {
     db.getBrandWebsite.mockResolvedValue({ website: "https://northfield.com", confirmed: true });
     await generateEnrichmentAction("own.myshopify.com", "p-1");
-    expect(braveSearch).not.toHaveBeenCalledWith("Northfield official site", 5);
+    expect(braveSearch).not.toHaveBeenCalledWith("Northfield shoes", 5, "CA");
     expect(db.setBrandWebsite).not.toHaveBeenCalled();
   });
 

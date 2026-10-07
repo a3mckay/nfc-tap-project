@@ -129,7 +129,8 @@ export async function generateEnrichmentAction(
 
   // The spec fields for this product's category (Step 15l, D51).
   const setup = await getSpecSetup(pool, store.id, productId);
-  const specFields = setup ? specFieldsFor(specCategoryFor(setup)) : [];
+  const category = setup ? specCategoryFor(setup) : "general";
+  const specFields = setup ? specFieldsFor(category) : [];
 
   // Research the product, brand's own site first (PRD v4 §7 Step 15b). Every
   // source is numbered so the facts the model returns can cite one.
@@ -140,13 +141,13 @@ export async function generateEnrichmentAction(
     const deps: ResearchDeps = { search: braveSearch, fetchText: fetchPageText };
     try {
       const known = product.vendor ? await getBrandWebsite(pool, store.id, product.vendor) : null;
-      const brand = product.vendor ? await findBrandDomain(product.vendor, known?.website ?? null, deps) : null;
+      const brand = product.vendor ? await findBrandDomain(product.vendor, known?.website ?? null, category, deps) : null;
       if (brand?.found && product.vendor) {
         await setBrandWebsite(pool, store.id, product.vendor, `https://${brand.domain}`, false);
       }
       const query = [product.vendor, product.title].filter(Boolean).join(" ");
       const [found, ytResults] = await Promise.all([
-        researchProduct(product, brand?.domain ?? null, deps),
+        researchProduct(product, brand?.domain ?? null, category, deps),
         braveSearch(`${query} site:youtube.com`, 3),
       ]);
       sources = found;

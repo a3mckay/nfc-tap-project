@@ -31,28 +31,77 @@ describe("domainOf / classifySource", () => {
 });
 
 describe("findBrandDomain", () => {
-  const deps = (results: ReturnType<typeof r>[]): Pick<ResearchDeps, "search"> => ({ search: vi.fn(async () => results) });
+  // Search results per country, and page text per URL (null = can't be read).
+  const deps = (byCountry: Record<string, ReturnType<typeof r>[]>, pages: Record<string, string | null> = {}) => ({
+    search: vi.fn(async (_q: string, _n: number, country?: string) => byCountry[country ?? ""] ?? []),
+    fetchText: vi.fn(async (url: string) => pages[url] ?? null),
+  });
 
   it("uses a known website without searching", async () => {
-    const d = deps([]);
-    expect(await findBrandDomain("Northfield", "https://www.northfield.com/", d)).toEqual({ domain: "northfield.com", found: false });
+    const d = deps({});
+    expect(await findBrandDomain("Northfield", "https://www.northfield.com/", "footwear", d)).toEqual({ domain: "northfield.com", found: false });
     expect(d.search).not.toHaveBeenCalled();
   });
 
-  it("searches for the official site and takes the first result whose domain matches the brand name", async () => {
-    const d = deps([r("https://www.amazon.com/northfield"), r("https://en.wikipedia.org/wiki/Northfield"), r("https://www.northfieldshoes.com/")]);
-    expect(await findBrandDomain("Northfield", null, d)).toEqual({ domain: "northfieldshoes.com", found: true });
-    expect(d.search).toHaveBeenCalledWith("Northfield official site", 5);
+  it("searches the brand and category from Canada, and skips a town's government site (the Carmel case)", async () => {
+    const d = deps(
+      { CA: [r("https://www.carmel.in.gov/"), r("https://carmelcannabis.ca/")] },
+      { "https://www.carmel.in.gov/": "City of Carmel, Indiana", "https://carmelcannabis.ca/": "Carmel Cannabis | Craft Cannabis Grown in Canada" },
+    );
+    expect(await findBrandDomain("Carmel", null, "cannabis", d)).toEqual({ domain: "carmelcannabis.ca", found: true });
+    expect(d.search).toHaveBeenCalledWith("Carmel cannabis", 5, "CA");
+    expect(d.fetchText).not.toHaveBeenCalledWith("https://www.carmel.in.gov/");
   });
 
-  it("matches brand names with spaces and punctuation", async () => {
-    expect(await findBrandDomain("Red Wing Shoes", null, deps([r("https://www.redwingshoes.com/")]))).toEqual({ domain: "redwingshoes.com", found: true });
-    expect(await findBrandDomain("A.P.C.", null, deps([r("https://www.apc.fr/")]))).toEqual({ domain: "apc.fr", found: true });
+  it("never takes a government, school or military site", async () => {
+    const d = deps(
+      { CA: ["https://carmel.gov", "https://carmel.edu", "https://carmel.mil", "https://carmel.gc.ca", "https://carmel.gov.on.ca", "https://carmel.ac.uk"].map((u) => r(u, "Carmel cannabis")) },
+    );
+    expect(await findBrandDomain("Carmel", null, "cannabis", d)).toBeNull();
   });
 
-  it("returns null rather than guess when no result looks like the brand", async () => {
-    expect(await findBrandDomain("Northfield", null, deps([r("https://www.nordstrom.com/x")]))).toBeNull();
-    expect(await findBrandDomain("", null, deps([]))).toBeNull();
+  it("skips a site named like the brand whose page isn't about the category", async () => {
+    const d = deps(
+      { CA: [r("https://carmelrealty.ca/"), r("https://carmelcannabis.ca/")] },
+      { "https://carmelrealty.ca/": "Carmel Realty: homes for sale", "https://carmelcannabis.ca/": "Carmel craft cannabis" },
+    );
+    expect(await findBrandDomain("Carmel", null, "cannabis", d)).toEqual({ domain: "carmelcannabis.ca", found: true });
+  });
+
+  it("checks the search result's title and description when the page can't be read (e.g. an age gate)", async () => {
+    const d = deps({ CA: [r("https://carmelcannabis.ca/", "Carmel Cannabis | Craft Cannabis Grown in Canada", "")] });
+    expect(await findBrandDomain("Carmel", null, "cannabis", d)).toEqual({ domain: "carmelcannabis.ca", found: true });
+  });
+
+  it("tries the US, the UK and Australia in turn, and stops at the first site that checks out", async () => {
+    const d = deps({ US: [r("https://www.northfieldshoes.com/", "Northfield Shoes", "Handmade boots")] });
+    expect(await findBrandDomain("Northfield", null, "footwear", d)).toEqual({ domain: "northfieldshoes.com", found: true });
+    expect(d.search.mock.calls.map((c) => c[2])).toEqual(["CA", "US"]);
+  });
+
+  it("tries likely addresses when no search result checks out", async () => {
+    const d = deps({}, { "https://carmelcannabis.ca/": "Carmel Cannabis | Craft Cannabis Grown in Canada" });
+    expect(await findBrandDomain("Carmel", null, "cannabis", d)).toEqual({ domain: "carmelcannabis.ca", found: true });
+    expect(d.search.mock.calls.map((c) => c[2])).toEqual(["CA", "US", "GB", "AU"]);
+    expect(d.fetchText).toHaveBeenCalledWith("https://carmel.com/");
+    expect(d.fetchText).toHaveBeenCalledWith("https://carmelcannabis.com.au/");
+  });
+
+  it("doesn't repeat the category when it's already in the brand name", async () => {
+    const d = deps({ CA: [r("https://www.redwingshoes.com/", "Red Wing Shoes", "Boots since 1905")] });
+    expect(await findBrandDomain("Red Wing Shoes", null, "footwear", d)).toEqual({ domain: "redwingshoes.com", found: true });
+    expect(d.search).toHaveBeenCalledWith("Red Wing Shoes", 5, "CA");
+  });
+
+  it("searches the brand alone for general products, and needs only the brand on the page", async () => {
+    const d = deps({ CA: [r("https://www.apc.fr/", "A.P.C. official site", "")] });
+    expect(await findBrandDomain("A.P.C.", null, "general", d)).toEqual({ domain: "apc.fr", found: true });
+    expect(d.search).toHaveBeenCalledWith("A.P.C.", 5, "CA");
+  });
+
+  it("returns null rather than guess when nothing checks out", async () => {
+    expect(await findBrandDomain("Northfield", null, "footwear", deps({ CA: [r("https://www.nordstrom.com/x", "Northfield boots")] }))).toBeNull();
+    expect(await findBrandDomain("", null, "footwear", deps({}))).toBeNull();
   });
 });
 
@@ -64,10 +113,10 @@ describe("researchProduct", () => {
         : [r("https://www.reddit.com/r/x", "Chukka review", "review snippet"), r("https://www.nordstrom.com/chukka", "Chukka", "retail snippet"), r("https://northfield.com/chukka", "dup", "dup")]);
     const fetchText = vi.fn(async () => "Full-grain suede. Leather lining. Made in Portugal.");
 
-    const sources = await researchProduct({ vendor: "Northfield", title: "Weekend Chukka" }, "northfield.com", { search, fetchText });
+    const sources = await researchProduct({ vendor: "Northfield", title: "Weekend Chukka" }, "northfield.com", "footwear", { search, fetchText });
 
     expect(search).toHaveBeenCalledWith("site:northfield.com Weekend Chukka", 3);
-    expect(search).toHaveBeenCalledWith("Northfield Weekend Chukka materials features review", 6);
+    expect(search).toHaveBeenCalledWith("Northfield Weekend Chukka materials features review", 6, "CA");
     expect(sources.map((s) => [s.n, s.kind, s.url])).toEqual([
       [1, "brand", "https://northfield.com/chukka"],
       [2, "retailer", "https://www.nordstrom.com/chukka"],
@@ -80,9 +129,15 @@ describe("researchProduct", () => {
 
   it("works without a brand domain, and keeps the snippet if the page can't be read", async () => {
     const search = vi.fn(async () => [r("https://www.nordstrom.com/chukka", "Chukka", "retail snippet")]);
-    const sources = await researchProduct({ vendor: "Northfield", title: "Weekend Chukka" }, null, { search, fetchText: vi.fn(async () => null) });
+    const sources = await researchProduct({ vendor: "Northfield", title: "Weekend Chukka" }, null, "footwear", { search, fetchText: vi.fn(async () => null) });
     expect(search).toHaveBeenCalledTimes(1);
     expect(sources).toEqual([{ n: 1, kind: "retailer", url: "https://www.nordstrom.com/chukka", title: "Chukka", text: "retail snippet" }]);
+  });
+
+  it("searches with words that suit the product's category", async () => {
+    const search = vi.fn(async () => []);
+    await researchProduct({ vendor: "Carmel", title: "Animal Face" }, null, "cannabis", { search, fetchText: vi.fn(async () => null) });
+    expect(search).toHaveBeenCalledWith("Carmel Animal Face cannabis strain review", 6, "CA");
   });
 });
 

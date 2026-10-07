@@ -3,7 +3,7 @@
 // first, reads the top brand page, and numbers every source so each fact the
 // model returns can be traced to one (D41, D42). Search and page fetching are
 // injected, so this has no network access of its own.
-import type { ResearchedFact } from "@nfc/db";
+import type { ResearchedFact, SpecCategory } from "@nfc/db";
 
 export type SourceKind = "brand" | "retailer" | "review";
 
@@ -14,7 +14,7 @@ export interface SearchHit {
 }
 
 export interface ResearchDeps {
-  search(query: string, count: number): Promise<SearchHit[]>;
+  search(query: string, count: number, country?: string): Promise<SearchHit[]>;
   fetchText(url: string): Promise<string | null>;
 }
 
@@ -37,6 +37,26 @@ const NOT_BRAND_HOSTS = [
 ];
 const TOPICS = ["materials", "care", "fit", "sizing", "origin", "construction", "features", "other"] as const;
 
+// Stores are Canadian for now (stores have no country yet; see DEFERRED.md).
+// Brand sites are looked for in other English-speaking markets too, home first.
+const HOME_COUNTRY = "CA";
+const BRAND_COUNTRIES = [HOME_COUNTRY, "US", "GB", "AU"];
+const GUESS_ENDINGS = [".ca", ".com", ".co.uk", ".com.au"];
+
+// Per category: the word added to the brand search, what the brand's page must
+// mention to count as its site, and the words for the product search.
+const CATEGORY_SEARCH: Record<SpecCategory, { word: string; match: RegExp | null; research: string }> = {
+  cannabis: { word: "cannabis", match: /cannabis|marijuana/i, research: "cannabis strain review" },
+  wine: { word: "wine", match: /wine|vineyard/i, research: "wine tasting notes review" },
+  beer: { word: "beer", match: /beer|brew/i, research: "beer review" },
+  spirits: { word: "spirits", match: /spirit|distill|whisk|vodka|\bgin\b|\brum\b|tequila/i, research: "tasting notes review" },
+  eyewear: { word: "eyewear", match: /eyewear|sunglass|glasses|optical/i, research: "lens frame review" },
+  footwear: { word: "shoes", match: /shoe|boot|sneaker|footwear/i, research: "materials features review" },
+  apparel: { word: "clothing", match: /cloth|apparel|wear|fashion/i, research: "materials features review" },
+  home: { word: "home", match: /home|furniture|decor|bedding|linen/i, research: "materials features review" },
+  general: { word: "", match: null, research: "materials features review" },
+};
+
 export function domainOf(url: string): string | null {
   try {
     return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
@@ -56,12 +76,21 @@ export function classifySource(url: string, title: string, brandDomain: string |
 
 const compact = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-// The brand's website domain: the known one if set, else the first search result
-// whose domain contains the brand name. Null rather than a guess.
+// Government, school and military sites are never a brand's (e.g. carmel.in.gov).
+function isInstitution(domain: string): boolean {
+  const labels = domain.split(".");
+  return labels.slice(1).some((l) => ["gov", "edu", "mil", "gc"].includes(l)) || labels.at(-2) === "ac";
+}
+
+// The brand's website domain: the known one if set; else a search result named
+// like the brand whose page (or, if it can't be read, its search snippet)
+// mentions the brand and the category; else a likely address that does. Null
+// rather than a guess.
 export async function findBrandDomain(
   vendor: string,
   knownWebsite: string | null,
-  deps: Pick<ResearchDeps, "search">,
+  category: SpecCategory,
+  deps: ResearchDeps,
 ): Promise<{ domain: string; found: boolean } | null> {
   if (knownWebsite) {
     const domain = domainOf(knownWebsite.includes("://") ? knownWebsite : `https://${knownWebsite}`);
@@ -69,12 +98,25 @@ export async function findBrandDomain(
   }
   const name = compact(vendor);
   if (!name) return null;
-  for (const hit of await deps.search(`${vendor} official site`, 5)) {
-    const domain = domainOf(hit.url);
-    if (!domain || NOT_BRAND_HOSTS.some((h) => domain.includes(h))) continue;
-    if (compact(domain.split(".")[0]!).includes(name)) return { domain, found: true };
+  const { word, match } = CATEGORY_SEARCH[category];
+  const isBrandPage = (text: string) => compact(text).includes(name) && (!match || match.test(text));
+
+  const query = !word || match?.test(vendor) ? vendor : `${vendor} ${word}`;
+  for (const country of BRAND_COUNTRIES) {
+    for (const hit of await deps.search(query, 5, country)) {
+      const domain = domainOf(hit.url);
+      if (!domain || isInstitution(domain) || NOT_BRAND_HOSTS.some((h) => domain.includes(h))) continue;
+      if (!compact(domain.split(".")[0]!).includes(name)) continue;
+      const page = await deps.fetchText(hit.url);
+      if (isBrandPage(`${page ?? ""} ${hit.title} ${hit.description}`)) return { domain, found: true };
+    }
   }
-  return null;
+
+  const names = word ? [name, name + compact(word)] : [name];
+  const guesses = names.flatMap((n) => GUESS_ENDINGS.map((end) => n + end));
+  const pages = await Promise.all(guesses.map((d) => deps.fetchText(`https://${d}/`)));
+  const i = pages.findIndex((p) => p !== null && isBrandPage(p));
+  return i >= 0 ? { domain: guesses[i]!, found: true } : null;
 }
 
 const KIND_ORDER: Record<SourceKind, number> = { brand: 0, retailer: 1, review: 2 };
@@ -82,12 +124,13 @@ const KIND_ORDER: Record<SourceKind, number> = { brand: 0, retailer: 1, review: 
 export async function researchProduct(
   product: { vendor: string | null; title: string },
   brandDomain: string | null,
+  category: SpecCategory,
   deps: ResearchDeps,
 ): Promise<ResearchSource[]> {
   const name = [product.vendor, product.title].filter(Boolean).join(" ");
   const [brandHits, webHits] = await Promise.all([
     brandDomain ? deps.search(`site:${brandDomain} ${product.title}`, 3) : Promise.resolve([]),
-    deps.search(`${name} materials features review`, 6),
+    deps.search(`${name} ${CATEGORY_SEARCH[category].research}`, 6, HOME_COUNTRY),
   ]);
 
   const seen = new Set<string>();

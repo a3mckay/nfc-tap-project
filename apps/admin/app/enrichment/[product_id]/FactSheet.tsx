@@ -83,9 +83,9 @@ export function FactSheet({ shop, productId, vendor, brandWebsite, facts }: Prop
             <>
               {brandWebsite
                 ? <a href={brandWebsite.website} target="_blank" rel="noopener noreferrer" style={{ color: "#0369a1" }}>{hostOf(brandWebsite.website)}</a>
-                : <span style={{ color: "#999" }}>not set</span>}
+                : <span style={{ color: "#92400e" }}>not found. Add it so research starts from the brand&apos;s own site.</span>}
               {brandWebsite && !brandWebsite.confirmed && <span style={{ ...pillStyle, background: "#fef3c7", color: "#92400e" }}>Found automatically — check it</span>}
-              <button type="button" style={linkBtnStyle} onClick={() => setEditingSite(true)}>{brandWebsite ? "Change" : "Set"}</button>
+              <button type="button" style={linkBtnStyle} onClick={() => setEditingSite(true)}>{brandWebsite ? "Change" : "Add website"}</button>
             </>
           )}
         </div>

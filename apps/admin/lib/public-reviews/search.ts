@@ -21,7 +21,8 @@ interface BraveResponse {
   };
 }
 
-export async function braveSearch(query: string, count = 10): Promise<SearchResult[]> {
+// `country` is a two-letter code (e.g. "CA") for where results should come from.
+export async function braveSearch(query: string, count = 10, country?: string): Promise<SearchResult[]> {
   const apiKey = process.env.BRAVE_SEARCH_API_KEY;
   if (!apiKey) {
     // eslint-disable-next-line no-console
@@ -29,7 +30,7 @@ export async function braveSearch(query: string, count = 10): Promise<SearchResu
     return [];
   }
 
-  const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}`;
+  const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}${country ? `&country=${country}` : ""}`;
   const res = await fetch(url, {
     headers: {
       "X-Subscription-Token": apiKey,

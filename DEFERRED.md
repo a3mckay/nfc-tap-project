@@ -124,6 +124,15 @@ Things we consciously deferred during the build, with enough context to pick the
 
 ---
 
+## Stores
+
+### Stores have no country or province
+**What exists:** Nothing records where a store is. Generate's research assumes Canada: brand websites are looked for in Canada, then the US, UK and Australia; product searches run from Canada (`apps/admin/src/lib/product-research.ts`).
+**Why deferred:** All stores are Canadian for now (founder, 2026-10-07).
+**What's needed:** Pre-fill the store's details at onboarding from Google Places (address, country, province, hours, phone), then use the country for search order. The province will also matter for cannabis stores: the legal age (19 in most provinces, 18 in Alberta, 21 in Quebec) and provincial marketing rules (Alberta's AGLC bans effect claims).
+
+---
+
 ## Owner emails
 
 ### Weekly owner email
