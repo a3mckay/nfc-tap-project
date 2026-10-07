@@ -7,6 +7,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveSpecsAction } from "./specActions.js";
+import { syncSpecValues } from "@/spec-values.js";
 
 interface Field { key: string; label: string; hint: string }
 interface Spec { key: string; value: string; source_url: string | null; source_kind: string }
@@ -38,6 +39,14 @@ export function SpecsPanel({ shop, productId, detected, override, templates, spe
   const category = choice || detected;
   const byKey = new Map(specs.map((s) => [s.key, s]));
   const [values, setValues] = useState<Record<string, string>>(Object.fromEntries(specs.map((s) => [s.key, s.value])));
+  const [edited, setEdited] = useState<ReadonlySet<string>>(new Set());
+  // Values saved elsewhere (Generate) arrive as new props: show them without a reload.
+  const specsKey = JSON.stringify(specs);
+  const [seenSpecs, setSeenSpecs] = useState(specsKey);
+  if (specsKey !== seenSpecs) {
+    setSeenSpecs(specsKey);
+    setValues(syncSpecValues(values, edited, specs));
+  }
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fields = templates[category] ?? [];
@@ -47,6 +56,7 @@ export function SpecsPanel({ shop, productId, detected, override, templates, spe
     startTransition(async () => {
       const res = await saveSpecsAction(shop, productId, choice || null, Object.fromEntries(fields.map((f) => [f.key, values[f.key] ?? ""])));
       if (res.error) { setError(res.error); return; }
+      setEdited(new Set());
       setSaved(true);
       router.refresh();
     });
@@ -72,7 +82,7 @@ export function SpecsPanel({ shop, productId, detected, override, templates, spe
             <div key={f.key}>
               <label htmlFor={`spec-${f.key}`} style={{ fontSize: "0.78rem", fontWeight: 600, color: "#444" }}>{f.label}</label>
               <input id={`spec-${f.key}`} style={{ ...inputStyle, marginTop: "3px" }} placeholder={f.hint} value={values[f.key] ?? ""}
-                onChange={(e) => { setValues({ ...values, [f.key]: e.target.value }); setSaved(false); }} />
+                onChange={(e) => { setValues({ ...values, [f.key]: e.target.value }); setEdited(new Set(edited).add(f.key)); setSaved(false); }} />
               {s && values[f.key] === s.value && (
                 <p style={{ fontSize: "0.7rem", color: "#999", margin: "2px 0 0" }}>
                   {KIND[s.source_kind] ?? s.source_kind}{s.source_url && <> · <a href={s.source_url} target="_blank" rel="noopener noreferrer" style={{ color: "#999" }}>{hostOf(s.source_url)}</a></>}
