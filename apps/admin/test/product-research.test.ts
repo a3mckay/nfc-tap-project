@@ -195,6 +195,12 @@ describe("factsFromModel", () => {
       { topic: "other", fact: "Pairs with chinos", source_url: "https://northfield.com/chukka", source_kind: "brand" },
     ]);
   });
+
+  it("keeps the topics of the product's category (e.g. a wine's)", () => {
+    const wineTopics = ["grapes", "winemaking", "tasting", "other"];
+    expect(factsFromModel([{ topic: "winemaking", fact: "Ripasso method", source: 1 }, { topic: "fit", fact: "x", source: 1 }], sources, wineTopics).map((f) => f.topic))
+      .toEqual(["winemaking", "other"]);
+  });
 });
 
 describe("specsFromModel (Step 15l)", async () => {

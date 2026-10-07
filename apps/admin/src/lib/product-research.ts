@@ -182,9 +182,11 @@ export function isFetchableUrl(url: string): boolean {
 
 // Turns the model's facts into fact-sheet rows. A fact whose source number
 // doesn't match a real source is dropped: claims need a source (D41).
+// Topics outside the product's category's list (docs/category-labels.md §3) become "other".
 export function factsFromModel(
   raw: Array<{ topic: string; fact: string; source: number }>,
   sources: ResearchSource[],
+  topics: readonly string[] = TOPICS,
 ): ResearchedFact[] {
   const byN = new Map(sources.map((s) => [s.n, s]));
   const out: ResearchedFact[] = [];
@@ -192,7 +194,7 @@ export function factsFromModel(
     const source = byN.get(f.source);
     const fact = f.fact?.trim();
     if (!source || !fact) continue;
-    const topic = (TOPICS as readonly string[]).includes(f.topic) ? f.topic : "other";
+    const topic = topics.includes(f.topic) ? f.topic : "other";
     out.push({ topic, fact, source_url: source.url, source_kind: source.kind });
   }
   return out.slice(0, 20);

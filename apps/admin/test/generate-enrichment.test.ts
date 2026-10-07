@@ -24,7 +24,7 @@ const braveSearch = vi.hoisted(() => vi.fn());
 const fetchPageText = vi.hoisted(() => vi.fn(async () => "Full-grain suede upper. Made in Portugal."));
 const create = vi.hoisted(() => vi.fn());
 
-vi.mock("@nfc/db", () => db);
+vi.mock("@nfc/db", async (importOriginal) => ({ copyFor: (await importOriginal<typeof import("@nfc/db")>()).copyFor, ...db }));
 vi.mock("@/current-store.js", () => ({ getActionStore }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("../lib/public-reviews/search.js", () => ({ braveSearch }));
@@ -159,6 +159,36 @@ describe("cannabis (Cannabis Act promotion rules, founder decisions 2026-10-07)"
     db.specCategoryFor.mockReturnValue("footwear");
     await generateEnrichmentAction("own.myshopify.com", "p-1");
     expect(JSON.stringify(create.mock.calls[0]![0].messages)).not.toMatch(/never describe effects/i);
+  });
+});
+
+describe("category words (docs/category-labels.md)", () => {
+  afterEach(() => {
+    db.specCategoryFor.mockReturnValue("footwear");
+  });
+
+  it("asks for each field in the category's words, with its fact topics", async () => {
+    db.specCategoryFor.mockReturnValue("wine");
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    const props = create.mock.calls[0]![0].tools[0].input_schema.properties;
+    expect(props.fit_notes.description).toMatch(/Tasting notes/);
+    expect(props.materials.description).toMatch(/Winemaking/);
+    expect(props.facts.items.properties.topic.enum).toContain("winemaking");
+    expect(props.facts.items.properties.topic.enum).not.toContain("sizing");
+  });
+
+  it("gives drinks the alcohol marketing rules: taste, food and serving, never mood or success", async () => {
+    db.specCategoryFor.mockReturnValue("beer");
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    const request = create.mock.calls[0]![0];
+    expect(JSON.stringify(request.messages)).toMatch(/alcohol/i);
+    expect(JSON.stringify(request.messages)).toMatch(/mood/i);
+    expect(request.tools[0].input_schema.properties.great_when.description).toMatch(/taste, food/);
+  });
+
+  it("gives other categories neither the alcohol nor the cannabis rules", async () => {
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(JSON.stringify(create.mock.calls[0]![0].messages)).not.toMatch(/alcohol|cannabis/i);
   });
 });
 

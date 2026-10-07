@@ -1,6 +1,9 @@
 // PRD v4 §7 Step 15k: re-checks a product's notes for contradictions after
 // they change (D49). Never blocks or fails a save.
-import { getPool, getProductById, getEnrichmentByProductId, getProductTraining, getProductFacts, saveReviewFlags } from "@nfc/db";
+import {
+  getPool, getProductById, getEnrichmentByProductId, getProductTraining, getProductFacts, saveReviewFlags,
+  getSpecSetup, specCategoryFor, copyFor,
+} from "@nfc/db";
 import { runConsistencyCheck, findContradictions } from "./consistency-check.js";
 
 type Pool = ReturnType<typeof getPool>;
@@ -8,13 +11,15 @@ type Pool = ReturnType<typeof getPool>;
 export async function checkProductNotes(pool: Pool, storeId: string, productId: string): Promise<void> {
   if (!process.env.ANTHROPIC_API_KEY) return;
   try {
-    const [product, enrichment, training, facts] = await Promise.all([
+    const [product, enrichment, training, facts, specSetup] = await Promise.all([
       getProductById(pool, productId),
       getEnrichmentByProductId(pool, productId),
       getProductTraining(pool, productId, storeId),
       getProductFacts(pool, storeId, productId),
+      getSpecSetup(pool, storeId, productId),
     ]);
     if (!product || product.store_id !== storeId) return;
+    const copy = copyFor(specSetup ? specCategoryFor(specSetup) : "general");
     await runConsistencyCheck({
       title: product.title,
       productType: product.product_type,
@@ -27,6 +32,10 @@ export async function checkProductNotes(pool: Pool, storeId: string, productId: 
         closest_alternative: training.closest_alternative, common_questions: training.common_questions ?? [],
       },
       facts: facts.map((f) => ({ topic: f.topic, fact: f.fact })),
+      labels: {
+        fit: copy.fields.fit_notes.label, materials: copy.fields.materials.label,
+        care: copy.fields.care_instructions.label, truth: copy.training.truth.label,
+      },
     }, {
       model: findContradictions,
       save: (messages) => saveReviewFlags(pool, storeId, productId, "contradiction", messages),

@@ -4,12 +4,21 @@
 import {
   getTagByUuid, getProductById, getStoreById, getEnrichmentByProductId, getProductTraining,
   getProductFacts, getActiveAnswers, getApprovedReviewsByProduct, getStorePolicies, getRecentQuestions,
-  getProductSpecs, specCategoryFor, specFieldsFor,
+  getProductSpecs, specCategoryFor, specFieldsFor, copyFor,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
 import type { LoadedContext } from "./handle.js";
 
 type Pool = Parameters<typeof getTagByUuid>[0];
+
+// The category's words for the store's notes (docs/category-labels.md).
+function categoryLabels(category: Parameters<typeof copyFor>[0]) {
+  const { fields, training } = copyFor(category);
+  return {
+    materials: fields.materials.label, fit: fields.fit_notes.label, care: fields.care_instructions.label,
+    sustainability: fields.sustainability_notes.label, truth: training.truth.label,
+  };
+}
 
 const stripHtml = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
@@ -99,6 +108,7 @@ export async function loadProductContext(
         ...(enrichment?.reviews ?? []).map((r) => ({ rating: r.rating, text: r.text })),
       ].filter((r) => r.text),
       category,
+      labels: categoryLabels(category),
       policies: policies.map((p) => ({ label: p.label, text: p.text })),
       ...(audience === "staff" ? {
         staff: {

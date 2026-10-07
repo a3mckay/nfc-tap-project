@@ -581,6 +581,8 @@ These were built in May 2026. The migrations number them as expansion sections Â
 - **`/offers` management**
 - **Product import:** CSV import and manual product creation
 
+**Category labels** (founder-approved 2026-10-07; `docs/category-labels.md`). Every place that describes a product uses its spec category's words: the product editor's labels and examples, the customer-page headings, Generate's instructions and fact topics, the AI assistant, the staff training tab and its AI draft, the staff view, and the note-consistency check. The stored fields don't change (a wine's "Tasting notes" is the column a shirt's "Fit & feel" uses). All words live in `packages/db/src/category-copy.ts`; a test checks that drinks and cannabis never get clothing or footwear words. Generate also applies alcohol marketing rules to wine, beer and spirits (taste, food, serving; never mood, success or drinking more).
+
 **Cannabis compliance** (Cannabis Act s.17; founder decisions 2026-10-07, pending the legal review in `ACTION_ITEMS.md`). Applies to products whose spec category (Step 15l) is cannabis:
 - **No testimonials:** the tap page shows no customer reviews, ratings or staff quote (`apps/tap-page/src/cannabis.ts`); the product editor hides those sections; the assistant gets no reviews.
 - **No effects, occasions or lifestyle:** Generate writes facts only (strain, lineage, grow and cure, aroma, terpenes, potency, format) and a factual "Great whenâ€¦"; it writes no staff quote. The assistant never describes effects; asked about them, it says "We can't describe effects, but we can tell you about its strain, terpenes, THC and CBD." (`apps/tap-page/src/ask/prompt.ts`). No effects tags.

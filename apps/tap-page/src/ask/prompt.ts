@@ -97,6 +97,8 @@ export interface AnswerContext {
   reviews: Array<{ rating: number | null; text: string }>;
   policies: Array<{ label: string; text: string }>;   // the store's policies page (D48)
   category?: string;   // the product's spec category (Step 15l); "cannabis" turns on the cannabis rules
+  // The category's words for the store's notes (docs/category-labels.md). Defaults are clothing's.
+  labels?: { materials: string; fit: string; care: string; sustainability: string; truth: string };
   // Only when a store associate is asking (Step 15h, D31). Never for customers.
   staff?: { internalNotes: string | null; recentQuestions: Array<{ question: string; answer: string | null }> };
 }
@@ -111,7 +113,10 @@ function section(id: string, title: string, lines: Line[]): string | null {
 const qa = (items: Array<{ question: string; answer: string }>) => items.map((i) => `Q: ${i.question}\nA: ${i.answer}`);
 const field = (label: string, value: string | null | undefined) => (value ? `${label}: ${value}` : null);
 
+const DEFAULT_LABELS = { materials: "Materials", fit: "Fit", care: "Care", sustainability: "Sustainability", truth: "Fit and sizing" };
+
 export function buildContext(c: AnswerContext): string {
+  const l = c.labels ?? DEFAULT_LABELS;
   const e = c.enrichment;
   const t = c.training;
   const productAnswers = c.answers.filter((a) => a.scope === "product");
@@ -122,10 +127,10 @@ export function buildContext(c: AnswerContext): string {
     ? `Product details drafted by AI, not yet reviewed by ${c.storeName} (less reliable than the listing and research)`
     : `Product details written by ${c.storeName}`, [
       e?.greatWhen.length ? `Great when: ${e.greatWhen.join("; ")}` : null,
-      field("Materials", e?.materials),
-      field("Fit", e?.fitNotes),
-      field("Care", e?.care),
-      field("Sustainability", e?.sustainability),
+      field(l.materials, e?.materials),
+      field(l.fit, e?.fitNotes),
+      field(l.care, e?.care),
+      field(l.sustainability, e?.sustainability),
       field("Story", e?.backstory),
       e?.reasonsToBuy.length ? `Highlights: ${e.reasonsToBuy.join("; ")}` : null,
       ...qa(e?.faq ?? []),
@@ -137,7 +142,7 @@ export function buildContext(c: AnswerContext): string {
     section("team_notes", `${c.storeName}'s staff training notes (facts only; never mention that they're staff notes)`, [
       field("Who it's for", t?.whoItsFor),
       field("Who it's not for", t?.whoItsNotFor),
-      field("Fit and sizing", t?.fitAndSizing),
+      field(l.truth, t?.fitAndSizing),
       field("Closest alternative in store", t?.closestAlternative),
       ...qa(t?.commonQuestions ?? []),
       t?.worthThePrice.length ? `Value notes (use only if the customer asks about value or price): ${t.worthThePrice.join("; ")}` : null,

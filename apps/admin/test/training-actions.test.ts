@@ -7,11 +7,13 @@ const db = vi.hoisted(() => ({
   getEnrichmentByProductId: vi.fn(async () => null),
   getProductsWithStatus: vi.fn(async () => []),
   saveProductTraining: vi.fn(async () => true),
+  getSpecSetup: vi.fn(async () => ({ storeIndustry: null, override: null, productType: "Red wine", title: "Campofiorin" })),
+  specCategoryFor: vi.fn(() => "wine"),
 }));
 const getActionStore = vi.hoisted(() => vi.fn());
 const draftTraining = vi.hoisted(() => vi.fn());
 
-vi.mock("@nfc/db", () => db);
+vi.mock("@nfc/db", async (importOriginal) => ({ copyFor: (await importOriginal<typeof import("@nfc/db")>()).copyFor, ...db }));
 vi.mock("@/current-store.js", () => ({ getActionStore }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/training-draft.js", () => ({ draftTraining }));
@@ -68,6 +70,8 @@ describe("draftTrainingAction", () => {
     draftTraining.mockResolvedValue(draft);
     expect(await draftTrainingAction(SHOP, "prod-own")).toEqual({ draft });
     expect(draftTraining).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ title: "Trail Runner", vendor: "Acme" }));
+    // In the product's category's words (docs/category-labels.md): here a wine.
+    expect(draftTraining.mock.calls[0]![1].labels).toEqual(expect.objectContaining({ fit: "Tasting notes", truth: "Style and serving truth" }));
     expect(db.saveProductTraining).not.toHaveBeenCalled();
   });
 
