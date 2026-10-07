@@ -16,7 +16,7 @@ const db = vi.hoisted(() => ({
   getApprovedReviewsByProduct: vi.fn(async () => [{ rating: "4.0", body: "Comfy" }]),
   getStorePolicies: vi.fn(async () => [{ key: "returns", label: "Returns and exchanges", text: "30 days." }]),
   getProductSpecs: vi.fn(async () => [{ key: "thc", value: "22%", source_url: null, source_kind: "owner", owner_edited: true }]),
-  specCategoryFor: vi.fn(() => "cannabis"),
+  specCategoryFor: vi.fn(() => "footwear"),
   specFieldsFor: vi.fn(() => [{ key: "thc", label: "THC", hint: "" }, { key: "cbd", label: "CBD", hint: "" }]),
   getRecentQuestions: vi.fn(async () => [{ question_text: "Does it run small?", answer_text: "True to size." }]),
 }));
@@ -56,6 +56,13 @@ describe("loadAnswerContext", () => {
     expect(loaded!.context.enrichment?.aiDraft).toBe(false);
     expect(loaded!.context.policies).toEqual([{ label: "Returns and exchanges", text: "30 days." }]);
     expect(loaded!.context.reviews).toEqual([{ rating: 4, text: "Comfy" }, { rating: 5, text: "Great" }]);
+  });
+
+  it("gives no reviews for cannabis products, and marks their category (Cannabis Act: no testimonials)", async () => {
+    db.specCategoryFor.mockReturnValueOnce("cannabis");
+    const loaded = await loadAnswerContext({} as never, "u");
+    expect(loaded!.context.category).toBe("cannabis");
+    expect(loaded!.context.reviews).toEqual([]);
   });
 
   it("never includes internal staff notes or the stock note", async () => {

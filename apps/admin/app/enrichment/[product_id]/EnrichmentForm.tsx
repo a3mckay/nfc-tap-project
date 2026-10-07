@@ -8,6 +8,8 @@ interface Props {
   initial: EnrichmentFormData;
   productTitle: string;
   isAiGenerated: boolean;
+  // Cannabis Act: no testimonials (founder decisions, 2026-10-07; see ACTION_ITEMS.md).
+  hideTestimonials?: boolean;
 }
 
 function AiBadge() {
@@ -43,7 +45,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 
 const AI_FIELDS = new Set(["backstory", "materials", "fit_notes", "reasons_to_buy_text", "great_when_text"]);
 
-export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) {
+export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTestimonials = false }: Props) {
   const [form, setForm] = useState<EnrichmentFormData>(initial);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -224,6 +226,9 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
         </div>
       </div>
 
+      {hideTestimonials ? (
+        <p style={{ ...hintStyle, ...sectionStyle }}>Customer reviews and staff quotes aren&apos;t shown for cannabis products: the Cannabis Act doesn&apos;t allow testimonials.</p>
+      ) : (<>
       {/* Customer Reviews */}
       <div style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
@@ -258,6 +263,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
           </div>
         ))}
       </div>
+      </>)}
 
       {/* FAQ */}
       <div style={sectionStyle}>
@@ -288,6 +294,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
         ))}
       </div>
 
+      {!hideTestimonials && (<>
       {/* Staff */}
       <div style={sectionStyle}>
         <p style={sectionHeadingStyle}>Staff Perspective</p>
@@ -318,6 +325,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated }: Props) 
           </div>
         </div>
       </div>
+      </>)}
 
       {/* Internal */}
       <div style={sectionStyle}>

@@ -1,7 +1,7 @@
 // PRD v4 §7 Step 15b: "Generate" researches the product brand-first, saves a
 // fact sheet with a source for every fact, and drafts "Great when…" key points
 // (docs/PRD-ai-assistant.md §6.2, D21, D41, D42).
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const db = vi.hoisted(() => ({
   getPool: vi.fn(() => ({})),
@@ -129,6 +129,36 @@ describe("spec fields (Step 15l)", () => {
     expect(db.saveResearchedSpecs).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1", [
       { key: "upper", value: "Full-grain suede", source_url: "https://northfield.com/chukka", source_kind: "brand" },
     ]);
+  });
+});
+
+describe("cannabis (Cannabis Act promotion rules, founder decisions 2026-10-07)", () => {
+  beforeEach(() => {
+    db.specCategoryFor.mockReturnValue("cannabis");
+  });
+  afterEach(() => {
+    db.specCategoryFor.mockReturnValue("footwear");
+  });
+
+  it("tells the model to keep to facts: no effects, occasions or lifestyle", async () => {
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    const request = create.mock.calls[0]![0];
+    expect(JSON.stringify(request.messages)).toMatch(/never describe effects/i);
+    const greatWhen = request.tools[0].input_schema.properties.great_when.description as string;
+    expect(greatWhen).toMatch(/factual/i);
+    expect(greatWhen).not.toContain("office to bar");
+  });
+
+  it("never saves a staff quote", async () => {
+    const { draft } = await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(draft?.staff_quote).toBe("");
+    expect(db.upsertFullEnrichment).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ staff_quote: null }));
+  });
+
+  it("leaves other categories' copy instructions as they are", async () => {
+    db.specCategoryFor.mockReturnValue("footwear");
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(JSON.stringify(create.mock.calls[0]![0].messages)).not.toMatch(/never describe effects/i);
   });
 });
 

@@ -14,6 +14,7 @@ interface Props {
   productTitle: string;
   isAiGenerated: boolean;
   publicReviewsEnabled: boolean;
+  hideTestimonials: boolean;   // cannabis products (Cannabis Act)
 }
 
 const SHIMMER_CSS = `
@@ -30,6 +31,7 @@ export function EnrichmentPageClient({
   productTitle,
   isAiGenerated,
   publicReviewsEnabled,
+  hideTestimonials,
 }: Props) {
   const router = useRouter();
   const [formData, setFormData] = useState<EnrichmentFormData>(initial);
@@ -139,6 +141,7 @@ export function EnrichmentPageClient({
         initial={formData}
         productTitle={productTitle}
         isAiGenerated={isAiGenerated || formKey > 0}
+        hideTestimonials={hideTestimonials}
       />
     </>
   );

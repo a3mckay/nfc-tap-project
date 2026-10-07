@@ -45,6 +45,13 @@ export interface EnrichmentFormData {
 
 const MAX_GREAT_WHEN = 3;
 
+// Cannabis Act promotion rules (s.17). Founder decisions, 2026-10-07, pending
+// legal review (ACTION_ITEMS.md): facts only, and no staff quote (a testimonial).
+const CANNABIS_RULES = `This is a cannabis product. Canada's Cannabis Act limits how it may be promoted, so every field must be factual: strain type, lineage, grower and how it was grown and cured, aroma and flavour, terpenes, THC and CBD as labelled, format and size. Never describe effects or how it may make someone feel (e.g. relaxing, energetic, uplifting, "daytime high", "couch-lock"), never suggest occasions, activities or a lifestyle, and make no health claims. Leave staff_quote empty.`;
+
+const GREAT_WHEN_HINT = "Exactly 3 short phrases that complete the sentence 'Great when…', naming the situation or problem this product is for (e.g. 'you need one boot from office to bar'). Max 10 words each. Don't repeat 'Great when'. No upselling.";
+const CANNABIS_GREAT_WHEN_HINT = "Exactly 3 short factual phrases that complete the sentence 'Great when…', naming a quality a customer may be looking for (e.g. 'you want a limonene-forward sativa-dominant hybrid', 'you prefer hand-trimmed, cold-cured flower'). Max 10 words each. Don't repeat 'Great when'. No effects, moods, occasions or activities.";
+
 export async function saveEnrichmentAction(
   data: EnrichmentFormData,
 ): Promise<{ error?: string }> {
@@ -131,6 +138,7 @@ export async function generateEnrichmentAction(
   const setup = await getSpecSetup(pool, store.id, productId);
   const category = setup ? specCategoryFor(setup) : "general";
   const specFields = setup ? specFieldsFor(category) : [];
+  const cannabis = category === "cannabis";
 
   // Research the product, brand's own site first (PRD v4 §7 Step 15b). Every
   // source is numbered so the facts the model returns can cite one.
@@ -197,7 +205,7 @@ export async function generateEnrichmentAction(
           great_when: {
             type: "array",
             items: { type: "string" },
-            description: "Exactly 3 short phrases that complete the sentence 'Great when…', naming the situation or problem this product is for (e.g. 'you need one boot from office to bar'). Max 10 words each. Don't repeat 'Great when'. No upselling.",
+            description: cannabis ? CANNABIS_GREAT_WHEN_HINT : GREAT_WHEN_HINT,
           },
           facts: {
             type: "array",
@@ -237,7 +245,7 @@ export async function generateEnrichmentAction(
     tool_choice: { type: "tool", name: "submit_product_copy" },
     messages: [{
       role: "user",
-      content: `Generate SHORT, punchy in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nIMPORTANT: Keep every field brief — customers are on their phone in a store. Ground copy in the web research where provided; don't invent facts.`,
+      content: `Generate SHORT, punchy in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nIMPORTANT: Keep every field brief — customers are on their phone in a store. Ground copy in the web research where provided; don't invent facts.${cannabis ? `\n\n${CANNABIS_RULES}` : ""}`,
     }],
   });
   } catch (err: unknown) {
@@ -251,6 +259,7 @@ export async function generateEnrichmentAction(
   }
 
   const draft = toolUse.input as GeneratedDraft;
+  if (cannabis) draft.staff_quote = "";
 
   // Auto-save as ai_generated draft
   await upsertFullEnrichment(pool, {

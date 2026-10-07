@@ -76,6 +76,21 @@ describe("buildContext", () => {
   });
 });
 
+describe("cannabis (Cannabis Act promotion rules)", () => {
+  it("marks cannabis products so the cannabis rules apply, and only those", () => {
+    expect(buildContext(ctx({ category: "cannabis" }))).toContain("CATEGORY: cannabis");
+    expect(buildContext(ctx({ category: "footwear" }))).not.toContain("CATEGORY:");
+    expect(buildContext(ctx())).not.toContain("CATEGORY:");
+  });
+
+  it("tells the assistant never to describe effects, moods or occasions for cannabis", () => {
+    const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf("CATEGORY: cannabis"));
+    expect(rule).toMatch(/never describe (its )?effects/i);
+    expect(rule).toMatch(/occasions/i);
+    expect(rule).toMatch(/even if PRODUCT INFO/i);
+  });
+});
+
 describe("SYSTEM_PROMPT", () => {
   it("carries the rules the spec requires", () => {
     for (const rule of [/never (push|suggest) (an )?additional purchase|no upsell/i, /\[unanswered/, /\[stock/, /\[off_topic/, /\[price/, /\[partial/, /language the customer/i, /<<meta/, /never ask for (contact|personal)/i, /"regulated"/]) {

@@ -52,10 +52,11 @@ export async function loadProductContext(
 
   const { options, price } = variantLabels(product.variants);
   // Spec values, labelled by the product's category template (Step 15l, D51).
-  const fields = specFieldsFor(specCategoryFor({
+  const category = specCategoryFor({
     productType: product.product_type, title: product.title,
     override: product.spec_category, storeIndustry: store.industry,
-  }));
+  });
+  const fields = specFieldsFor(category);
   const valueByKey = new Map(specValues.map((v) => [v.key, v.value]));
   const specs = fields.filter((f) => valueByKey.has(f.key)).map((f) => ({ label: f.label, value: valueByKey.get(f.key)! }));
   const description = [
@@ -92,10 +93,12 @@ export async function loadProductContext(
         commonQuestions: training.common_questions ?? [],
       },
       facts: facts.map((f) => ({ topic: f.topic, fact: f.fact, sourceKind: f.source_kind })),
-      reviews: [
+      // Reviews are testimonials, which the Cannabis Act doesn't allow for cannabis.
+      reviews: category === "cannabis" ? [] : [
         ...reviews.map((r) => ({ rating: r.rating === null ? null : Number(r.rating), text: r.body })),
         ...(enrichment?.reviews ?? []).map((r) => ({ rating: r.rating, text: r.text })),
       ].filter((r) => r.text),
+      category,
       policies: policies.map((p) => ({ label: p.label, text: p.text })),
       ...(audience === "staff" ? {
         staff: {
