@@ -581,6 +581,11 @@ These were built in May 2026. The migrations number them as expansion sections Â
 - **`/offers` management**
 - **Product import:** CSV import and manual product creation
 
+**Cannabis compliance** (Cannabis Act s.17; founder decisions 2026-10-07, pending the legal review in `ACTION_ITEMS.md`). Applies to products whose spec category (Step 15l) is cannabis:
+- **No testimonials:** the tap page shows no customer reviews, ratings or staff quote (`apps/tap-page/src/cannabis.ts`); the product editor hides those sections; the assistant gets no reviews.
+- **No effects, occasions or lifestyle:** Generate writes facts only (strain, lineage, grow and cure, aroma, terpenes, potency, format) and a factual "Great whenâ€¦"; it writes no staff quote. The assistant never describes effects; asked about them, it says "We can't describe effects, but we can tell you about its strain, terpenes, THC and CBD." (`apps/tap-page/src/ask/prompt.ts`). No effects tags.
+- **Age gate:** 19+ on cannabis tap pages (in progress).
+
 ---
 
 ## 11. Where the Spec and the Code Disagree (decisions needed)

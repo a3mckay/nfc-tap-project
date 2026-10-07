@@ -26,6 +26,7 @@ import { suggestedQuestions } from "@/ask/client.js";
 import { isAutomatedVisit } from "@/link-preview-bots.js";
 import { shareMetadata } from "@/share-meta.js";
 import { NotifyMe } from "./NotifyMe.js";
+import { productCategory, withoutTestimonials } from "@/cannabis.js";
 
 interface Props {
   params: Promise<{ tag_uuid: string }>;
@@ -112,7 +113,7 @@ export default async function TapPage({ params, searchParams }: Props) {
   }
   const isPreview = view === "preview";
 
-  const [product, store, enrichment, tapCount, externalReviews, reviewAggregate, externalAwards] = await Promise.all([
+  const [product, store, rawEnrichment, tapCount, rawExternalReviews, rawReviewAggregate, externalAwards] = await Promise.all([
     getProductById(pool, state.productId),
     getStoreById(pool, state.storeId),
     getEnrichmentByProductId(pool, state.productId),
@@ -122,6 +123,9 @@ export default async function TapPage({ params, searchParams }: Props) {
     getApprovedAwardsByProduct(pool, state.productId),
   ]);
   if (!product) notFound();
+  const { enrichment, externalReviews, reviewAggregate } = withoutTestimonials(productCategory(product, store), {
+    enrichment: rawEnrichment, externalReviews: rawExternalReviews, reviewAggregate: rawReviewAggregate,
+  });
 
   const theme = (store?.theme_settings ?? {}) as Partial<ThemeSettings>;
   const cssVars = buildThemeVars(theme);

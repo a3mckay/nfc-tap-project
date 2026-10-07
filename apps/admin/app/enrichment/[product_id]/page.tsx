@@ -115,6 +115,7 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         productTitle={product.title}
         isAiGenerated={enrichment?.ai_generated ?? false}
         publicReviewsEnabled={(store as unknown as { public_reviews_enabled?: boolean })?.public_reviews_enabled ?? false}
+        hideTestimonials={!!specSetup && specCategoryFor(specSetup) === "cannabis"}
       />
 
       {specSetup && (
