@@ -66,6 +66,12 @@ describe("trainingSections", () => {
     }
   });
 
+  it("uses the category's words (e.g. a wine's), never clothing's", () => {
+    const labels = { fit: "Tasting notes", materials: "Winemaking", truth: "Style and serving truth" };
+    expect(trainingSections({ ...emptyTraining, fit_and_sizing: "Decant it" }, enrichment, labels).sections.map((s) => s.title)).toEqual(["Style and serving truth"]);
+    expect(trainingSections(null, enrichment, labels).sections.map((s) => s.title)).toEqual(["Tasting notes", "Winemaking", "Common questions"]);
+  });
+
   it("returns nothing to show when there's no content at all", () => {
     expect(trainingSections(null, null)).toEqual({ sections: [], hasOwnerNotes: false });
   });

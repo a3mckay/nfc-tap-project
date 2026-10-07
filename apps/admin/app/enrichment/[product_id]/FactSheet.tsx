@@ -23,9 +23,10 @@ interface Props {
   vendor: string | null;
   brandWebsite: { website: string; confirmed: boolean } | null;
   facts: FactRow[];
+  // Topics and examples for the product's category (docs/category-labels.md §3).
+  factCopy: { topics: string[]; defaultTopic: string; example: string; websiteExample: string };
 }
 
-const TOPICS = ["materials", "care", "fit", "sizing", "origin", "construction", "features", "other"];
 const KIND_LABEL: Record<string, string> = { brand: "Brand site", retailer: "Retailer", review: "Review", other: "Web", owner: "Your note" };
 
 const sectionStyle: React.CSSProperties = { borderTop: "1px solid #eee", paddingTop: "1.5rem", marginTop: "2rem" };
@@ -40,13 +41,15 @@ function hostOf(url: string): string {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
 
-export function FactSheet({ shop, productId, vendor, brandWebsite, facts }: Props) {
+export function FactSheet({ shop, productId, vendor, brandWebsite, facts, factCopy }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ topic: "materials", fact: "" });
-  const [newFact, setNewFact] = useState({ topic: "materials", fact: "" });
+  const [draft, setDraft] = useState({ topic: factCopy.defaultTopic, fact: "" });
+  const [newFact, setNewFact] = useState({ topic: factCopy.defaultTopic, fact: "" });
+  // A fact saved under another category's topic keeps it as an option.
+  const topicsWith = (topic: string) => (factCopy.topics.includes(topic) ? factCopy.topics : [...factCopy.topics, topic]);
   const [site, setSite] = useState(brandWebsite?.website.replace(/^https:\/\//, "") ?? "");
   const [editingSite, setEditingSite] = useState(false);
 
@@ -74,7 +77,7 @@ export function FactSheet({ shop, productId, vendor, brandWebsite, facts }: Prop
           {editingSite ? (
             <>
               <input style={{ ...inputStyle, width: "220px" }} value={site} onChange={(e) => setSite(e.target.value)}
-                placeholder="northfield.com" aria-label={`${vendor} website`} />
+                placeholder={factCopy.websiteExample} aria-label={`${vendor} website`} />
               <button type="button" style={btnStyle} disabled={isPending}
                 onClick={() => run(() => setBrandWebsiteAction(shop, productId, site), () => setEditingSite(false))}>Save</button>
               <button type="button" style={linkBtnStyle} onClick={() => setEditingSite(false)}>Cancel</button>
@@ -100,7 +103,7 @@ export function FactSheet({ shop, productId, vendor, brandWebsite, facts }: Prop
               {editing === f.id ? (
                 <div style={{ display: "flex", gap: "0.4rem", flex: 1, flexWrap: "wrap" }}>
                   <select style={inputStyle} value={draft.topic} onChange={(e) => setDraft({ ...draft, topic: e.target.value })} aria-label="Topic">
-                    {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    {topicsWith(draft.topic).map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                   <input style={{ ...inputStyle, flex: 1, minWidth: "200px" }} value={draft.fact} onChange={(e) => setDraft({ ...draft, fact: e.target.value })} aria-label="Fact" />
                   <button type="button" style={btnStyle} disabled={isPending}
@@ -130,9 +133,9 @@ export function FactSheet({ shop, productId, vendor, brandWebsite, facts }: Prop
 
       <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
         <select style={inputStyle} value={newFact.topic} onChange={(e) => setNewFact({ ...newFact, topic: e.target.value })} aria-label="New fact topic">
-          {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
+          {factCopy.topics.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
-        <input style={{ ...inputStyle, flex: 1, minWidth: "220px" }} value={newFact.fact} placeholder="Runs half a size large"
+        <input style={{ ...inputStyle, flex: 1, minWidth: "220px" }} value={newFact.fact} placeholder={factCopy.example}
           onChange={(e) => setNewFact({ ...newFact, fact: e.target.value })} aria-label="New fact" />
         <button type="button" style={btnStyle} disabled={isPending}
           onClick={() => run(() => addFactAction(shop, productId, newFact.topic, newFact.fact), () => setNewFact({ ...newFact, fact: "" }))}>Add fact</button>

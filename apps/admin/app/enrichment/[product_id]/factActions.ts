@@ -2,10 +2,10 @@
 
 // PRD v4 §7 Step 15b: corrections to the research fact sheet and the brand's
 // website. Edited and added facts survive regeneration (docs/PRD-ai-assistant.md §6.2).
-import { getPool, getProductById, updateFact, addOwnerFact, deleteFact, setBrandWebsite } from "@nfc/db";
+import { getPool, getProductById, updateFact, addOwnerFact, deleteFact, setBrandWebsite, ALL_FACT_TOPICS } from "@nfc/db";
 import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
-import { FACT_TOPICS, domainOf } from "@/lib/product-research.js";
+import { domainOf } from "@/lib/product-research.js";
 
 type Result = { error?: string };
 
@@ -14,7 +14,7 @@ const store = (shop: string) => getActionStore(pool(), shop, "content");
 const done = (productId: string): Result => { revalidatePath(`/enrichment/${productId}`); return {}; };
 
 function checkFact(topic: string, fact: string): string | null {
-  if (!(FACT_TOPICS as readonly string[]).includes(topic)) return "Unknown topic";
+  if (!ALL_FACT_TOPICS.includes(topic)) return "Unknown topic";
   if (!fact.trim()) return "Write the fact first";
   return null;
 }
@@ -56,7 +56,7 @@ export async function setBrandWebsiteAction(shop: string, productId: string, web
   const domain = /^[^\s]+\.[a-z]{2,}(\/.*)?$/i.test(raw.replace(/^https?:\/\//i, ""))
     ? domainOf(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`)
     : null;
-  if (!domain) return { error: "Enter a website like northfield.com" };
+  if (!domain) return { error: "Enter a website address, like brandname.com" };
 
   await setBrandWebsite(pool(), s.id, product.vendor, `https://${domain}`, true);
   return done(productId);

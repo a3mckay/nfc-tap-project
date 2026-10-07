@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPool, getStoreByDomain, getProductById, getProductTraining, getReviewFlags } from "@nfc/db";
+import { getPool, getStoreByDomain, getProductById, getProductTraining, getReviewFlags, getSpecSetup, specCategoryFor, copyFor } from "@nfc/db";
 import { ReviewFlags } from "../ReviewFlags.js";
 import { ProductTabs } from "@/ProductTabs.js";
 import { TrainingForm } from "../TrainingForm.js";
@@ -18,11 +18,14 @@ export default async function TrainingNotesPage({ params, searchParams }: PagePr
   const store = await getStoreByDomain(pool, shop);
   if (!store) return <main><p style={{ color: "#c00" }}>Store not found.</p></main>;
 
-  const [product, training, flags] = await Promise.all([
+  const [product, training, flags, specSetup] = await Promise.all([
     getProductById(pool, product_id),
     getProductTraining(pool, product_id, store.id),
     getReviewFlags(pool, store.id, product_id),
+    getSpecSetup(pool, store.id, product_id),
   ]);
+  // Labels and examples follow the product's category (docs/category-labels.md).
+  const copy = copyFor(specSetup ? specCategoryFor(specSetup) : "general");
   if (!product || product.store_id !== store.id) {
     return <main><p style={{ color: "#c00" }}>Product not found.</p></main>;
   }
@@ -40,6 +43,7 @@ export default async function TrainingNotesPage({ params, searchParams }: PagePr
         shop={shop}
         productId={product_id}
         aiAvailable={!!process.env.ANTHROPIC_API_KEY}
+        trainingCopy={copy.training}
         stockNoteUpdatedAt={training?.stock_note_updated_at?.toISOString() ?? null}
         initial={{
           one_line_sell: training?.one_line_sell ?? "",

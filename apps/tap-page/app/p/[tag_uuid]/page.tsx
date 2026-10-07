@@ -8,6 +8,7 @@ import {
   getApprovedAwardsByProduct, getApplicableOffer, recordOfferDelivery,
   getBrandCollectorForCustomer, getCategoryPatternForCustomer, getUntappedSameBrandProducts,
   getProductTraining, recordStaffProductView, getProductQuestionView,
+  copyFor,
   type BrandCollectorInsight, type CategoryPatternInsight, type SimilarProductSuggestion,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
@@ -28,6 +29,15 @@ import { shareMetadata } from "@/share-meta.js";
 import { NotifyMe } from "./NotifyMe.js";
 import { productCategory, withoutTestimonials, needsAgeGate, ageGateMetadata, AGE_COOKIE, CANNABIS_MIN_AGE } from "@/cannabis.js";
 import { AgeGate } from "../../AgeGate.js";
+
+// Customer-page headings in the product's category's words (docs/category-labels.md).
+function detailLabels(category: Parameters<typeof copyFor>[0]) {
+  const { fields } = copyFor(category);
+  return {
+    materials: fields.materials.label, fit: fields.fit_notes.label,
+    care: fields.care_instructions.label, sustainability: fields.sustainability_notes.label,
+  };
+}
 
 interface Props {
   params: Promise<{ tag_uuid: string }>;
@@ -97,7 +107,10 @@ export default async function TapPage({ params, searchParams }: Props) {
       getProductQuestionView(pool, state.storeId, state.productId),
     ]);
     if (!product) notFound();
-    const { sections, hasOwnerNotes } = trainingSections(training, enrichment);
+    const { fields: f, training: tr } = copyFor(productCategory(product, store));
+    const { sections, hasOwnerNotes } = trainingSections(training, enrichment, {
+      fit: f.fit_notes.label, materials: f.materials.label, truth: tr.truth.label,
+    });
     const theme = (store?.theme_settings ?? {}) as { primaryColor?: string };
     return (
       <StaffShell
@@ -207,6 +220,7 @@ export default async function TapPage({ params, searchParams }: Props) {
           brandCollector={brandCollector}
           categoryPattern={categoryPattern}
           sameBrand={sameBrand}
+          detailLabels={detailLabels(category)}
           afterKeyPoints={!isPreview && <ReactionBar tagId={state.tagId} sessionId={sessionId} primaryColor={primaryColor} customerId={customer?.id ?? null} />}
         />
         {!isPreview && <NotifyMe

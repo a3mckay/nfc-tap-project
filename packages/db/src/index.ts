@@ -54,3 +54,4 @@ export async function closePool(): Promise<void> {
     pool = undefined;
   }
 }
+export * from "./category-copy.js";

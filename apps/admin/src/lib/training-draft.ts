@@ -19,7 +19,11 @@ export interface TrainingDraftContext {
     faq: { question: string; answer: string }[];
   } | null;
   otherProducts: string[];
+  // The product's category's words (docs/category-labels.md). Defaults are clothing's.
+  labels?: { fit: string; materials: string; truth: string; truthHint: string };
 }
+
+const DEFAULT_LABELS = { fit: "Fit notes", materials: "Materials", truth: "Fit and sizing", truthHint: "Honest fit and sizing guidance." };
 
 export interface TrainingDraft {
   one_line_sell: string;
@@ -33,13 +37,13 @@ export interface TrainingDraft {
   brand_context: string;
 }
 
-const format = jsonSchemaOutputFormat({
+const formatFor = (labels: NonNullable<TrainingDraftContext["labels"]>) => jsonSchemaOutputFormat({
   type: "object",
   properties: {
     one_line_sell: { type: "string", description: "One sentence an associate says when a customer picks this up. How they'd actually say it, not marketing copy." },
     who_its_for: { type: "string", description: "2-3 customer profiles this genuinely suits, comma-separated." },
     who_its_not_for: { type: "string", description: "Honest limitations: who it isn't right for." },
-    fit_and_sizing: { type: "string", description: "Honest fit and sizing guidance. Empty string if unknown or not applicable." },
+    fit_and_sizing: { type: "string", description: `${labels.truth}: ${labels.truthHint} Empty string if unknown or not applicable.` },
     worth_the_price: { type: "array", items: { type: "string" }, description: "2-3 specific reasons it justifies its price." },
     closest_alternative: { type: "string", description: "How it compares to the closest alternative among the store's other products. Empty string if none is close." },
     common_questions: {
@@ -63,13 +67,14 @@ const format = jsonSchemaOutputFormat({
 } as const);
 
 function contextText(c: TrainingDraftContext): string {
+  const labels = c.labels ?? DEFAULT_LABELS;
   const lines = [
     `Product: ${c.title}`,
     c.vendor && `Brand: ${c.vendor}`,
     c.productType && `Type: ${c.productType}`,
     c.description && `Description: ${c.description}`,
-    c.existingCopy?.fit_notes && `Fit notes from the product page: ${c.existingCopy.fit_notes}`,
-    c.existingCopy?.materials && `Materials: ${c.existingCopy.materials}`,
+    c.existingCopy?.fit_notes && `${labels.fit} from the product page: ${c.existingCopy.fit_notes}`,
+    c.existingCopy?.materials && `${labels.materials}: ${c.existingCopy.materials}`,
     c.existingCopy?.backstory && `Backstory: ${c.existingCopy.backstory}`,
     c.existingCopy?.reasons_to_buy.length && `Reasons to buy: ${c.existingCopy.reasons_to_buy.join("; ")}`,
     c.existingCopy?.faq.length && `Customer FAQ: ${c.existingCopy.faq.map((f) => `${f.question} ${f.answer}`).join(" | ")}`,
@@ -82,7 +87,7 @@ export async function draftTraining(client: Anthropic, context: TrainingDraftCon
   const response = await client.messages.parse({
     model: TRAINING_DRAFT_MODEL,
     max_tokens: 16000,
-    output_config: { effort: "medium", format },
+    output_config: { effort: "medium", format: formatFor(context.labels ?? DEFAULT_LABELS) },
     system:
       "You help independent boutique owners write training notes for their floor staff. " +
       "Write the way an experienced associate talks to a customer: plain, honest, specific. " +

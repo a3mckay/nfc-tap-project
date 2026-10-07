@@ -31,18 +31,22 @@ interface CustomerCopy {
 const text = (title: string, value: string | null): TrainingSection[] =>
   value?.trim() ? [{ title, kind: "text", text: value.trim() }] : [];
 
+const DEFAULT_LABELS = { fit: "Fit", materials: "Materials", truth: "Fit and sizing" };
+
 // The owner's notes in the order they write them. With no notes yet, falls back
 // to the customer page's fit, materials and FAQ so staff still have something.
+// Titles use the product's category's words (docs/category-labels.md).
 export function trainingSections(
   t: TrainingFields | null,
   copy: CustomerCopy | null,
+  labels: { fit: string; materials: string; truth: string } = DEFAULT_LABELS,
 ): { sections: TrainingSection[]; hasOwnerNotes: boolean } {
   const owner: TrainingSection[] = t
     ? [
         ...text("The one-line sell", t.one_line_sell),
         ...text("Who it's for", t.who_its_for),
         ...text("Who it's not for", t.who_its_not_for),
-        ...text("Fit and sizing", t.fit_and_sizing),
+        ...text(labels.truth, t.fit_and_sizing),
         ...(t.worth_the_price.length ? [{ title: "Why it's worth the price", kind: "list" as const, items: t.worth_the_price }] : []),
         ...text("Closest alternative in the store", t.closest_alternative),
         ...(t.common_questions.length ? [{ title: "Common questions", kind: "qa" as const, items: t.common_questions }] : []),
@@ -58,8 +62,8 @@ export function trainingSections(
 
   const fallback: TrainingSection[] = copy
     ? [
-        ...text("Fit", copy.fit_notes),
-        ...text("Materials", copy.materials),
+        ...text(labels.fit, copy.fit_notes),
+        ...text(labels.materials, copy.materials),
         ...(copy.faq.length ? [{ title: "Common questions", kind: "qa" as const, items: copy.faq }] : []),
         ...text("Internal notes", copy.internal_staff_notes),
       ]
