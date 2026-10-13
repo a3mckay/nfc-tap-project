@@ -11,7 +11,8 @@
     "migrate:down": "node-pg-migrate down -m migrations -d DATABASE_URL",
     "seed:demo": "tsx seeds/demo.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:prospect": "tsx seeds/prospect.ts"
   },
   "dependencies": {
     "node-pg-migrate": "^7.6.1",

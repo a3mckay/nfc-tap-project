@@ -420,7 +420,7 @@ Covered by Steps 5–7 above.
 
 **Step 12: Demo kit & sales tooling 🟡🧍**
 - Build 3 demo store environments (sneaker, outdoor, menswear). A demo seed exists at `packages/db/seeds/demo.ts`.
-- Pre-build a page per target store
+- ✅ Pre-build a page per target store (2026-10-13): `corepack pnpm --filter @nfc/db seed:prospect seeds/prospects/<slug>.json` creates a prospect's demo store from one config file (name, category, theme, products, one tag per product, optional owner login) and prints the tag links to write to cards. Owner demos only: no made-up taps, no data sharing. Prospect files stay out of git (`packages/db/seeds/prospects/README.md`). First prospects: Miller's Shoes, Pale Blue Dot, Citizen Kid (Hamilton), DSW, Kit and Ace.
 - Write the 90-second demo script
 - Prepare the leave-behind
 - Offer: "I'll set up your first 10 products free"

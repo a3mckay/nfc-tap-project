@@ -1,0 +1,20 @@
+{
+  "slug": "millers-shoes",
+  "name": "Miller's Shoes",
+  "industry": "footwear",
+  "theme": {
+    "primaryColor": "#1f3a5f",
+    "logoUrl": "https://example.com/logo.png"
+  },
+  "owner": { "email": "owner@example.com" },
+  "products": [
+    {
+      "title": "990v6",
+      "vendor": "New Balance",
+      "productType": "Shoes",
+      "price": "259.99",
+      "imageUrl": "https://example.com/990v6.jpg",
+      "description": "Made in USA running shoe, available in wide widths."
+    }
+  ]
+}
