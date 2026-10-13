@@ -4,7 +4,8 @@ import { afterAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "crypto";
 import { seedProspect, parseProspect, type ProspectConfig } from "../seeds/prospect.js";
-import { verifyPassword } from "../src/index.js";
+import { verifyPassword, getOpenStoreClaim } from "../src/index.js";
+import { createHash } from "crypto";
 
 const connectionString = process.env.DATABASE_URL ?? "postgres://nfc:nfc@localhost:5432/nfc";
 const pool = new Pool({ connectionString });
@@ -80,5 +81,47 @@ describe("seedProspect", () => {
     expect(again.owner).toEqual({ email, created: false });
     const { rows: [product] } = await pool.query(`select variants from products where store_id = $1 and title = 'Wide Walker'`, [first.storeId]);
     expect(product.variants[0].price).toBe("199.00");
+  });
+});
+
+const urlOf = (r: Awaited<ReturnType<typeof seedProspect>>) => (r.claim?.status === "created" ? r.claim.url : undefined);
+
+describe("seedProspect without an owner email (claim links)", () => {
+  const claimSlug = `prospect-claim-${randomUUID().slice(0, 8)}`;
+  const claimConfig: ProspectConfig = { slug: claimSlug, name: "DSW", industry: "footwear", products: [{ title: "Court Vision Low" }] };
+  const opts = { adminBaseUrl: "https://admin.tapshelf.co" };
+  let firstUrl: string;
+
+  afterAll(async () => {
+    await pool.query(`delete from stores where shopify_shop_domain = $1`, [`${claimSlug}.prospect.tapshelf.co`]);
+  });
+
+  it("creates a one-time claim link for the kit, valid for 90 days", async () => {
+    const result = await seedProspect(pool, claimConfig, "https://tapshelf.store", opts);
+    expect(result.owner).toBeNull();
+    expect(result.claim).toMatchObject({ status: "created" });
+    firstUrl = urlOf(result)!;
+    expect(firstUrl).toMatch(/^https:\/\/admin\.tapshelf\.co\/login\/claim\?token=[A-Za-z0-9_-]{43}$/);
+    const token = new URL(firstUrl).searchParams.get("token")!;
+    const open = await getOpenStoreClaim(pool, createHash("sha256").update(token).digest("base64url"));
+    expect(open?.store_id).toBe(result.storeId);
+    const { rows: [c] } = await pool.query(`select expires_at - created_at > interval '89 days' as long from store_claims where store_id = $1`, [result.storeId]);
+    expect(c.long).toBe(true);
+  });
+
+  it("keeps the same link on a re-run, and issues a new one (replacing it) only when asked", async () => {
+    expect((await seedProspect(pool, claimConfig, "https://tapshelf.store", opts)).claim).toEqual({ status: "open" });
+    const renewed = await seedProspect(pool, claimConfig, "https://tapshelf.store", { ...opts, newClaim: true });
+    expect(renewed.claim?.status).toBe("created");
+    expect(urlOf(renewed)).not.toBe(firstUrl);
+    const old = new URL(firstUrl).searchParams.get("token")!;
+    expect(await getOpenStoreClaim(pool, createHash("sha256").update(old).digest("base64url"))).toBeNull();
+  });
+
+  it("makes no link once the store has an owner", async () => {
+    const { rows: [s] } = await pool.query(`select id from stores where shopify_shop_domain = $1`, [`${claimSlug}.prospect.tapshelf.co`]);
+    await pool.query(`insert into store_admins (store_id, email, password_hash) values ($1, $2, 'x')`, [s.id, `${claimSlug}@example.com`]);
+    expect((await seedProspect(pool, claimConfig, "https://tapshelf.store", { ...opts, newClaim: true })).claim).toEqual({ status: "claimed" });
+    await pool.query(`delete from store_admins where email = $1`, [`${claimSlug}@example.com`]);
   });
 });
