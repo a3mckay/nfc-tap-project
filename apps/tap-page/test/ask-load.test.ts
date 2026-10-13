@@ -20,7 +20,7 @@ const db = vi.hoisted(() => ({
   specFieldsFor: vi.fn(() => [{ key: "thc", label: "THC", hint: "" }, { key: "cbd", label: "CBD", hint: "" }]),
   getRecentQuestions: vi.fn(async () => [{ question_text: "Does it run small?", answer_text: "True to size." }]),
 }));
-vi.mock("@nfc/db", () => db);
+vi.mock("@nfc/db", async (importOriginal) => ({ copyFor: (await importOriginal<typeof import("@nfc/db")>()).copyFor, ...db }));
 
 const { loadAnswerContext } = await import("@/ask/load.js");
 
@@ -63,6 +63,12 @@ describe("loadAnswerContext", () => {
     const loaded = await loadAnswerContext({} as never, "u");
     expect(loaded!.context.category).toBe("cannabis");
     expect(loaded!.context.reviews).toEqual([]);
+  });
+
+  it("gives the assistant the category's labels", async () => {
+    db.specCategoryFor.mockReturnValueOnce("wine");
+    const loaded = await loadAnswerContext({} as never, "u");
+    expect(loaded!.context.labels).toEqual({ materials: "Winemaking", fit: "Tasting notes", care: "Serving & storage", sustainability: "Farming", truth: "Style and serving truth" });
   });
 
   it("never includes internal staff notes or the stock note", async () => {

@@ -10,6 +10,7 @@ import {
   getProductSpecs,
   getSpecSetup,
   specCategoryFor,
+  copyFor,
   SPEC_TEMPLATES,
 } from "@nfc/db";
 import { SpecsPanel } from "./SpecsPanel.js";
@@ -59,6 +60,9 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     getProductSpecs(pool, store.id, product_id),
     getSpecSetup(pool, store.id, product_id),
   ]);
+  // Labels and examples follow the product's category (docs/category-labels.md).
+  const category = specSetup ? specCategoryFor(specSetup) : "general";
+  const copy = copyFor(category);
 
   if (!product || product.store_id !== store.id) {
     return (
@@ -115,7 +119,8 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         productTitle={product.title}
         isAiGenerated={enrichment?.ai_generated ?? false}
         publicReviewsEnabled={(store as unknown as { public_reviews_enabled?: boolean })?.public_reviews_enabled ?? false}
-        hideTestimonials={!!specSetup && specCategoryFor(specSetup) === "cannabis"}
+        hideTestimonials={category === "cannabis"}
+        copy={copy}
       />
 
       {specSetup && (
@@ -134,6 +139,7 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
         productId={product_id}
         vendor={product.vendor}
         brandWebsite={brandWebsite}
+        factCopy={copy.facts}
         facts={facts.map((f) => ({
           id: f.id, topic: f.topic, fact: f.fact, source_url: f.source_url,
           source_kind: f.source_kind, owner_edited: f.owner_edited,

@@ -27,6 +27,8 @@ interface Props {
   categoryPattern: CategoryPatternInsight | null;
   sameBrand: SimilarProductSuggestion[];
   afterKeyPoints?: React.ReactNode;   // the reactions row (founder, 2026-10-05: under the key points)
+  // Headings in the product's category's words (docs/category-labels.md).
+  detailLabels: { materials: string; fit: string; care: string; sustainability: string };
 }
 
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -64,7 +66,7 @@ function FaqAccordion({ items, primaryColor }: { items: FaqItem[]; primaryColor:
   );
 }
 
-export function ProductShell({ product, theme, enrichment, tapCount, scarcityThreshold, tagUuid, storeName, isAuthenticated, externalReviews, reviewAggregate, externalAwards, offer, brandCollector, categoryPattern, sameBrand, afterKeyPoints }: Props) {
+export function ProductShell({ product, theme, enrichment, tapCount, scarcityThreshold, tagUuid, storeName, isAuthenticated, externalReviews, reviewAggregate, externalAwards, offer, brandCollector, categoryPattern, sameBrand, afterKeyPoints, detailLabels }: Props) {
   const images = product.images as ShopifyImage[];
   const variants = product.variants as ShopifyVariant[];
   const primaryImage = images[0];
@@ -262,25 +264,25 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
               )}
               {enrichment!.materials && (
                 <div>
-                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Materials</p>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>{detailLabels.materials}</p>
                   <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.materials}</p>
                 </div>
               )}
               {enrichment!.fit_notes && (
                 <div>
-                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Fit & Feel</p>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>{detailLabels.fit}</p>
                   <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.fit_notes}</p>
                 </div>
               )}
               {enrichment!.sustainability_notes && (
                 <div>
-                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Sustainability</p>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>{detailLabels.sustainability}</p>
                   <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.sustainability_notes}</p>
                 </div>
               )}
               {enrichment!.care_instructions && (
                 <div>
-                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>Care</p>
+                  <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#bbb", marginBottom: "0.35rem" }}>{detailLabels.care}</p>
                   <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.6, margin: 0 }}>{enrichment!.care_instructions}</p>
                 </div>
               )}

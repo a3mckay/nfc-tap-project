@@ -76,6 +76,21 @@ describe("buildContext", () => {
   });
 });
 
+describe("category labels (docs/category-labels.md)", () => {
+  it("names the store's copy and training notes in the category's words", () => {
+    const text = buildContext(ctx({ labels: { materials: "Winemaking", fit: "Tasting notes", care: "Serving & storage", sustainability: "Farming", truth: "Style and serving truth" },
+      training: { ...ctx().training!, fitAndSizing: "Bigger than the label suggests" } }));
+    expect(text).toContain("Winemaking: Full-grain suede");
+    expect(text).toContain("Tasting notes: True to size");
+    expect(text).toContain("Style and serving truth: Bigger than the label suggests");
+    expect(text).not.toMatch(/\bFit: |Fit and sizing: /);
+  });
+
+  it("keeps clothing's words when no labels are given", () => {
+    expect(buildContext(ctx())).toContain("Fit: True to size");
+  });
+});
+
 describe("cannabis (Cannabis Act promotion rules)", () => {
   it("marks cannabis products so the cannabis rules apply, and only those", () => {
     expect(buildContext(ctx({ category: "cannabis" }))).toContain("CATEGORY: cannabis");

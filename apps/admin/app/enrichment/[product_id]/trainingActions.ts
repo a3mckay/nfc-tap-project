@@ -3,6 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import {
   getPool, getProductById, getEnrichmentByProductId, getProductsWithStatus, saveProductTraining,
+  getSpecSetup, specCategoryFor, copyFor,
 } from "@nfc/db";
 import { getActionStore } from "@/current-store.js";
 import { normalizeTrainingForm, type TrainingFormData } from "@/training-utils.js";
@@ -40,13 +41,20 @@ export async function draftTrainingAction(
 
   if (!process.env.ANTHROPIC_API_KEY) return { error: "AI drafting isn't set up (ANTHROPIC_API_KEY is missing)" };
 
-  const [enrichment, products] = await Promise.all([
+  const [enrichment, products, specSetup] = await Promise.all([
     getEnrichmentByProductId(pool, productId),
     getProductsWithStatus(pool, store.id),
+    getSpecSetup(pool, store.id, productId),
   ]);
+  // The category's words (docs/category-labels.md), so a wine isn't drafted as a shoe.
+  const copy = copyFor(specSetup ? specCategoryFor(specSetup) : "general");
 
   try {
     const draft = await draftTraining(new Anthropic(), {
+      labels: {
+        fit: copy.fields.fit_notes.label, materials: copy.fields.materials.label,
+        truth: copy.training.truth.label, truthHint: copy.training.truth.hint,
+      },
       title: product.title,
       vendor: product.vendor,
       productType: product.product_type,

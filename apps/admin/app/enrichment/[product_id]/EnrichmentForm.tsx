@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { saveEnrichmentAction, type EnrichmentFormData } from "./actions.js";
-import type { Review, FaqItem } from "@nfc/db";
+import type { Review, FaqItem, CategoryCopy } from "@nfc/db";
 
 interface Props {
   initial: EnrichmentFormData;
@@ -10,6 +10,7 @@ interface Props {
   isAiGenerated: boolean;
   // Cannabis Act: no testimonials (founder decisions, 2026-10-07; see ACTION_ITEMS.md).
   hideTestimonials?: boolean;
+  copy: CategoryCopy;   // labels and examples for the product's category (docs/category-labels.md)
 }
 
 function AiBadge() {
@@ -45,7 +46,8 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 
 const AI_FIELDS = new Set(["backstory", "materials", "fit_notes", "reasons_to_buy_text", "great_when_text"]);
 
-export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTestimonials = false }: Props) {
+export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTestimonials = false, copy }: Props) {
+  const lines = (items: string[]) => items.join("\n");
   const [form, setForm] = useState<EnrichmentFormData>(initial);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
             <label style={labelStyle}>Product name</label>
             <input style={inputStyle} value={form.product_title}
               onChange={(e) => set("product_title", e.target.value)}
-              placeholder="e.g. Air Force 1" />
+              placeholder={copy.productNameExample} />
           </div>
         </div>
       )}
@@ -128,41 +130,41 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
         </label>
         <textarea style={taStyle} value={form.backstory}
           onChange={(e) => set("backstory", e.target.value)}
-          placeholder="Brand origin or product design story…" />
+          placeholder={copy.backstoryExample} />
       </div>
 
       <div style={fieldStyle}>
         <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          Materials & Construction
+          {copy.fields.materials.label}
           {showAiBadge("materials") && <AiBadge />}
         </label>
         <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.materials}
           onChange={(e) => set("materials", e.target.value)}
-          placeholder="Key materials, fabric weight, construction details…" />
+          placeholder={copy.fields.materials.example} />
       </div>
 
       <div style={fieldStyle}>
         <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          Fit & Feel
+          {copy.fields.fit_notes.label}
           {showAiBadge("fit_notes") && <AiBadge />}
         </label>
         <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.fit_notes}
           onChange={(e) => set("fit_notes", e.target.value)}
-          placeholder="Sizing, fit, or how to wear it…" />
+          placeholder={copy.fields.fit_notes.example} />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>Care Instructions</label>
+        <label style={labelStyle}>{copy.fields.care_instructions.label}</label>
         <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.care_instructions}
           onChange={(e) => set("care_instructions", e.target.value)}
-          placeholder="Machine wash cold, lay flat to dry…" />
+          placeholder={copy.fields.care_instructions.example} />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>Sustainability</label>
+        <label style={labelStyle}>{copy.fields.sustainability_notes.label}</label>
         <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.sustainability_notes}
           onChange={(e) => set("sustainability_notes", e.target.value)}
-          placeholder="Certified organic cotton, carbon-neutral shipping, made in Portugal…" />
+          placeholder={copy.fields.sustainability_notes.example} />
       </div>
 
       {/* Why Buy */}
@@ -173,10 +175,10 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
             Great when…
             {showAiBadge("great_when_text") && <AiBadge />}
           </label>
-          <span style={hintStyle}>The 3 key points customers see first. Name the situation it&apos;s for, one per line, finishing &ldquo;Great when…&rdquo;</span>
+          <span style={hintStyle}>{copy.greatWhenHint}</span>
           <textarea style={{ ...taStyle, minHeight: "70px" }} value={form.great_when_text}
             onChange={(e) => set("great_when_text", e.target.value)}
-            placeholder={"you need one boot from office to bar\nit's wet but not snowing\nyou hate breaking shoes in"} />
+            placeholder={lines(copy.greatWhenExample)} />
         </div>
         <div style={fieldStyle}>
           <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -186,14 +188,14 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
           <span style={hintStyle}>One reason per line (2–4 recommended)</span>
           <textarea style={taStyle} value={form.reasons_to_buy_text}
             onChange={(e) => set("reasons_to_buy_text", e.target.value)}
-            placeholder={"Ethically sourced merino\nWarm yet breathable\nLifetime repair guarantee"} />
+            placeholder={lines(copy.reasonsExample)} />
         </div>
         <div style={fieldStyle}>
           <label style={labelStyle}>Awards & Press</label>
           <span style={hintStyle}>One per line — certifications, press mentions, awards</span>
           <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.awards_text}
             onChange={(e) => set("awards_text", e.target.value)}
-            placeholder={"B Corp Certified\nAs seen in Vogue, March 2024\nSustainable Apparel Coalition member"} />
+            placeholder={lines(copy.awardsExample)} />
         </div>
       </div>
 
@@ -219,7 +221,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
         </div>
         <div style={fieldStyle}>
           <label style={labelStyle}>Extra image URLs</label>
-          <span style={hintStyle}>One URL per line — detail shots, lifestyle images, packaging</span>
+          <span style={hintStyle}>{copy.extraImagesHint}</span>
           <textarea style={taStyle} value={form.extra_images_text}
             onChange={(e) => set("extra_images_text", e.target.value)}
             placeholder={"https://cdn.example.com/detail-1.jpg\nhttps://cdn.example.com/lifestyle.jpg"} />
@@ -282,13 +284,13 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
             <div style={fieldStyle}>
               <label style={labelStyle}>Question</label>
               <input style={inputStyle} value={f.question} onChange={(e) => updateFaq(i, { question: e.target.value })}
-                placeholder="Is this suitable for cold weather?" />
+                placeholder={copy.faqExample.question} />
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Answer</label>
               <textarea style={{ ...taStyle, minHeight: "60px" }} value={f.answer}
                 onChange={(e) => updateFaq(i, { answer: e.target.value })}
-                placeholder="Yes — the merino wool retains warmth even when damp…" />
+                placeholder={copy.faqExample.answer} />
             </div>
           </div>
         ))}
@@ -303,13 +305,13 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
             <label style={labelStyle}>Staff quote</label>
             <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.staff_quote}
               onChange={(e) => set("staff_quote", e.target.value)}
-              placeholder='"This is my go-to piece every winter."' />
+              placeholder={copy.staffQuoteExample} />
           </div>
           <div style={fieldStyle}>
             <label style={labelStyle}>Staff name & role</label>
             <input style={inputStyle} value={form.staff_name}
               onChange={(e) => set("staff_name", e.target.value)}
-              placeholder="Alex, Senior Stylist" />
+              placeholder={copy.staffNameExample} />
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "1rem", alignItems: "center", marginBottom: "1.25rem" }}>
@@ -334,7 +336,7 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
           <span style={hintStyle}>Not shown to customers</span>
           <textarea style={{ ...taStyle, minHeight: "60px" }} value={form.internal_staff_notes}
             onChange={(e) => set("internal_staff_notes", e.target.value)}
-            placeholder="Fragile clasp — handle with care when demonstrating…" />
+            placeholder={copy.internalNotesExample} />
         </div>
       </div>
 

@@ -114,6 +114,9 @@ The PRD flags two documents that need external legal review before launch:
 - **Terms of Service** — disclosing the aggregated data use (the data intelligence layer)
 PIPEDA compliance (Canada) is a hard requirement per the PRD. Do not launch without legal sign-off.
 
+### Alcohol marketing review (before selling to wine, beer or spirits stores)
+Generate now follows these rules for wine, beer and spirits (founder, 2026-10-07): describe taste, food pairings, serving, gifting and cellaring; never mood or effects ("after a long day"), social or personal success, drinking more, or activities that need care (driving, boating, sports). Ask the lawyer whether that matches provincial liquor advertising rules (AGCO in Ontario) and whether "Great when you're bringing a bottle to dinner"-style occasions are fine.
+
 ### Cannabis marketing review (before selling to cannabis stores)
 Licensed stores are covered by the Cannabis Act's promotion rules (s.17): no testimonials or endorsements, no lifestyle associations, and online promotion only where minors are reasonably kept out. Provinces add their own rules (AGCO in Ontario, AGLC in Alberta). Founder decisions, 2026-10-07, for the lawyer to confirm:
 - **No customer reviews or staff quotes** on cannabis products (testimonials).

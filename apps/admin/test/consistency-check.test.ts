@@ -19,6 +19,17 @@ describe("describeProductNotes", () => {
     expect(text).toContain("Research fact (materials): Synthetic leather upper");
     expect(text).not.toContain("backstory");
   });
+
+  it("names the notes in the product's category's words (e.g. a wine's), so its findings do too", () => {
+    const text = describeProductNotes({
+      ...notes,
+      labels: { fit: "Tasting notes", materials: "Winemaking", care: "Serving & storage", truth: "Style and serving truth" },
+    });
+    expect(text).toContain("Customer copy – tasting notes: Runs true to size");
+    expect(text).toContain("Customer copy – winemaking: Full-grain leather");
+    expect(text).toContain("Staff training – style and serving truth: Fits larger");
+    expect(text).not.toMatch(/fit notes|fit and sizing/);
+  });
 });
 
 describe("runConsistencyCheck", () => {

@@ -2,7 +2,7 @@
 
 import {
   getPool, upsertFullEnrichment, getProductById, updateManualProduct, getBrandWebsite, setBrandWebsite,
-  replaceResearchedFacts, saveReviewFlags, getSpecSetup, saveResearchedSpecs, specCategoryFor, specFieldsFor,
+  replaceResearchedFacts, saveReviewFlags, getSpecSetup, saveResearchedSpecs, specCategoryFor, specFieldsFor, copyFor,
   type Review, type FaqItem,
 } from "@nfc/db";
 import { checkProductNotes } from "@/lib/check-product.js";
@@ -15,7 +15,7 @@ import {
 import Anthropic from "@anthropic-ai/sdk";
 import { braveSearch } from "../../../lib/public-reviews/search.js";
 import {
-  findBrandDomain, researchProduct, sourcesForPrompt, factsFromModel, specsFromModel, fetchPageText, FACT_TOPICS,
+  findBrandDomain, researchProduct, sourcesForPrompt, factsFromModel, specsFromModel, fetchPageText,
   type ResearchDeps, type ResearchSource,
 } from "@/lib/product-research.js";
 
@@ -48,6 +48,11 @@ const MAX_GREAT_WHEN = 3;
 // Cannabis Act promotion rules (s.17). Founder decisions, 2026-10-07, pending
 // legal review (ACTION_ITEMS.md): facts only, and no staff quote (a testimonial).
 const CANNABIS_RULES = `This is a cannabis product. Canada's Cannabis Act limits how it may be promoted, so every field must be factual: strain type, lineage, grower and how it was grown and cured, aroma and flavour, terpenes, THC and CBD as labelled, format and size. Never describe effects or how it may make someone feel (e.g. relaxing, energetic, uplifting, "daytime high", "couch-lock"), never suggest occasions, activities or a lifestyle, and make no health claims. Leave staff_quote empty.`;
+
+// Canadian alcohol marketing rules (founder 2026-10-07, pending legal review).
+const ALCOHOL_RULES = `This is an alcoholic drink. Canadian alcohol advertising rules apply: describe taste, food pairings, serving and gifting. Never suggest it changes mood or relieves stress, brings social, sexual or professional success, or encourages drinking more, and never link it to driving, sports or other activities that need care.`;
+const ALCOHOL_GREAT_WHEN_HINT = "Exactly 3 short phrases that complete the sentence 'Great when…', naming a taste, food or moment it suits (e.g. 'you're cooking a slow braise', 'you want a red with depth under $30'). Max 10 words each. Don't repeat 'Great when'. No moods, effects, success or drinking more.";
+const isAlcohol = (category: string) => category === "wine" || category === "beer" || category === "spirits";
 
 const GREAT_WHEN_HINT = "Exactly 3 short phrases that complete the sentence 'Great when…', naming the situation or problem this product is for (e.g. 'you need one boot from office to bar'). Max 10 words each. Don't repeat 'Great when'. No upselling.";
 const CANNABIS_GREAT_WHEN_HINT = "Exactly 3 short factual phrases that complete the sentence 'Great when…', naming a quality a customer may be looking for (e.g. 'you want a limonene-forward sativa-dominant hybrid', 'you prefer hand-trimmed, cold-cured flower'). Max 10 words each. Don't repeat 'Great when'. No effects, moods, occasions or activities.";
@@ -139,6 +144,9 @@ export async function generateEnrichmentAction(
   const category = setup ? specCategoryFor(setup) : "general";
   const specFields = setup ? specFieldsFor(category) : [];
   const cannabis = category === "cannabis";
+  const alcohol = isAlcohol(category);
+  const copy = copyFor(category);   // the category's words for each field (docs/category-labels.md)
+  const fieldHint = (key: keyof typeof copy.fields) => `${copy.fields[key].label}: ${copy.fields[key].instruction}`;
 
   // Research the product, brand's own site first (PRD v4 §7 Step 15b). Every
   // source is numbered so the facts the model returns can cite one.
@@ -183,10 +191,10 @@ export async function generateEnrichmentAction(
         type: "object" as const,
         properties: {
           backstory: { type: "string", description: "1-2 sentences max. Brand origin or what makes this specific product special. Be concrete, not vague." },
-          materials: { type: "string", description: "One sentence. Key material(s) and one standout construction detail. No padding." },
-          fit_notes: { type: "string", description: "One sentence on sizing, fit, or styling. Empty string if not clothing/footwear/accessories." },
-          care_instructions: { type: "string", description: "One plain sentence, e.g. 'Machine wash cold, reshape and air dry.'" },
-          sustainability_notes: { type: "string", description: "One sentence if genuinely applicable. Empty string if nothing meaningful is known." },
+          materials: { type: "string", description: fieldHint("materials") },
+          fit_notes: { type: "string", description: fieldHint("fit_notes") },
+          care_instructions: { type: "string", description: fieldHint("care_instructions") },
+          sustainability_notes: { type: "string", description: fieldHint("sustainability_notes") },
           reasons_to_buy: { type: "array", items: { type: "string" }, description: "3-4 bullet points, max 7 words each. Each must be a specific, different reason." },
           staff_quote: { type: "string", description: "One punchy first-person sentence a real staff member might say. No clichés." },
           video_url: { type: "string", description: `YouTube URL for a brand or product video. Use this URL if it looks relevant: ${youtubeUrl || "(none found)"}. Otherwise leave empty string.` },
@@ -205,14 +213,14 @@ export async function generateEnrichmentAction(
           great_when: {
             type: "array",
             items: { type: "string" },
-            description: cannabis ? CANNABIS_GREAT_WHEN_HINT : GREAT_WHEN_HINT,
+            description: cannabis ? CANNABIS_GREAT_WHEN_HINT : alcohol ? ALCOHOL_GREAT_WHEN_HINT : GREAT_WHEN_HINT,
           },
           facts: {
             type: "array",
             items: {
               type: "object",
               properties: {
-                topic: { type: "string", enum: [...FACT_TOPICS] },
+                topic: { type: "string", enum: [...copy.facts.topics] },
                 fact: { type: "string", description: "One specific, checkable fact about this exact product, in a short sentence." },
                 source: { type: "integer", description: "The number of the source this fact comes from." },
               },
@@ -245,7 +253,7 @@ export async function generateEnrichmentAction(
     tool_choice: { type: "tool", name: "submit_product_copy" },
     messages: [{
       role: "user",
-      content: `Generate SHORT, punchy in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nIMPORTANT: Keep every field brief — customers are on their phone in a store. Ground copy in the web research where provided; don't invent facts.${cannabis ? `\n\n${CANNABIS_RULES}` : ""}`,
+      content: `Generate SHORT, punchy in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nIMPORTANT: Keep every field brief — customers are on their phone in a store. Ground copy in the web research where provided; don't invent facts.${cannabis ? `\n\n${CANNABIS_RULES}` : ""}${alcohol ? `\n\n${ALCOHOL_RULES}` : ""}`,
     }],
   });
   } catch (err: unknown) {
@@ -286,7 +294,7 @@ export async function generateEnrichmentAction(
   // Only a run that actually researched replaces the fact sheet; the owner's
   // edited and added facts are always kept.
   if (sources.length > 0) {
-    await replaceResearchedFacts(pool, store.id, productId, factsFromModel(draft.facts ?? [], sources));
+    await replaceResearchedFacts(pool, store.id, productId, factsFromModel(draft.facts ?? [], sources, copy.facts.topics));
     await saveReviewFlags(pool, store.id, productId, "mismatch", draft.mismatches ?? []);   // D50
     await saveResearchedSpecs(pool, store.id, productId, specsFromModel(draft.specs ?? [], sources, specFields.map((f) => f.key)));   // D51
   }

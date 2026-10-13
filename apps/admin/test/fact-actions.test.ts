@@ -9,6 +9,7 @@ const db = vi.hoisted(() => ({
   addOwnerFact: vi.fn(async () => true),
   deleteFact: vi.fn(async () => true),
   setBrandWebsite: vi.fn(async () => {}),
+  ALL_FACT_TOPICS: ["materials", "care", "fit", "winemaking", "terpenes", "other"],
 }));
 const getActionStore = vi.hoisted(() => vi.fn());
 vi.mock("@nfc/db", () => db);
@@ -46,6 +47,10 @@ describe("fact sheet actions", () => {
     expect(db.deleteFact).toHaveBeenCalledWith(expect.anything(), "store-1", "f-1");
   });
 
+  it("accepts any category's topic (e.g. a wine's), so facts survive a category change", async () => {
+    expect(await addFactAction("own.myshopify.com", "p-1", "winemaking", "Aged in oak")).toEqual({});
+  });
+
   it("rejects empty facts and unknown topics", async () => {
     expect(await addFactAction("own.myshopify.com", "p-1", "fit", "   ")).toEqual({ error: "Write the fact first" });
     expect(await addFactAction("own.myshopify.com", "p-1", "vibes", "x")).toEqual({ error: "Unknown topic" });
@@ -65,7 +70,7 @@ describe("setBrandWebsiteAction", () => {
   });
 
   it("rejects something that isn't a website, and products without a brand", async () => {
-    expect(await setBrandWebsiteAction("own.myshopify.com", "p-1", "not a site")).toEqual({ error: "Enter a website like northfield.com" });
+    expect(await setBrandWebsiteAction("own.myshopify.com", "p-1", "not a site")).toEqual({ error: "Enter a website address, like brandname.com" });
     db.getProductById.mockResolvedValue({ id: "p-1", store_id: "store-1", vendor: null });
     expect(await setBrandWebsiteAction("own.myshopify.com", "p-1", "northfield.com")).toEqual({ error: "This product has no brand" });
     expect(db.setBrandWebsite).not.toHaveBeenCalled();

@@ -6,6 +6,7 @@ import { GenerateButton } from "./GenerateButton.js";
 import { EnrichmentForm } from "./EnrichmentForm.js";
 import { PublicSearchButton } from "./PublicSearchButton.js";
 import type { EnrichmentFormData, GeneratedDraft } from "./actions.js";
+import type { CategoryCopy } from "@nfc/db";
 
 interface Props {
   shop: string;
@@ -15,6 +16,7 @@ interface Props {
   isAiGenerated: boolean;
   publicReviewsEnabled: boolean;
   hideTestimonials: boolean;   // cannabis products (Cannabis Act)
+  copy: CategoryCopy;           // labels and examples for the product's category
 }
 
 const SHIMMER_CSS = `
@@ -32,6 +34,7 @@ export function EnrichmentPageClient({
   isAiGenerated,
   publicReviewsEnabled,
   hideTestimonials,
+  copy,
 }: Props) {
   const router = useRouter();
   const [formData, setFormData] = useState<EnrichmentFormData>(initial);
@@ -142,6 +145,7 @@ export function EnrichmentPageClient({
         productTitle={productTitle}
         isAiGenerated={isAiGenerated || formKey > 0}
         hideTestimonials={hideTestimonials}
+        copy={copy}
       />
     </>
   );
