@@ -387,6 +387,17 @@ export const SCHEMA_SPEC: TableSpec[] = [
       { name: "updated_at", type: "timestamp", nullable: false },
     ],
   },
+  {
+    name: "store_claims",
+    columns: [
+      { name: "token_hash", type: "text", nullable: false },
+      { name: "store_id", type: "uuid", nullable: false },
+      { name: "expires_at", type: "timestamp", nullable: false },
+      { name: "used_at", type: "timestamp", nullable: true },
+      { name: "created_at", type: "timestamp", nullable: false },
+    ],
+  },
+
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {

@@ -9,12 +9,16 @@
  */
 
 import { Pool } from "pg";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { readFileSync, writeFileSync } from "fs";
 import { pathToFileURL } from "url";
 import { assignTagToProduct, getTagsByStore, provisionTags } from "../src/tags.js";
 import { createStoreAdmin, getStoreAdminByEmail } from "../src/store-admins.js";
 import { SPEC_CATEGORIES } from "../src/spec-templates.js";
+import { createStoreClaim, hasOpenStoreClaim } from "../src/store-claims.js";
+
+// A kit's claim link lasts long enough to be mailed and opened.
+export const CLAIM_TTL_DAYS = 90;
 
 export interface ProspectProduct {
   title: string;
@@ -38,6 +42,14 @@ export interface ProspectResult {
   storeId: string;
   tags: Array<{ title: string; url: string }>;
   owner: { email: string; created: boolean; password?: string } | null;
+  // Without an owner email: the one-time link that lets the prospect set up
+  // their own login (shown once, when created).
+  claim?: { status: "created"; url: string } | { status: "open" } | { status: "claimed" };
+}
+
+export interface SeedOptions {
+  adminBaseUrl?: string;
+  newClaim?: boolean;   // replace an unused claim link (e.g. a lost card)
 }
 
 const fail = (msg: string): never => { throw new Error(`Prospect config: ${msg}`); };
@@ -70,7 +82,7 @@ export function parseProspect(raw: unknown): ProspectConfig {
 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const productKey = (title: string) => `prospect-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
 
-export async function seedProspect(pool: Pool, config: ProspectConfig, tapBaseUrl: string): Promise<ProspectResult> {
+export async function seedProspect(pool: Pool, config: ProspectConfig, tapBaseUrl: string, opts: SeedOptions = {}): Promise<ProspectResult> {
   const domain = `${config.slug}.prospect.tapshelf.co`;
   const { rows: [store] } = await pool.query<{ id: string }>(
     `insert into stores (shopify_shop_domain, shopify_access_token, platform, name, industry, theme_settings, data_sharing_opted_in)
@@ -128,16 +140,35 @@ export async function seedProspect(pool: Pool, config: ProspectConfig, tapBaseUr
     }
   }
 
-  return { storeId: store.id, tags, owner };
+  let claim: ProspectResult["claim"];
+  if (!config.owner) {
+    const { rows } = await pool.query(`select 1 from store_admins where store_id = $1`, [store.id]);
+    if (rows.length > 0) {
+      claim = { status: "claimed" };
+    } else if (!opts.newClaim && (await hasOpenStoreClaim(pool, store.id))) {
+      claim = { status: "open" };
+    } else {
+      // Same token format and hash as the admin's sign-in links (SHA-256, base64url).
+      const token = randomBytes(32).toString("base64url");
+      await createStoreClaim(pool, store.id, createHash("sha256").update(token).digest("base64url"), CLAIM_TTL_DAYS);
+      const base = (opts.adminBaseUrl ?? "https://admin.tapshelf.co").replace(/\/+$/, "");
+      claim = { status: "created", url: `${base}/login/claim?token=${token}` };
+    }
+  }
+
+  return { storeId: store.id, tags, owner, ...(claim ? { claim } : {}) };
 }
 
 async function main() {
-  const file = process.argv[2];
-  if (!file) throw new Error("Usage: seed:prospect seeds/prospects/<slug>.json");
+  const file = process.argv.slice(2).find((a) => !a.startsWith("--"));
+  const newClaim = process.argv.includes("--new-claim");
+  if (!file) throw new Error("Usage: seed:prospect seeds/prospects/<slug>.json [--new-claim]");
   const config = parseProspect(JSON.parse(readFileSync(file, "utf8")));
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
-    const result = await seedProspect(pool, config, process.env.TAP_PAGE_URL ?? "https://tapshelf.store");
+    const result = await seedProspect(pool, config, process.env.TAP_PAGE_URL ?? "https://tapshelf.store", {
+      adminBaseUrl: process.env.ADMIN_URL, newClaim,
+    });
     const csv = ["product,url", ...result.tags.map((t) => `"${t.title.replace(/"/g, '""')}",${t.url}`)].join("\n");
     const csvFile = file.replace(/\.json$/, ".tags.csv");
     writeFileSync(csvFile, `${csv}\n`);
@@ -146,6 +177,13 @@ async function main() {
     console.log(`Admin: https://admin.tapshelf.co/?shop=${config.slug}.prospect.tapshelf.co`);
     if (result.owner?.created) console.log(`Owner login: ${result.owner.email} / ${result.owner.password}  (shown once; put it in the kit)`);
     else if (result.owner) console.log(`Owner login: ${result.owner.email} (already set up; password unchanged)`);
+    if (result.claim?.status === "created") {
+      console.log(`Claim link (shown once; print it as a QR code in the kit; works once, for ${CLAIM_TTL_DAYS} days):\n  ${result.claim.url}`);
+    } else if (result.claim?.status === "open") {
+      console.log(`Claim link: already created and not used yet. Lost it? Re-run with --new-claim (the old one stops working).`);
+    } else if (result.claim?.status === "claimed") {
+      console.log(`Claim link: used. The store's owner has set up their login.`);
+    }
     console.log(`\nWrite these to the tags (also saved to ${csvFile}):`);
     for (const t of result.tags) console.log(`  ${t.title}: ${t.url}`);
     console.log(`\nNext: open each product in the admin, click Generate, and review the copy.`);

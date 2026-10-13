@@ -55,3 +55,4 @@ export async function closePool(): Promise<void> {
   }
 }
 export * from "./category-copy.js";
+export * from "./store-claims.js";
