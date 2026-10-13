@@ -10,3 +10,9 @@ coverage/
 .turbo/
 *.tsbuildinfo
 .claude/
+
+# Sales prospect configs and their tag lists (names, emails): kept out of git.
+# Only the example is committed. See packages/db/seeds/prospects/README.md.
+packages/db/seeds/prospects/*
+!packages/db/seeds/prospects/example.json
+!packages/db/seeds/prospects/README.md
