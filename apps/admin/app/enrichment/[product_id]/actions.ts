@@ -15,7 +15,7 @@ import {
 import Anthropic from "@anthropic-ai/sdk";
 import { braveSearch } from "../../../lib/public-reviews/search.js";
 import {
-  findBrandDomain, researchProduct, sourcesForPrompt, factsFromModel, specsFromModel, fetchPageText,
+  findBrandDomain, researchProduct, sourcesForPrompt, factsFromModel, specsFromModel, fetchPageText, videoFor,
   type ResearchDeps, type ResearchSource,
 } from "@/lib/product-research.js";
 
@@ -166,7 +166,9 @@ export async function generateEnrichmentAction(
   // Research the product, brand's own site first (PRD v4 §7 Step 15b). Every
   // source is numbered so the facts the model returns can cite one.
   let webContext = "";
-  let youtubeUrl = "";
+  let video: { url: string; title: string } | null = null;
+  // No videos for cannabis: video is where lifestyle content creeps in (Cannabis Act).
+  const wantsVideo = category !== "cannabis";
   let sources: ResearchSource[] = [];
   // A vintage piece with no maker has nothing to search for (founder, 2026-10-13).
   const nothingToResearch = category === "vintage" && !product.vendor;
@@ -181,16 +183,14 @@ export async function generateEnrichmentAction(
       const query = [product.vendor, product.title].filter(Boolean).join(" ");
       const [found, ytResults] = await Promise.all([
         researchProduct(product, brand?.domain ?? null, category, deps),
-        braveSearch(`${query} site:youtube.com`, 3),
+        wantsVideo ? braveSearch(`${query} site:youtube.com`, 3) : Promise.resolve([]),
       ]);
       sources = found;
       if (sources.length > 0) {
         webContext = "\n\nNumbered sources about this product. Brand sources are the most trusted; ground your copy in them and don't invent facts:\n" +
           sourcesForPrompt(sources);
       }
-      // Find the first proper YouTube watch URL
-      const ytMatch = ytResults.find((r) => r.url.includes("youtube.com/watch"));
-      if (ytMatch) youtubeUrl = ytMatch.url;
+      video = videoFor(ytResults, product.vendor);
     } catch {
       // Search failed — proceed without web context
     }
@@ -214,7 +214,9 @@ export async function generateEnrichmentAction(
           sustainability_notes: { type: "string", description: fieldHint("sustainability_notes") },
           reasons_to_buy: { type: "array", items: { type: "string" }, description: "3-4 bullet points, max 7 words each. Each must be a specific, different reason." },
           staff_quote: { type: "string", description: "One punchy first-person sentence a real staff member might say. No clichés." },
-          video_url: { type: "string", description: `YouTube URL for a brand or product video. Use this URL if it looks relevant: ${youtubeUrl || "(none found)"}. Otherwise leave empty string.` },
+          video_url: { type: "string", description: video
+            ? `A YouTube video found for this product, titled "${video.title}": ${video.url}. Use this URL only if the title shows it's about this product or brand; otherwise leave empty string.`
+            : "No video was found: leave empty string." },
           faq: {
             type: "array",
             items: {
@@ -285,6 +287,8 @@ export async function generateEnrichmentAction(
 
   const draft = toolUse.input as GeneratedDraft;
   if (cannabis) draft.staff_quote = "";
+  // Only the video that was offered: never a link the model made up.
+  if (draft.video_url !== video?.url) draft.video_url = "";
 
   // Auto-save as ai_generated draft
   await upsertFullEnrichment(pool, {

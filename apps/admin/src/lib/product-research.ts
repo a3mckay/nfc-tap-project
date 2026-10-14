@@ -246,3 +246,13 @@ export function specsFromModel(
     return source && value && keys.has(s.key) ? [{ key: s.key, value, source_url: source.url, source_kind: source.kind }] : [];
   });
 }
+
+// Generate's product video: the first YouTube watch page whose title or
+// description names the brand. A search for "Kit and Ace Down Filled Cord
+// Bomber" once returned a "Bomber Crew" game guide first. Null without a brand.
+export function videoFor(hits: SearchHit[], vendor: string | null): { url: string; title: string } | null {
+  const brand = compact(vendor ?? "");
+  if (!brand) return null;
+  const hit = hits.find((h) => h.url.includes("youtube.com/watch") && compact(`${h.title} ${h.description}`).includes(brand));
+  return hit ? { url: hit.url, title: hit.title } : null;
+}

@@ -10,6 +10,7 @@ import {
   htmlToText,
   factsFromModel,
   isFetchableUrl,
+  videoFor,
   type ResearchDeps,
 } from "../src/lib/product-research.js";
 
@@ -222,5 +223,26 @@ describe("specsFromModel (Step 15l)", async () => {
     ], sources, ["thc", "cbd", "size"])).toEqual([
       { key: "thc", value: "22–26%", source_url: "https://carmel.ca/animal-face", source_kind: "brand" },
     ]);
+  });
+});
+
+describe("videoFor (Generate's product video)", () => {
+  const yt = (url: string, title: string, description = "") => ({ url, title, description });
+
+  it("takes only a video that names the brand (founder report: a 'Bomber Crew' game guide on the Cord Bomber)", () => {
+    const hits = [
+      yt("https://www.youtube.com/watch?v=WY9u_XuP_zs", "20 TIPS AND TRICKS TO ACE BOMBER CREW / How to Play"),
+      yt("https://www.youtube.com/watch?v=abc123", "Kit and Ace | Down Filled Cord Bomber, Fall 2026"),
+    ];
+    expect(videoFor(hits, "Kit and Ace")).toEqual({ url: "https://www.youtube.com/watch?v=abc123", title: "Kit and Ace | Down Filled Cord Bomber, Fall 2026" });
+  });
+
+  it("offers nothing when no video names the brand, or there's no brand", () => {
+    expect(videoFor([yt("https://www.youtube.com/watch?v=WY9u_XuP_zs", "20 TIPS AND TRICKS TO ACE BOMBER CREW")], "Kit and Ace")).toBeNull();
+    expect(videoFor([yt("https://www.youtube.com/watch?v=abc123", "Cord Bomber review")], null)).toBeNull();
+  });
+
+  it("takes only YouTube watch pages", () => {
+    expect(videoFor([yt("https://www.youtube.com/@kitandace", "Kit and Ace channel")], "Kit and Ace")).toBeNull();
   });
 });
