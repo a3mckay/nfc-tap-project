@@ -1,4 +1,4 @@
-# Toys and vintage categories (founder-approved 2026-10-13; not built yet)
+# Toys and vintage categories (founder-approved and built 2026-10-13)
 
 Two new spec categories, for Citizen Kid (ethical toys) and The Pale Blue Dot (antiques and vintage). They plug into the approved category system (`docs/category-labels.md`): same stored fields, their own words everywhere.
 

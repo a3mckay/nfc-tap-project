@@ -54,6 +54,21 @@ const ALCOHOL_RULES = `This is an alcoholic drink. Canadian alcohol advertising 
 const ALCOHOL_GREAT_WHEN_HINT = "Exactly 3 short phrases that complete the sentence 'Great when…', naming a taste, food or moment it suits (e.g. 'you're cooking a slow braise', 'you want a red with depth under $30'). Max 10 words each. Don't repeat 'Great when'. No moods, effects, success or drinking more.";
 const isAlcohol = (category: string) => category === "wine" || category === "beer" || category === "spirits";
 
+// Canadian cosmetic rules (docs/category-beauty.md, founder-approved 2026-10-13).
+const BEAUTY_RULES = `This is a cosmetic. In Canada a product that claims to treat or change the body is a drug, not a cosmetic, so describe appearance and feel only (e.g. "skin looks smoother", "reduces the look of fine lines", "feels hydrated"). Never claim it heals, treats acne, repairs the skin barrier, boosts collagen, is anti-inflammatory or reverses ageing. Say hypoallergenic, non-comedogenic, dermatologist tested, clinically proven, safe for sensitive skin, vegan or cruelty-free only when a source states it. Give SPF only as stated on the product, and ingredients only as the brand lists them.`;
+
+// Toys (docs/category-toys-vintage.md, founder-approved 2026-10-13).
+const TOY_RULES = `This is a toy. Write to the adult buyer, never to the child. Give the age range and any safety information only as the packaging or sources state them, and never invent a certification or a safety claim. Make no developmental or health claims (e.g. "boosts brain development", "makes kids smarter").`;
+
+// Vintage: one-of-a-kind pieces, written from the owner's notes.
+const VINTAGE_RULES = `This is a one-of-a-kind vintage or antique piece. Write from the store's description; any research is about the maker, not this exact piece. Never invent an era, maker, provenance or condition, and never state its value or investment potential. "One of a kind" is a fact: no urgency ("won't last", "grab it before it's gone").`;
+
+// The extra rules each regulated or special category gets.
+const CATEGORY_RULES: Partial<Record<string, string>> = {
+  cannabis: CANNABIS_RULES, wine: ALCOHOL_RULES, beer: ALCOHOL_RULES, spirits: ALCOHOL_RULES,
+  beauty: BEAUTY_RULES, toys: TOY_RULES, vintage: VINTAGE_RULES,
+};
+
 const GREAT_WHEN_HINT = "Exactly 3 short phrases that complete the sentence 'Great when…', naming the situation or problem this product is for (e.g. 'you need one boot from office to bar'). Max 10 words each. Don't repeat 'Great when'. No upselling.";
 const CANNABIS_GREAT_WHEN_HINT = "Exactly 3 short factual phrases that complete the sentence 'Great when…', naming a quality a customer may be looking for (e.g. 'you want a limonene-forward sativa-dominant hybrid', 'you prefer hand-trimmed, cold-cured flower'). Max 10 words each. Don't repeat 'Great when'. No effects, moods, occasions or activities.";
 
@@ -153,7 +168,9 @@ export async function generateEnrichmentAction(
   let webContext = "";
   let youtubeUrl = "";
   let sources: ResearchSource[] = [];
-  if (process.env.BRAVE_SEARCH_API_KEY) {
+  // A vintage piece with no maker has nothing to search for (founder, 2026-10-13).
+  const nothingToResearch = category === "vintage" && !product.vendor;
+  if (process.env.BRAVE_SEARCH_API_KEY && !nothingToResearch) {
     const deps: ResearchDeps = { search: braveSearch, fetchText: fetchPageText };
     try {
       const known = product.vendor ? await getBrandWebsite(pool, store.id, product.vendor) : null;
@@ -253,7 +270,7 @@ export async function generateEnrichmentAction(
     tool_choice: { type: "tool", name: "submit_product_copy" },
     messages: [{
       role: "user",
-      content: `Generate SHORT, punchy in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nIMPORTANT: Keep every field brief — customers are on their phone in a store. Ground copy in the web research where provided; don't invent facts.${cannabis ? `\n\n${CANNABIS_RULES}` : ""}${alcohol ? `\n\n${ALCOHOL_RULES}` : ""}`,
+      content: `Generate SHORT, punchy in-store NFC tap page copy for this retail product:\n\n${productContext}${webContext}\n\nIMPORTANT: Keep every field brief — customers are on their phone in a store. Ground copy in the web research where provided; don't invent facts.${CATEGORY_RULES[category] ? `\n\n${CATEGORY_RULES[category]}` : ""}`,
     }],
   });
   } catch (err: unknown) {

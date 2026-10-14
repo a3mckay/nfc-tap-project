@@ -68,6 +68,32 @@ export const SPEC_TEMPLATES = {
     f("care", "Care", "e.g. machine wash warm"),
     f("certifications", "Certifications", "e.g. OEKO-TEX Standard 100"),
   ],
+  // docs/category-beauty.md (founder-approved 2026-10-13)
+  beauty: [
+    f("shade", "Shade", "e.g. 03 Warm Beige, or the shade range"),
+    f("finish", "Finish", "e.g. matte, satin, dewy"),
+    f("skin_type", "Skin type", "As the brand states it, e.g. all, oily, sensitive"),
+    f("key_ingredients", "Key ingredients", "e.g. hyaluronic acid, niacinamide"),
+    f("free_from", "Free from", "As the brand states it, e.g. fragrance-free, vegan"),
+    f("size", "Size", "e.g. 30 ml"),
+  ],
+  // docs/category-toys-vintage.md (founder-approved 2026-10-13)
+  toys: [
+    f("ages", "Ages", "As on the packaging, e.g. 3+"),
+    f("safety", "Safety", "As on the packaging, e.g. no small parts"),
+    f("materials", "Materials", "e.g. FSC beech, water-based paint"),
+    f("batteries", "Batteries", "e.g. none, or 2 × AA included"),
+    f("origin", "Made in", "Country of manufacture"),
+    f("dimensions", "Dimensions", "Size of the toy or box"),
+  ],
+  vintage: [
+    f("era", "Era", "e.g. 1960s"),
+    f("maker", "Maker", "e.g. Dansk, or unmarked"),
+    f("materials", "Materials", "e.g. teak, brass"),
+    f("condition", "Condition", "e.g. very good; light wear on the base"),
+    f("dimensions", "Dimensions", "e.g. 30 × 20 cm"),
+    f("provenance", "Provenance", "Where it came from, if known"),
+  ],
   general: [
     f("material", "Material", "What it's made of"),
     f("dimensions", "Dimensions", "Size or capacity"),
@@ -80,14 +106,19 @@ export const SPEC_CATEGORIES = Object.keys(SPEC_TEMPLATES) as SpecCategory[];
 
 const isCategory = (c: string | null | undefined): c is SpecCategory => !!c && c in SPEC_TEMPLATES;
 
-// First match wins, so more specific words come first.
+// First match wins, so more specific words come first. Cannabis comes first (a
+// CBD face oil is a cannabis product in Canada), then beauty and vintage, so
+// "Rose Gold Highlighter" isn't a wine and "Top Coat" isn't clothing.
 const KEYWORDS: Array<[SpecCategory, RegExp]> = [
   ["cannabis", /\b(cannabis|flower|pre-?rolls?|indica|sativa|thc|cbd|vape cart\w*)\b/i],
+  ["beauty", /\b(make-?up|cosmetics?|beauty|lipsticks?|lip ?(gloss|liner|tint|balm|oil|cream|stain)s?|mascaras?|foundations?|concealers?|blush(es)?|bronzers?|highlighters?|eye ?shadows?|eyeliners?|brow (gel|pencil|pomade)|nail (polish|lacquer)|top coat|base coat|serums?|moisturi[sz]ers?|cleansers?|toners?|sunscreens?|spf|skin ?care|face (mask|oil|wash|cream|mist)s?|perfumes?|eau de (parfum|toilette)|colognes?|shampoos?|conditioners?|hair (oil|mask|serum)s?|body (lotion|wash|butter|oil|mist)s?)\b/i],
+  ["vintage", /\b(vintage|antiques?|retro|mid-?century)\b/i],
   ["eyewear", /\b(sunglass\w*|eyewear|glasses|frames?)\b/i],
   ["footwear", /\b(shoes?|sneakers?|boots?|loafers?|sandals?|trainers?|footwear|chukka)\b/i],
-  ["wine", /\b(wine|champagne|prosecco|ripasso|amarone|cabernet|merlot|pinot|chardonnay|riesling|ros[eé])\b/i],
+  ["wine", /\b(wine|champagne|prosecco|ripasso|amarone|cabernet|merlot|pinot|chardonnay|riesling)\b|ros\u00e9/i],
   ["beer", /\b(beer|ipa|lager|ale|stout|pilsner|cider)\b/i],
   ["spirits", /\b(whisk(e)?y|vodka|gin|rum|tequila|mezcal|bourbon|brandy|cognac|spirits?|liqueur)\b/i],
+  ["toys", /\b(toys?|puzzles?|jigsaw|blocks|plush(ies)?|stuffed animals?|dolls?|teddy|rattles?|teethers?|stacker|play ?sets?|wooden train)\b/i],
   ["home", /\b(bedding|duvet|sheets?|pillow\w*|blanket|throw|towel|furniture|lamp|rug|candle|home)\b/i],
   ["apparel", /\b(shirt|t-?shirt|top|tee|dress|skirt|pants?|trousers|jeans|jacket|coat|sweater|knit|hoodie|clothing|apparel|crewneck|cardigan)\b/i],
 ];
@@ -98,6 +129,12 @@ export function specCategoryFor(p: { productType: string | null; title: string; 
   for (const [category, re] of KEYWORDS) if (re.test(text)) return category;
   return isCategory(p.storeIndustry) ? p.storeIndustry : "general";
 }
+
+// Display names, for the category pickers in the admin.
+export const CATEGORY_NAMES: Record<SpecCategory, string> = {
+  apparel: "Apparel", footwear: "Footwear", eyewear: "Eyewear", beauty: "Beauty", cannabis: "Cannabis", wine: "Wine",
+  beer: "Beer", spirits: "Spirits", toys: "Toys", vintage: "Vintage", home: "Home", general: "General",
+};
 
 export function specFieldsFor(category: SpecCategory): SpecField[] {
   return SPEC_TEMPLATES[category];

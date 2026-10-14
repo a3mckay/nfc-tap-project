@@ -315,6 +315,111 @@ const home: CategoryCopy = {
   },
 };
 
+// docs/category-beauty.md (founder-approved 2026-10-13). Canadian cosmetic
+// rules: appearance and feel only, never treatment.
+const beauty: CategoryCopy = {
+  productNameExample: "e.g. Soft Matte Lip Cream, 03",
+  backstoryExample: "The brand and what makes this formula different…",
+  fields: {
+    materials: f("Key ingredients", "Hyaluronic acid and squalane; fragrance-free…", "One sentence on the key ingredients, as the brand lists them. Never invent an ingredient."),
+    fit_notes: f("Shade & finish", "Buildable sheer-to-medium coverage, satin finish; 24 shades…", "One sentence on shade range, coverage and finish, as the sources state them."),
+    care_instructions: f("How to use", "Apply with fingertips or a damp sponge; layer under SPF…", "One plain sentence on how to apply or use it."),
+    sustainability_notes: f("Sustainability & ethics", "Leaping Bunny certified; refillable compact…", "One sentence on certifications (vegan, cruelty-free) or packaging, only if a source states them. Empty string if nothing meaningful is known."),
+  },
+  greatWhenExample: ["you want a matte lip that doesn't dry out", "you have oily skin and want it to last", "you want one shade from day to night"],
+  greatWhenHint: GREAT_WHEN_HINT,
+  reasonsExample: ["24 shades", "Fragrance-free", "Vegan and cruelty-free"],
+  awardsExample: ["Allure Best of Beauty 2025"],
+  faqExample: { question: "Is it fragrance-free?", answer: "Yes, no added fragrance." },
+  staffNameExample: "Jess, Makeup artist",
+  staffQuoteExample: "\"The only matte lip I re-apply once a day.\"",
+  internalNotesExample: "Testers are in the drawer; swap them every month…",
+  extraImagesHint: "One URL per line — swatches, texture shots, packaging",
+  facts: { topics: ["ingredients", "shade", "finish", "skin type", "how to use", "free-from", "certifications", "size", "other"], defaultTopic: "ingredients", example: "Fragrance-free and vegan", websiteExample: "glossier.com" },
+  training: {
+    oneLineSellExample: "The matte lip we recommend to people who hate how drying most mattes are.",
+    whoItsForExample: "People who want a long-lasting lip, makeup minimalists, gift buyers.",
+    whoItsNotForExample: "Not for anyone after a high-shine gloss.",
+    truth: { label: "Shade and longevity truth", hint: "The honest version, not the box version.", example: "Runs warm: most customers go one shade lighter. Lasts about 4 hours, not 8." },
+    worthExample: ["One coat covers; the tube lasts months.", "Doesn't settle into lip lines.", "Shade range covers deep skin tones properly."],
+    closestAlternativeExample: "Like the Velvet Lip but less drying, with fewer shades.",
+    questionExample: { question: "Will it transfer onto a mask or cup?", answer: "A little in the first 10 minutes, then it sets." },
+    companionExample: "Customers often add the matching lip liner.",
+    brandExample: "Founded by a makeup artist; every shade is tested on a range of skin tones…",
+    stockNoteExample: "Shade 03 sold out; restock due next week.",
+  },
+};
+
+// docs/category-toys-vintage.md (founder-approved 2026-10-13). Toys: written to
+// the adult buyer; ages and safety only as the packaging states them.
+const toys: CategoryCopy = {
+  productNameExample: "e.g. Wooden Stacking Blocks",
+  backstoryExample: "Who makes it, and why…",
+  fields: {
+    materials: f("Materials & safety", "Solid beech, water-based paints; no small parts…", "One sentence on materials and safety, only as the packaging or sources state them. Never invent a certification or safety claim."),
+    fit_notes: f("Ages & play", "Best for ages 3–6; open-ended building…", "One sentence on the age range (as on the packaging) and how it's played with. No developmental or health claims."),
+    care_instructions: f("Care", "Wipe with a damp cloth; don't soak…", "One plain sentence on cleaning and care."),
+    sustainability_notes: f("Who made it", "Hand-knit by a women's cooperative in Peru…", "One sentence on who made it and how, only if a source states it. Empty string if nothing meaningful is known."),
+  },
+  greatWhenExample: ["you want a toy with no batteries", "you're buying for a 3-year-old who loves building", "you want a gift that lasts past the toddler years"],
+  greatWhenHint: GREAT_WHEN_HINT,
+  reasonsExample: ["No batteries, no screens", "Made from natural materials", "Built to be handed down"],
+  awardsExample: ["Canadian Toy Testing Council: Three Star Award 2025"],
+  faqExample: { question: "What age is it for?", answer: "3 and up: no small parts." },
+  staffNameExample: "Rebecca, Owner",
+  staffQuoteExample: "\"The toy my kids still play with five years later.\"",
+  internalNotesExample: "Display set is missing one block; sell from the boxed stock…",
+  extraImagesHint: "One URL per line — the toy, the box, a close-up of the materials",
+  facts: { topics: ["ages", "safety", "materials", "made-by", "play", "care", "other"], defaultTopic: "ages", example: "Ages 3+, no small parts", websiteExample: "plantoys.com" },
+  training: {
+    oneLineSellExample: "The toy we recommend when parents want something with no batteries that lasts.",
+    whoItsForExample: "Toddlers who love building, parents avoiding plastic, gift buyers.",
+    whoItsNotForExample: "Not for under-3s; not for kids who want electronic toys.",
+    truth: { label: "Age and durability truth", hint: "The honest version, not the box version.", example: "Says 3+, but the pieces are fiddly; best from 4." },
+    worthExample: ["Solid wood survives years of play.", "Non-toxic paints.", "Grows with the child: more ways to play at 5 than at 3."],
+    closestAlternativeExample: "Like the rainbow stacker, but more pieces and more open-ended.",
+    questionExample: { question: "Is the paint safe if they chew it?", answer: "It's water-based and non-toxic, per the maker; check the box." },
+    companionExample: "Parents often add the matching storage bag.",
+    brandExample: "Made in Thailand from rubberwood trees that no longer produce latex…",
+    stockNoteExample: "Two boxed sets left; more arriving in two weeks.",
+  },
+};
+
+// Vintage: one-of-a-kind pieces. Written from the owner's notes; never invents
+// an era, maker, provenance, condition or value.
+const vintage: CategoryCopy = {
+  productNameExample: "e.g. Teak Sideboard, 1960s",
+  backstoryExample: "The piece's story: where it's from and why you love it…",
+  fields: {
+    materials: f("Materials & maker", "Teak and brass; Danish, maker unmarked…", "One sentence on materials and maker, only as the owner or sources state them."),
+    fit_notes: f("Size & condition", "30 × 20 cm; light scuffs on the base, no chips…", "One sentence on dimensions and condition, only as the owner states them."),
+    care_instructions: f("Care", "Dust with a soft cloth; oil the teak once a year…", "One plain sentence on care."),
+    sustainability_notes: f("Provenance", "From a Dundas estate; one owner since 1968…", "One sentence on where it came from, only if the owner states it. Empty string if unknown."),
+  },
+  greatWhenExample: ["you're furnishing with one-of-a-kind pieces", "you love mid-century design", "you'd rather buy old than new"],
+  greatWhenHint: GREAT_WHEN_HINT,
+  reasonsExample: ["One of a kind", "Solid teak", "Original finish"],
+  awardsExample: ["Featured in Hamilton Magazine, 2025"],
+  faqExample: { question: "Is it the original finish?", answer: "Yes, never refinished." },
+  staffNameExample: "Sam, Owner",
+  staffQuoteExample: "\"The piece I almost kept for myself.\"",
+  internalNotesExample: "Price is firm; the matching chair is in the cave…",
+  extraImagesHint: "One URL per line — every side, any marks or maker's stamp, close-ups of the condition",
+  facts: { topics: ["era", "maker", "materials", "condition", "provenance", "dimensions", "other"], defaultTopic: "era", example: "Stamped \"Made in Denmark\" underneath", websiteExample: "dansk.com" },
+  training: {
+    oneLineSellExample: "A genuine 1960s Danish piece in original condition, and the only one we have.",
+    whoItsForExample: "Mid-century collectors, people furnishing a first home with character.",
+    whoItsNotForExample: "Not for anyone who wants a perfect, as-new finish.",
+    truth: { label: "Condition truth", hint: "Every mark, before the customer finds it.", example: "Small chip on the lid; point it out before they ask." },
+    worthExample: ["Solid teak, not veneer.", "Original hardware.", "Built to last another 60 years."],
+    closestAlternativeExample: "The walnut cabinet upstairs is newer, with more storage.",
+    questionExample: { question: "Can you hold it for me?", answer: "We can hold it for 48 hours with a deposit." },
+    companionExample: "The matching side table is in the cave.",
+    brandExample: "Sourced from estates around Hamilton and the Niagara region…",
+    stockNoteExample: "On hold for a customer until Friday.",
+  },
+};
+
 const general: CategoryCopy = {
   productNameExample: "e.g. Product name",
   backstoryExample: "Brand origin or product story…",
@@ -348,7 +453,7 @@ const general: CategoryCopy = {
   },
 };
 
-export const CATEGORY_COPY: Record<SpecCategory, CategoryCopy> = { apparel, footwear, eyewear, cannabis, wine, beer, spirits, home, general };
+export const CATEGORY_COPY: Record<SpecCategory, CategoryCopy> = { apparel, footwear, eyewear, beauty, cannabis, wine, beer, spirits, toys, vintage, home, general };
 
 export function copyFor(category: SpecCategory): CategoryCopy {
   return CATEGORY_COPY[category];

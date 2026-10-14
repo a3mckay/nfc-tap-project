@@ -91,6 +91,31 @@ describe("category labels (docs/category-labels.md)", () => {
   });
 });
 
+describe("beauty, toys and vintage rules (docs/category-beauty.md, docs/category-toys-vintage.md)", () => {
+  it("marks those categories so their rules apply", () => {
+    for (const c of ["beauty", "toys", "vintage"]) expect(buildContext(ctx({ category: c }))).toContain(`CATEGORY: ${c}`);
+  });
+
+  it("beauty: appearance and feel only; allergy, skin and sun questions are regulated; no shade guessing", () => {
+    const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: beauty"'));
+    expect(rule).toMatch(/appearance and feel only/i);
+    expect(rule).toMatch(/allerg/i);
+    expect(rule).toMatch(/shade/i);
+  });
+
+  it("toys: ages and safety only as stated, and regulated", () => {
+    const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: toys"'));
+    expect(rule).toMatch(/ages and safety/i);
+    expect(rule).toMatch(/"regulated": true/);
+  });
+
+  it("vintage: never states value, never invents era or maker", () => {
+    const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: vintage"'));
+    expect(rule).toMatch(/value/i);
+    expect(rule).toMatch(/era/i);
+  });
+});
+
 describe("cannabis (Cannabis Act promotion rules)", () => {
   it("marks cannabis products so the cannabis rules apply, and only those", () => {
     expect(buildContext(ctx({ category: "cannabis" }))).toContain("CATEGORY: cannabis");

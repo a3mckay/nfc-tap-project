@@ -186,6 +186,38 @@ describe("category words (docs/category-labels.md)", () => {
     expect(request.tools[0].input_schema.properties.great_when.description).toMatch(/taste, food/);
   });
 
+  it("gives beauty Canada's cosmetic rules: appearance and feel only, never treatment", async () => {
+    db.specCategoryFor.mockReturnValue("beauty");
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    const prompt = JSON.stringify(create.mock.calls[0]![0].messages);
+    expect(prompt).toMatch(/appearance/i);
+    expect(prompt).toMatch(/treats acne/i);
+    expect(prompt).toMatch(/hypoallergenic/i);
+  });
+
+  it("gives toys the child-safety rules: written to the adult, ages and safety only as stated", async () => {
+    db.specCategoryFor.mockReturnValue("toys");
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    const prompt = JSON.stringify(create.mock.calls[0]![0].messages);
+    expect(prompt).toMatch(/adult/i);
+    expect(prompt).toMatch(/packaging/i);
+  });
+
+  it("skips web research for a vintage piece with no maker, and writes from the owner's notes", async () => {
+    db.specCategoryFor.mockReturnValue("vintage");
+    db.getProductById.mockResolvedValue({ id: "p-1", store_id: "store-1", title: "Teak Sideboard", vendor: null, product_type: "Vintage", description_html: "<p>1960s, Danish</p>" });
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(braveSearch).not.toHaveBeenCalled();
+    expect(JSON.stringify(create.mock.calls[0]![0].messages)).toMatch(/never invent an era/i);
+  });
+
+  it("researches a vintage piece's maker when the owner sets one", async () => {
+    db.specCategoryFor.mockReturnValue("vintage");
+    db.getProductById.mockResolvedValue({ id: "p-1", store_id: "store-1", title: "Teak Sideboard", vendor: "Dansk", product_type: "Vintage", description_html: null });
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(braveSearch).toHaveBeenCalled();
+  });
+
   it("gives other categories neither the alcohol nor the cannabis rules", async () => {
     await generateEnrichmentAction("own.myshopify.com", "p-1");
     expect(JSON.stringify(create.mock.calls[0]![0].messages)).not.toMatch(/alcohol|cannabis/i);
