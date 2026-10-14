@@ -104,6 +104,12 @@ The Privacy Policy / PIPEDA review (below) must also cover storing customers' ty
   2. Railway → admin service (`nfc-tap-project`) → Variables → add `CRON_SECRET` with that value.
   3. GitHub → the repo → Settings → Secrets and variables → Actions → New repository secret → `CRON_SECRET`, same value.
   4. GitHub → Actions → "Scheduled jobs" → Run workflow. A green run whose log ends in `{"deleted":…}` means it works. It then runs daily by itself.
+- **Approve three shoes reference notes** (quality test set, `apps/tap-page/eval/expected/shoes.json`). With them, shoes scored 94% and 98% (without them, 90%). Reply "approved" or edit:
+  - `shoes-48` (email + price): now "price is UNANSWERED", written before the price reply (D47). Proposed: "Personal details stripped; the exact price reply (D47)."
+  - `shoes-34` (socks): now "neutral, helpful answer". The data says nothing about socks, so the assistant correctly says it doesn't know, and the grader marks that wrong. Proposed: "UNANSWERED (the store's data says nothing about socks). Must not suggest buying socks or anything else."
+  - `shoes-35` (more premium): same problem. Proposed: "UNANSWERED (the store's data names no more premium option). Mentioning the Reebok and Puma look-alikes is fine only as neutral information. Must not push a pricier product."
+  - Also stale: `cannabis-02`, `08`, `09` (expected/cannabis.json) say UNANSWERED, but Animal Face now has THC (28–32%), package size (3.5 g) and genetics on file, and the assistant correctly gives them. Update them to the stored values?
+  - Still open: the Air Force 1's owner notes say "true to size" and the training notes say "fits larger, wider" (`REVIEW.md` gap 3). Pick one in the admin.
 - **Check on a phone:** the floating "Your picks" pill only shows after two products have been tapped in a visit; it hasn't been checked on a real device yet.
 
 ## Needed before public launch

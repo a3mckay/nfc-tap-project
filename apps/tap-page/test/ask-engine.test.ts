@@ -137,6 +137,21 @@ describe("SYSTEM_PROMPT", () => {
       expect(SYSTEM_PROMPT).toMatch(rule);
     }
   });
+
+  // Tuning from the shoes test set (Step 15d, 2026-10-13).
+  it("answers 'should I buy two?' as the customer's choice, with no reasons to buy more", () => {
+    expect(SYSTEM_PROMPT).toMatch(/customer's choice/i);
+    expect(SYSTEM_PROMPT).toMatch(/owning several/i);
+  });
+
+  it("gives the store's general sizing for another brand's size, never a conversion", () => {
+    expect(SYSTEM_PROMPT).toMatch(/another brand's size/i);
+    expect(SYSTEM_PROMPT).toMatch(/never convert/i);
+  });
+
+  it("bans the model's own 'our product information doesn't say' wording", () => {
+    expect(SYSTEM_PROMPT).toMatch(/"our product information doesn't say/i);
+  });
 });
 
 describe("MetaSplitter", () => {
