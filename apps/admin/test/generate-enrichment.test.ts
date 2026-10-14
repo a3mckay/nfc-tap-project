@@ -224,6 +224,38 @@ describe("category words (docs/category-labels.md)", () => {
   });
 });
 
+describe("product video", () => {
+  afterEach(() => {
+    db.specCategoryFor.mockReturnValue("footwear");
+  });
+
+  it("offers the AI a brand video with its title, and saves only that link", async () => {
+    braveSearch.mockImplementation(async (q: string) =>
+      q.includes("site:youtube.com") ? [{ url: "https://www.youtube.com/watch?v=nf1", title: "Northfield Weekend Chukka | Made in Portugal", description: "" }] : []);
+    create.mockResolvedValue(modelOutput({ video_url: "https://www.youtube.com/watch?v=nf1" }));
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(create.mock.calls[0]![0].tools[0].input_schema.properties.video_url.description).toContain("Northfield Weekend Chukka | Made in Portugal");
+    expect(db.upsertFullEnrichment).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ video_url: "https://www.youtube.com/watch?v=nf1" }));
+  });
+
+  it("saves no video when none names the brand, even if the AI returns one", async () => {
+    braveSearch.mockImplementation(async (q: string) =>
+      q.includes("site:youtube.com") ? [{ url: "https://www.youtube.com/watch?v=WY9u_XuP_zs", title: "20 TIPS AND TRICKS TO ACE BOMBER CREW", description: "" }] : []);
+    create.mockResolvedValue(modelOutput({ video_url: "https://www.youtube.com/watch?v=WY9u_XuP_zs" }));
+    const { draft } = await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(draft?.video_url).toBe("");
+    expect(db.upsertFullEnrichment).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ video_url: null }));
+  });
+
+  it("never looks for or saves a video for cannabis (no lifestyle content)", async () => {
+    db.specCategoryFor.mockReturnValue("cannabis");
+    create.mockResolvedValue(modelOutput({ video_url: "https://www.youtube.com/watch?v=x" }));
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(braveSearch).not.toHaveBeenCalledWith(expect.stringContaining("site:youtube.com"), expect.anything());
+    expect(db.upsertFullEnrichment).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ video_url: null }));
+  });
+});
+
 describe("saveEnrichmentAction", () => {
   it("saves Great when… one per line, at most three", async () => {
     await saveEnrichmentAction({
