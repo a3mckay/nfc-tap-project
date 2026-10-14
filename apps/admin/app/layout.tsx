@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { AdminSession } from "../src/admin-auth.js";
 import { StoreSwitcher } from "../src/StoreSwitcher.js";
+import { switcherStores } from "../src/store-switch.js";
 import { AdminNav } from "../src/AdminNav.js";
 import "./admin-shell.css";
 import { getAdminSession, getCurrentAdminSession } from "../src/current-store.js";
@@ -79,7 +80,7 @@ async function Sidebar({ session }: { session: AdminSession | null }) {
           </div>
         ) : s ? (
           <Suspense>
-            <StoreSwitcher currentShop={s} stores={stores} />
+            <StoreSwitcher currentShop={s} stores={switcherStores(stores)} />
           </Suspense>
         ) : (
           <Link href="/stores" style={{ ...linkStyle, padding: "0.875rem 1.25rem", fontWeight: 500 }}>

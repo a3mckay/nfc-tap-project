@@ -1,22 +1,18 @@
 "use client";
 
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-
-interface StoreOption {
-  shopify_shop_domain: string;
-}
+import { storeSwitchUrl, type SwitcherStore } from "./store-switch.js";
 
 export function StoreSwitcher({
   currentShop,
   stores,
 }: {
   currentShop: string;
-  stores: StoreOption[];
+  stores: SwitcherStore[];
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -28,15 +24,14 @@ export function StoreSwitcher({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // A full page load, not a client-side push: the sidebar (store name and every
+  // menu link) is drawn by the layout, which a push doesn't redraw.
   function switchTo(domain: string) {
     setOpen(false);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("shop", domain);
-    // Stay on same section, swap the shop
-    const onStorePage = pathname === "/stores" || !pathname.startsWith("/");
-    router.push(onStorePage ? `/products?shop=${domain}` : `${pathname}?${params.toString()}`);
+    window.location.assign(storeSwitchUrl(pathname, searchParams.toString(), domain));
   }
 
+  const nameOf = (domain: string) => stores.find((s) => s.shopify_shop_domain === domain)?.name || domain;
   const others = stores.filter((s) => s.shopify_shop_domain !== currentShop);
 
   return (
@@ -53,7 +48,7 @@ export function StoreSwitcher({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: "0.62rem", color: "#aaa", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "1px" }}>Store</p>
           <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {currentShop}
+            {nameOf(currentShop)}
           </p>
         </div>
         <span style={{ fontSize: "0.65rem", color: "#bbb", flexShrink: 0 }}>{open ? "▴" : "▾"}</span>
@@ -69,7 +64,7 @@ export function StoreSwitcher({
           {/* Current store */}
           <div style={{ padding: "0.6rem 0.875rem", background: "#f9f9f9", borderBottom: "1px solid #eee" }}>
             <p style={{ fontSize: "0.68rem", color: "#aaa", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>Current</p>
-            <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentShop}</p>
+            <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nameOf(currentShop)}</p>
           </div>
 
           {/* Other stores */}
@@ -92,7 +87,7 @@ export function StoreSwitcher({
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                 >
-                  {s.shopify_shop_domain}
+                  {s.name || s.shopify_shop_domain}
                 </button>
               ))}
             </div>
@@ -102,7 +97,7 @@ export function StoreSwitcher({
           <div>
             <button
               type="button"
-              onClick={() => { setOpen(false); router.push("/stores"); }}
+              onClick={() => { setOpen(false); window.location.assign("/stores"); }}
               style={{
                 display: "block", width: "100%", textAlign: "left",
                 padding: "0.5rem 0.875rem", background: "none", border: "none",
@@ -115,7 +110,7 @@ export function StoreSwitcher({
             </button>
             <button
               type="button"
-              onClick={() => { setOpen(false); router.push("/stores?add=1"); }}
+              onClick={() => { setOpen(false); window.location.assign("/stores?add=1"); }}
               style={{
                 display: "block", width: "100%", textAlign: "left",
                 padding: "0.5rem 0.875rem", background: "none",
