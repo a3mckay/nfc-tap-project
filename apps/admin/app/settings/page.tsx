@@ -1,4 +1,4 @@
-import { getPool, getStoreByDomain } from "@nfc/db";
+import { getPool, getStoreByDomain, CATEGORY_NAMES } from "@nfc/db";
 import { ConsentToggle } from "./ConsentToggle.js";
 import { PlatformPicker } from "./PlatformPicker.js";
 import { IndustryPicker } from "./IndustryPicker.js";
@@ -64,7 +64,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
         <p style={{ fontSize: "0.875rem", color: "#555", marginBottom: "1rem", lineHeight: 1.5 }}>
           Decides which product specs (like THC % or alcohol %) we ask for when a product&apos;s type doesn&apos;t make it clear.
         </p>
-        <IndustryPicker shop={shop} initial={store.industry ?? ""} />
+        <IndustryPicker shop={shop} initial={store.industry ?? ""} names={CATEGORY_NAMES} />
       </section>
 
       <section>

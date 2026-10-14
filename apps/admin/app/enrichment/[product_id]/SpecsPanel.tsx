@@ -18,13 +18,10 @@ interface Props {
   detected: string;
   override: string | null;
   templates: Record<string, Field[]>;
+  names: Record<string, string>;   // category display names (CATEGORY_NAMES)
   specs: Spec[];
 }
 
-const LABEL: Record<string, string> = {
-  cannabis: "Cannabis", wine: "Wine", beer: "Beer", spirits: "Spirits", eyewear: "Eyewear",
-  footwear: "Footwear", apparel: "Apparel", home: "Home", general: "General",
-};
 const KIND: Record<string, string> = { brand: "Brand site", retailer: "Retailer", review: "Review", other: "Web", owner: "Your entry" };
 const inputStyle: React.CSSProperties = { padding: "0.4rem 0.5rem", border: "1px solid #ddd", borderRadius: "4px", fontSize: "0.88rem", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 
@@ -32,7 +29,7 @@ function hostOf(url: string): string {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
 
-export function SpecsPanel({ shop, productId, detected, override, templates, specs }: Props) {
+export function SpecsPanel({ shop, productId, detected, override, templates, names, specs }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [choice, setChoice] = useState<string>(override ?? "");
@@ -71,8 +68,8 @@ export function SpecsPanel({ shop, productId, detected, override, templates, spe
       <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.85rem", color: "#444", marginBottom: "1rem" }}>
         Category
         <select value={choice} onChange={(e) => { setChoice(e.target.value); setSaved(false); }} style={{ ...inputStyle, width: "auto" }}>
-          <option value="">Automatic ({LABEL[detected] ?? detected})</option>
-          {Object.keys(templates).map((c) => <option key={c} value={c}>{LABEL[c] ?? c}</option>)}
+          <option value="">Automatic ({names[detected] ?? detected})</option>
+          {Object.keys(templates).map((c) => <option key={c} value={c}>{names[c] ?? c}</option>)}
         </select>
       </label>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.85rem" }}>

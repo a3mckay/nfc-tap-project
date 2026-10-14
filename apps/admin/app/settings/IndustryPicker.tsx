@@ -4,12 +4,9 @@
 import { useState, useTransition } from "react";
 import { setIndustryAction } from "./actions.js";
 
-const OPTIONS: Array<[string, string]> = [
-  ["", "Mixed / not set"], ["apparel", "Apparel"], ["footwear", "Footwear"], ["eyewear", "Eyewear"],
-  ["home", "Home"], ["wine", "Wine"], ["beer", "Beer"], ["spirits", "Spirits"], ["cannabis", "Cannabis"],
-];
-
-export function IndustryPicker({ shop, initial }: { shop: string; initial: string }) {
+// `names` comes from CATEGORY_NAMES (this runs in the browser, so it can't import @nfc/db).
+export function IndustryPicker({ shop, initial, names }: { shop: string; initial: string; names: Record<string, string> }) {
+  const options: Array<[string, string]> = [["", "Mixed / not set"], ...Object.entries(names).filter(([c]) => c !== "general")];
   const [value, setValue] = useState(initial);
   const [status, setStatus] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -25,7 +22,7 @@ export function IndustryPicker({ shop, initial }: { shop: string; initial: strin
           });
         }}
         style={{ padding: "0.45rem 0.6rem", border: "1px solid #ddd", borderRadius: "4px", fontSize: "0.9rem", fontFamily: "inherit" }}>
-        {OPTIONS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        {options.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
       </select>
       {status && <span style={{ fontSize: "0.82rem", color: status === "Saved" ? "#15803d" : "#c00" }}>{status}</span>}
     </div>

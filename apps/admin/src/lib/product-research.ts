@@ -54,6 +54,9 @@ const CATEGORY_SEARCH: Record<SpecCategory, { word: string; match: RegExp | null
   footwear: { word: "shoes", match: /shoe|boot|sneaker|footwear/i, research: "materials features review" },
   apparel: { word: "clothing", match: /cloth|apparel|wear|fashion/i, research: "materials features review" },
   home: { word: "home", match: /home|furniture|decor|bedding|linen/i, research: "materials features review" },
+  beauty: { word: "beauty", match: /beauty|cosmetic|makeup|make-up|skin|fragrance|hair/i, research: "ingredients review" },
+  toys: { word: "toys", match: /toy|play|kids|children|baby/i, research: "toy review ages" },
+  vintage: { word: "", match: null, research: "maker history" },   // the maker, if the owner sets one
   general: { word: "", match: null, research: "materials features review" },
 };
 

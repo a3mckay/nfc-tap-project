@@ -12,6 +12,7 @@ import {
   specCategoryFor,
   copyFor,
   SPEC_TEMPLATES,
+  CATEGORY_NAMES,
 } from "@nfc/db";
 import { SpecsPanel } from "./SpecsPanel.js";
 import { ReviewFlags } from "./ReviewFlags.js";
@@ -130,6 +131,7 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
           detected={specCategoryFor({ ...specSetup, override: null })}
           override={specSetup.override}
           templates={SPEC_TEMPLATES}
+          names={CATEGORY_NAMES}
           specs={specs.map((x) => ({ key: x.key, value: x.value, source_url: x.source_url, source_kind: x.source_kind }))}
         />
       )}
