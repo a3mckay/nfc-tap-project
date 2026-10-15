@@ -92,6 +92,20 @@ Things we consciously deferred during the build, with enough context to pick the
 
 ---
 
+## Product categories
+
+### "Frame" means eyewear everywhere
+**File:** `packages/db/src/spec-templates.ts`
+**What exists:** the eyewear words include "frame", so "Cold Frame" (garden) and "Picture Frame" (home) are filed as eyewear.
+**Why deferred:** found while adding garden centres (2026-10-15); no live product is affected and owners can pick a category per product.
+**What's needed:** count "frame" as eyewear only with an eyewear word nearby (e.g. "acetate frame", "optical frame"), or in an eyewear store.
+
+### No garden questions in the AI quality test set
+**Files:** `apps/tap-page/eval/`
+**What exists:** the 350-question set covers shoes, cannabis, wine, womenswear, sunglasses, menswear and home. Beauty, toys, vintage, plants and garden care have rule tests but no graded questions.
+**Why deferred:** no garden centre's catalog yet to write questions from.
+**What's needed:** 50 questions per new category from a real store's products, especially pets and kids, "will it survive?" and pest control use questions, before a garden centre goes live.
+
 ## Email
 
 ### Admin notifications have their own Resend call
