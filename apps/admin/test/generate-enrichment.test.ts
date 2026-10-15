@@ -218,6 +218,26 @@ describe("category words (docs/category-labels.md)", () => {
     expect(braveSearch).toHaveBeenCalled();
   });
 
+  it("gives plants the garden rules: no promises, pets and kids only from a named source, no health claims (docs/category-garden.md)", async () => {
+    db.specCategoryFor.mockReturnValue("plants");
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    const prompt = JSON.stringify(create.mock.calls[0]![0].messages);
+    expect(prompt).toMatch(/zone system/i);
+    expect(prompt).toMatch(/never promise/i);
+    expect(prompt).toMatch(/ASPCA/);
+    expect(prompt).toMatch(/edible/i);
+    expect(prompt).toMatch(/health/i);
+  });
+
+  it("gives garden care the label rules: pest control never 'safe' or 'non-toxic'", async () => {
+    db.specCategoryFor.mockReturnValue("garden_care");
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    const prompt = JSON.stringify(create.mock.calls[0]![0].messages);
+    expect(prompt).toMatch(/label/i);
+    expect(prompt).toMatch(/non-toxic/i);
+    expect(prompt).toMatch(/N-P-K/);
+  });
+
   it("gives other categories neither the alcohol nor the cannabis rules", async () => {
     await generateEnrichmentAction("own.myshopify.com", "p-1");
     expect(JSON.stringify(create.mock.calls[0]![0].messages)).not.toMatch(/alcohol|cannabis/i);

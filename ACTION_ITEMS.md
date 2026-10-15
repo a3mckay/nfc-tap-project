@@ -61,6 +61,9 @@ Staff invite and sign-in emails are sent by the admin. In Railway, check the **a
 ### Decide whether to schedule the review and brand refreshes
 The admin has two more cron routes, `api/cron/brand-refresh` (every 2 weeks) and `api/cron/reviews-refresh` (daily). Nothing calls them: `CRON_SECRET` wasn't set in Railway, and until 2026-10-05 the admin's login check redirected them to the login page anyway (fixed). To turn them on, add a job for each to `.github/workflows/scheduled-jobs.yml`, the same way as `retention`. Public web reviews use Brave Search, so watch the free tier's 2,000 searches a month.
 
+### Outdoor and on-metal tags (before a garden centre goes live)
+Garden centre tags sit outdoors on bench signs, in rain and sun, and often on metal benches. Ask the tag suppliers (PRD v4 §7 Step 11) for waterproof, UV-stable NTAG213 tags and on-metal (ferrite-backed) tags, with prices. Put the tag on the bench sign, not the pot: the pot leaves with the customer.
+
 ---
 
 ## Needed before taking payments (Step 9)
@@ -130,6 +133,12 @@ Licensed stores are covered by the Cannabis Act's promotion rules (s.17): no tes
 - **Effects tags (e.g. Calm, Energetic) are allowed until banned outright.** Note: Alberta's AGLC already bans claims of positive or negative effects, and Health Canada found Cannabis NB non-compliant for "Discover / Connect / Refresh" groupings.
 - **Age gate:** a basic one-tap "I'm 19 or older" gate is now on cannabis pages (2026-10-07). Is that enough? Is an in-store tap enough (the store checks ID at the door)? Our tap page is a public link that can be revisited or shared later. Options: a one-tap "I'm 19 or older" gate on cannabis pages; or secure NFC tags (e.g. NTAG 424 DNA) that prove a physical tap, so only in-store taps skip the gate.
 - Also ask: awards (e.g. "KIND Awards Brand of the Year") — endorsement or fact? And whether showing prices on the tap page is fine.
+
+### Garden centre review (before selling to garden centres)
+Generate and the assistant follow these rules for plants and garden care (founder, 2026-10-15; `docs/category-garden.md`). Ask the lawyer to confirm:
+- **Pest and weed control** (Pest Control Products Act): copy repeats only the label's pests and uses, and never says "safe", "non-toxic", "harmless" or "pet-safe". Is that enough for advertising a registered product? Do provincial rules (Ontario's cosmetic pesticide ban) need more?
+- **Pets and kids:** the AI may say a plant is toxic, naming the ASPCA or the Canadian Poisonous Plants Information System. Is citing a source enough if it's wrong or out of date? Should "not on any list" ever be said as "safe"? (Today it isn't.)
+- **Fertilizers** (Fertilizers Act): N-P-K and claims only as on the label.
 
 ---
 

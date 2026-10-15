@@ -19,7 +19,7 @@ describe("CATEGORY_COPY", () => {
 
   it("never uses clothing or footwear words for drinks or cannabis (founder: never footwear labels on a wine)", () => {
     const clothing = /\b(shoes?|boots?|sneakers?|fit|fits|sizing|wash|fabric|merino|stylist|clasp|wear|worn|cotton|leather|suede)\b/i;
-    for (const c of ["wine", "beer", "spirits", "cannabis", "beauty", "toys", "vintage"] as const) {
+    for (const c of ["wine", "beer", "spirits", "cannabis", "beauty", "toys", "vintage", "plants", "garden_care"] as const) {
       const hit = strings(CATEGORY_COPY[c]).find((s) => clothing.test(s));
       expect(hit, `${c}: "${hit}"`).toBeUndefined();
     }
@@ -40,6 +40,14 @@ describe("CATEGORY_COPY", () => {
     expect(Object.values(copyFor("toys").fields).map((f) => f.label)).toEqual(["Materials & safety", "Ages & play", "Care", "Who made it"]);
     expect(Object.values(copyFor("vintage").fields).map((f) => f.label)).toEqual(["Materials & maker", "Size & condition", "Care", "Provenance"]);
     expect(copyFor("beauty").training.truth.label).toBe("Shade and longevity truth");
+  });
+
+  it("uses the approved labels for plants and garden care (docs/category-garden.md)", () => {
+    expect(Object.values(copyFor("plants").fields).map((f) => f.label)).toEqual(["Light & soil", "Size & habit", "Care", "Pollinators & wildlife"]);
+    expect(Object.values(copyFor("garden_care").fields).map((f) => f.label)).toEqual(["What's in it", "What it's for", "How to use", "Sustainability"]);
+    expect(copyFor("plants").training.truth.label).toBe("Survival truth");
+    expect(copyFor("garden_care").training.truth.label).toBe("Results truth");
+    expect(copyFor("plants").facts.defaultTopic).toBe("hardiness");
   });
 
   it("knows every category's fact topics, so a fact keeps a valid topic when the category changes", () => {
