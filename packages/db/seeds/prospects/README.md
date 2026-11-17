@@ -7,6 +7,7 @@ One JSON file per sales prospect creates their demo store: name, category, theme
 - **No email?** Leave `owner` out. The command prints a **claim link** instead (once): print it as a QR code in the kit. Whoever opens it sets the owner's email and password, and is signed in. It works once, for 90 days. Lost the card? Re-run with `--new-claim`; the old link stops working.
 - `products`: the products you chose. Only `title` is required.
 - **Photos:** `imageUrl` for a photo already online, or `imageFile` for a photo on your computer (a path from the config file's folder, e.g. `"terra/poinsettia.jpg"`). A file is stored like a photo uploaded in the admin and served from the tap page; re-running keeps the same address. JPEG, PNG or WebP, under 3 MB.
+- `category` (optional, per product): a spec category when automatic detection would pick the wrong one, e.g. `"general"` for a moisture meter in a plant store.
 
 Run against production (copy `DATABASE_PUBLIC_URL` from Railway's Postgres service):
 

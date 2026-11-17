@@ -18,6 +18,7 @@ import { createStoreAdmin, getStoreAdminByEmail } from "../src/store-admins.js";
 import { SPEC_CATEGORIES } from "../src/spec-templates.js";
 import { createStoreClaim, hasOpenStoreClaim } from "../src/store-claims.js";
 import { saveUploadedImage } from "../src/uploaded-images.js";
+import { setProductSpecCategory } from "../src/product-specs.js";
 
 // A kit's claim link lasts long enough to be mailed and opened.
 export const CLAIM_TTL_DAYS = 90;
@@ -29,6 +30,7 @@ export interface ProspectProduct {
   price?: string;
   imageUrl?: string;
   imageFile?: string;   // a local photo, relative to the config file (stored like an admin upload)
+  category?: string;    // a spec category, when automatic detection would pick the wrong one
   description?: string;
 }
 
@@ -79,6 +81,7 @@ export function parseProspect(raw: unknown): ProspectConfig {
   (c.products as Array<Record<string, unknown>>).forEach((p, i) => {
     if (typeof p?.title !== "string" || !p.title.trim()) fail(`products[${i}].title is required`);
     for (const k of ["vendor", "productType", "price", "imageUrl", "imageFile", "description"]) optionalString(p[k], `products[${i}].${k}`);
+    if (p.category !== undefined && !(SPEC_CATEGORIES as unknown[]).includes(p.category)) fail(`products[${i}].category must be one of: ${SPEC_CATEGORIES.join(", ")}`);
   });
   return raw as ProspectConfig;
 }
@@ -129,6 +132,7 @@ export async function seedProspect(pool: Pool, config: ProspectConfig, tapBaseUr
       ? r
       : pool.query<{ id: string }>(`select id from products where store_id = $1 and shopify_product_id = $2`, [store.id, id]));
     if (!product) throw new Error(`seedProspect: no product row for ${p.title}`);
+    if (p.category) await setProductSpecCategory(pool, store.id, product.id, p.category);
 
     let tag = tagByProduct.get(product.id);
     if (!tag) {

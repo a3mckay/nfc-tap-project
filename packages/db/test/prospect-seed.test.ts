@@ -44,6 +44,7 @@ describe("parseProspect", () => {
     expect(() => parseProspect({ ...config, products: [] })).toThrow(/product/);
     expect(() => parseProspect({ ...config, products: [{ title: "" }] })).toThrow(/title/);
     expect(() => parseProspect({ ...config, products: [{ title: "Hosta", imageFile: 3 }] })).toThrow(/imageFile/);
+    expect(() => parseProspect({ ...config, products: [{ title: "Trowel", category: "tools" }] })).toThrow(/category/);
   });
 });
 
@@ -69,6 +70,12 @@ describe("seedProspect with photo files", () => {
     expect(urls[0]).toMatch(/^https:\/\/tapshelf\.store\/img\/[0-9a-f-]{36}$/);
     expect(urls[1]).toBe(urls[0]);
     expect((await getUploadedImage(pool, urls[0]!.split("/img/")[1]!))?.contentType).toBe("image/jpeg");
+  });
+
+  it("sets a product's category when the config names one (e.g. a tool in a plant store)", async () => {
+    const { storeId } = await seedProspect(pool, { ...photoConfig, products: [{ title: "Moisture Tester", category: "general" }] }, "https://tapshelf.store", { configDir: dir });
+    const { rows: [product] } = await pool.query(`select spec_category from products where store_id = $1 and title = 'Moisture Tester'`, [storeId]);
+    expect(product.spec_category).toBe("general");
   });
 
   it("names a photo file that isn't a usable image", async () => {
