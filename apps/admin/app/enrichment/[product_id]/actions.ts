@@ -6,6 +6,7 @@ import {
   type Review, type FaqItem,
 } from "@nfc/db";
 import { checkProductNotes } from "@/lib/check-product.js";
+import { refreshPairings } from "@/lib/refresh-pairings.js";
 import { getActionStore } from "@/current-store.js";
 import { revalidatePath } from "next/cache";
 import {
@@ -324,6 +325,7 @@ export async function generateEnrichmentAction(
     await saveResearchedSpecs(pool, store.id, productId, specsFromModel(draft.specs ?? [], sources, specFields.map((f) => f.key)));   // D51
   }
   await checkProductNotes(pool, store.id, productId);   // D49
+  await refreshPairings(pool, store.id, productId);   // Goes great with (2026-11-16)
 
   revalidatePath(`/enrichment/${productId}`);
   return { draft: { ...draft, great_when: (draft.great_when ?? []).slice(0, MAX_GREAT_WHEN) } };

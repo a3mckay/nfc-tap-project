@@ -1,7 +1,7 @@
 // PRD v4 §7 Step 15c: the Shelf-Side AI Assistant's answer engine
 // (docs/PRD-ai-assistant.md §3.A, §6, §6.1; D5, D9, D11, D14, D22, D24, D25, D41).
 import { describe, it, expect, vi } from "vitest";
-import { buildContext, SYSTEM_PROMPT, STOCK_REPLY, PRICE_REPLY, unansweredReply, offTopicReply, partialNote, type AnswerContext } from "@/ask/prompt.js";
+import { buildContext, SYSTEM_PROMPT, SOURCE_LABELS, STOCK_REPLY, PRICE_REPLY, unansweredReply, offTopicReply, partialNote, type AnswerContext } from "@/ask/prompt.js";
 import { MetaSplitter } from "@/ask/meta.js";
 import { handleAsk, MAX_QUESTIONS_PER_VISIT, type AskDeps, type AskEvent } from "@/ask/handle.js";
 
@@ -113,6 +113,27 @@ describe("beauty, toys and vintage rules (docs/category-beauty.md, docs/category
     const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: vintage"'));
     expect(rule).toMatch(/value/i);
     expect(rule).toMatch(/era/i);
+  });
+});
+
+// Founder, 2026-11-16: no cross-selling unless the customer asks, and then only
+// the store's own products on the Goes great with list.
+describe("Goes great with and cross-selling", () => {
+  it("lists the store's Goes great with products, marked for use only when asked", () => {
+    const text = buildContext(ctx({ pairings: [{ title: "Suede Protector Spray", reason: "Suede marks easily in rain." }] }));
+    expect(text).toContain("[goes_great_with]");
+    expect(text).toContain("Suede Protector Spray: Suede marks easily in rain.");
+    expect(text).toMatch(/goes_great_with\] .*only if the customer asks/i);
+  });
+
+  it("only names products to buy from that list, and only when asked", () => {
+    expect(SYSTEM_PROMPT).toMatch(/goes_great_with/);
+    expect(SYSTEM_PROMPT).toMatch(/never name or suggest a product .*not .*goes_great_with/i);
+    expect(SYSTEM_PROMPT).toMatch(/what to use/i);
+  });
+
+  it("labels the source for customers", () => {
+    expect(SOURCE_LABELS.goes_great_with).toBe("Goes great with");
   });
 });
 

@@ -19,6 +19,8 @@ const db = vi.hoisted(() => ({
 }));
 const checkProductNotes = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("@/lib/check-product.js", () => ({ checkProductNotes }));
+const refreshPairings = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/lib/refresh-pairings.js", () => ({ refreshPairings }));
 const getActionStore = vi.hoisted(() => vi.fn(async () => ({ id: "store-1", shopify_shop_domain: "own.myshopify.com" })));
 const braveSearch = vi.hoisted(() => vi.fn());
 const fetchPageText = vi.hoisted(() => vi.fn(async () => "Full-grain suede upper. Made in Portugal."));
@@ -119,6 +121,13 @@ describe("checks after Generate (Step 15k)", () => {
     await generateEnrichmentAction("own.myshopify.com", "p-1");
     expect(db.saveReviewFlags).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1", "mismatch", ["One source describes the mid-top, not this low-top."]);
     expect(checkProductNotes).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1");
+  });
+});
+
+describe("Goes great with (2026-11-16)", () => {
+  it("picks the product's pairings after the fact sheet is saved", async () => {
+    await generateEnrichmentAction("own.myshopify.com", "p-1");
+    expect(refreshPairings).toHaveBeenCalledWith(expect.anything(), "store-1", "p-1");
   });
 });
 

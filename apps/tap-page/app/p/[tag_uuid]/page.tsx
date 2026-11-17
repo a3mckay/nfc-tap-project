@@ -8,7 +8,7 @@ import {
   getApprovedAwardsByProduct, getApplicableOffer, recordOfferDelivery,
   getBrandCollectorForCustomer, getCategoryPatternForCustomer, getUntappedSameBrandProducts,
   getProductTraining, recordStaffProductView, getProductQuestionView,
-  copyFor,
+  copyFor, getPairings, canPair,
   type BrandCollectorInsight, type CategoryPatternInsight, type SimilarProductSuggestion,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
@@ -128,7 +128,7 @@ export default async function TapPage({ params, searchParams }: Props) {
   }
   const isPreview = view === "preview";
 
-  const [product, store, rawEnrichment, tapCount, rawExternalReviews, rawReviewAggregate, externalAwards] = await Promise.all([
+  const [product, store, rawEnrichment, tapCount, rawExternalReviews, rawReviewAggregate, externalAwards, rawPairings] = await Promise.all([
     getProductById(pool, state.productId),
     getStoreById(pool, state.storeId),
     getEnrichmentByProductId(pool, state.productId),
@@ -136,6 +136,7 @@ export default async function TapPage({ params, searchParams }: Props) {
     getApprovedReviewsByProduct(pool, state.productId),
     getReviewAggregateByProduct(pool, state.productId),
     getApprovedAwardsByProduct(pool, state.productId),
+    getPairings(pool, state.storeId, state.productId),
   ]);
   if (!product) notFound();
   const category = productCategory(product, store);
@@ -220,6 +221,7 @@ export default async function TapPage({ params, searchParams }: Props) {
           brandCollector={brandCollector}
           categoryPattern={categoryPattern}
           sameBrand={sameBrand}
+          pairings={canPair(category) ? rawPairings : []}
           detailLabels={detailLabels(category)}
           afterKeyPoints={!isPreview && <ReactionBar tagId={state.tagId} sessionId={sessionId} primaryColor={primaryColor} customerId={customer?.id ?? null} />}
         />

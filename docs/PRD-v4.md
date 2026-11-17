@@ -98,7 +98,7 @@ The bar is Apple-level *intentionality*, not Apple-level cost.
 The customer is already in the store holding the product. The page's job is to **deepen, not convert**:
 - editorial rather than transactional
 - story first: backstory, materials and fit come before price
-- **no cart, no checkout, no cross-sell widgets**
+- **no cart, no checkout, no cross-sell widgets**, with one exception the founder approved on 2026-11-16: **"Goes great with"** (§10), up to three of the store's own products the product needs, each with a sourced reason; no prices or buy buttons
 - staff picks and the owner's voice are first-class content
 
 ---
@@ -292,6 +292,7 @@ Added to `stores`: `data_sharing_opted_in`, city/neighborhood/lat/lng. Added to 
 | 0030 | `store_claims` (one-time claim links for prospect demo stores) |
 | 0031 | `reference` source kind for `product_facts` and `product_specs` (trusted plant references) |
 | 0032 | `uploaded_images` (product photos uploaded in the admin, served by the tap page) |
+| 0033 | `product_pairings` ("Goes great with": up to three store products per product, each with a sourced reason; owner removals kept) |
 
 ---
 
@@ -588,6 +589,8 @@ These were built in May 2026. The migrations number them as expansion sections �
 
 **Photo upload** (founder, 2026-11-16): owners, managers and co-managers upload product photos in the product editor (main photo and extra photos) instead of pasting links. The browser shrinks each photo to 1600 px; the admin stores it (`uploaded_images`, migration 032; JPEG, PNG or WebP by their first bytes, 3 MB cap, one copy per store per photo) and the tap page serves it at `/img/<id>` with a one-year cache. The prospect demo tool takes local photo files too (`imageFile`). Stored in Postgres for now (`DEFERRED.md`).
 
+**Goes great with** (founder, 2026-11-16): up to three of the store's own live products a product needs, shown on the customer page under the main content (photo, name, reason; linked when the product has an active tag; no prices or buy buttons) and in a panel on the product editor. The AI picks them automatically at Generate (or "Find again"), with no approval step, but every pick must cite a fact on the product's fact sheet (its source of knowledge: the grower or brand, the trusted plant references, or the owner's own notes) and be a catalog product that plainly meets that need; the reason shown is the need from the fact. Owners, managers and co-managers can remove a pairing, and it stays removed. Not for cannabis or alcohol, on either side. Built: `product_pairings` (migration 033), `packages/db/src/product-pairings.ts`, `apps/admin/src/lib/pairings.ts` (Claude Sonnet 5.5), `refresh-pairings.ts`, `PairingsPanel.tsx`, `apps/tap-page/app/p/[tag_uuid]/GoesGreatWith.tsx`. **AI assistant cross-selling** tightened at the same time: it never names or suggests a product to buy that isn't on the product's Goes great with list (not even a generic one), and names those only when the customer asks what goes with it, what else they need, or what to use for something.
+
 **Cannabis compliance** (Cannabis Act s.17; founder decisions 2026-10-07, pending the legal review in `ACTION_ITEMS.md`). Applies to products whose spec category (Step 15l) is cannabis:
 - **No testimonials:** the tap page shows no customer reviews, ratings or staff quote (`apps/tap-page/src/cannabis.ts`); the product editor hides those sections; the assistant gets no reviews.
 - **No effects, occasions or lifestyle:** Generate writes facts only (strain, lineage, grow and cure, aroma, terpenes, potency, format) and a factual "Great when…"; it writes no staff quote. The assistant never describes effects; asked about them, it says "We can't describe effects, but we can tell you about its strain, terpenes, THC and CBD." (`apps/tap-page/src/ask/prompt.ts`). No effects tags.
@@ -604,7 +607,7 @@ These were built in May 2026. The migrations number them as expansion sections �
    - Decide which model is right, then update the other.
 2. **Tap-page performance gate.** The spec says to enforce it in CI from day one; the Lighthouse job was removed. Decide whether to restore it.
 3. **PII rule vs. customer accounts.** `tap_events` remains PII-free. Customer identity (email, phone) now lives in `customers` / `customer_taps` / `notification_*`. The privacy policy and PIPEDA review must cover this. v3 assumed no customer identity at all.
-4. **"No cross-sell" principle vs. offers and the picks bar.** Offers and the picks bar are arguably engagement, not cross-sell. Confirm they're in the spirit of §4.3.
+4. **"No cross-sell" principle vs. offers and the picks bar.** Offers and the picks bar are arguably engagement, not cross-sell. Confirm they're in the spirit of §4.3. (Goes great with was decided on 2026-11-16 as an explicit exception; see §4.3 and §10.)
 5. **Shelf-Side AI Assistant vs. the current tap page.** Decided (D1–D45 in [`docs/PRD-ai-assistant.md`](PRD-ai-assistant.md)). §5.4 will be updated when Step 15e lands.
 
 ## 12. Known Gaps & Human To-Dos

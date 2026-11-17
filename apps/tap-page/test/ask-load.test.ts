@@ -16,6 +16,8 @@ const db = vi.hoisted(() => ({
   getApprovedReviewsByProduct: vi.fn(async () => [{ rating: "4.0", body: "Comfy" }]),
   getStorePolicies: vi.fn(async () => [{ key: "returns", label: "Returns and exchanges", text: "30 days." }]),
   getProductSpecs: vi.fn(async () => [{ key: "thc", value: "22%", source_url: null, source_kind: "owner", owner_edited: true }]),
+  getPairings: vi.fn(async () => [{ product_id: "p-2", title: "Suede Protector Spray", image_url: null, tag_uuid: null, reason: "Suede marks easily in rain.", source_url: null, source_kind: "brand" }]),
+  canPair: vi.fn((c: string) => !["cannabis", "wine", "beer", "spirits"].includes(c)),
   specCategoryFor: vi.fn(() => "footwear"),
   specFieldsFor: vi.fn(() => [{ key: "thc", label: "THC", hint: "" }, { key: "cbd", label: "CBD", hint: "" }]),
   getRecentQuestions: vi.fn(async () => [{ question_text: "Does it run small?", answer_text: "True to size." }]),
@@ -56,6 +58,16 @@ describe("loadAnswerContext", () => {
     expect(loaded!.context.enrichment?.aiDraft).toBe(false);
     expect(loaded!.context.policies).toEqual([{ label: "Returns and exchanges", text: "30 days." }]);
     expect(loaded!.context.reviews).toEqual([{ rating: 4, text: "Comfy" }, { rating: 5, text: "Great" }]);
+  });
+
+  it("gives the assistant the product's Goes great with list (2026-11-16)", async () => {
+    const loaded = await loadAnswerContext({} as never, "u");
+    expect(loaded!.context.pairings).toEqual([{ title: "Suede Protector Spray", reason: "Suede marks easily in rain." }]);
+  });
+
+  it("gives no Goes great with list for cannabis or alcohol", async () => {
+    db.specCategoryFor.mockReturnValueOnce("wine");
+    expect((await loadAnswerContext({} as never, "u"))!.context.pairings).toEqual([]);
   });
 
   it("gives no reviews for cannabis products, and marks their category (Cannabis Act: no testimonials)", async () => {
