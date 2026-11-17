@@ -5,7 +5,7 @@
 // injected, so this has no network access of its own.
 import type { ResearchedFact, SpecCategory } from "@nfc/db";
 
-export type SourceKind = "brand" | "retailer" | "review";
+export type SourceKind = "brand" | "reference" | "retailer" | "review";
 
 export interface SearchHit {
   url: string;
@@ -35,6 +35,11 @@ const NOT_BRAND_HOSTS = [
   "amazon.", "ebay.", "etsy.com", "wikipedia.org", "instagram.com", "facebook.com", "linkedin.com",
   "reddit.com", "youtube.com", "tiktok.com", "pinterest.", "x.com", "twitter.com",
 ];
+// Trusted plant sources (founder, 2026-11-16), searched for plants after the
+// grower's own site: care (NC State Extension, Missouri Botanical Garden), then
+// pets and kids (ASPCA, Canadian Poisonous Plants Information System).
+export const PLANT_REFERENCES = ["plants.ces.ncsu.edu", "missouribotanicalgarden.org", "aspca.org", "cbif.gc.ca"];
+const PET_REFERENCES = ["aspca.org", "cbif.gc.ca"];
 const TOPICS = ["materials", "care", "fit", "sizing", "origin", "construction", "features", "other"] as const;
 
 // Stores are Canadian for now (stores have no country yet; see DEFERRED.md).
@@ -75,6 +80,7 @@ const onDomain = (host: string, domain: string) => host === domain || host.endsW
 export function classifySource(url: string, title: string, brandDomain: string | null): SourceKind {
   const host = domainOf(url) ?? "";
   if (brandDomain && onDomain(host, brandDomain)) return "brand";
+  if (PLANT_REFERENCES.some((d) => onDomain(host, d))) return "reference";
   if (REVIEW_HOSTS.some((h) => onDomain(host, h)) || /\breviews?\b/i.test(title)) return "review";
   return "retailer";
 }
@@ -124,7 +130,17 @@ export async function findBrandDomain(
   return i >= 0 ? { domain: guesses[i]!, found: true } : null;
 }
 
-const KIND_ORDER: Record<SourceKind, number> = { brand: 0, retailer: 1, review: 2 };
+const KIND_ORDER: Record<SourceKind, number> = { brand: 0, reference: 1, retailer: 2, review: 3 };
+
+// The plant's name for searching references: no pot sizes (6", 10 in, #2) and no
+// quoted cultivar ('Limelight'), which reference sites rarely list.
+export function plantSearchName(title: string): string {
+  return title
+    .replace(/\s['‘][^'’]*['’]/g, " ")
+    .replace(/#\s?\d+|\b\d+(\.\d+)?\s?(["”″]|in\b|inch(es)?\b|cm\b)/gi, " ")
+    .replace(/[,\s]+/g, " ")
+    .trim();
+}
 
 export async function researchProduct(
   product: { vendor: string | null; title: string },
@@ -133,24 +149,32 @@ export async function researchProduct(
   deps: ResearchDeps,
 ): Promise<ResearchSource[]> {
   const name = [product.vendor, product.title].filter(Boolean).join(" ");
-  const [brandHits, webHits] = await Promise.all([
+  const plant = category === "plants" ? plantSearchName(product.title) : null;
+  const [brandHits, webHits, ...referenceHits] = await Promise.all([
     brandDomain ? deps.search(`site:${brandDomain} ${product.title}`, 3) : Promise.resolve([]),
     deps.search(`${name} ${CATEGORY_SEARCH[category].research}`, 6, HOME_COUNTRY),
+    ...(plant ? PLANT_REFERENCES.map((d) => deps.search(`site:${d} ${plant}`, 2)) : []),
   ]);
 
   const seen = new Set<string>();
-  const ranked = [...brandHits, ...webHits]
+  const ranked = [...brandHits, ...referenceHits.flat(), ...webHits]
     .filter((h) => !seen.has(h.url) && seen.add(h.url))
     .map((h) => ({ ...h, kind: classifySource(h.url, h.title, brandDomain) }))
     .sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind])
     .slice(0, MAX_SOURCES);
 
   const sources: ResearchSource[] = ranked.map((h, i) => ({ n: i + 1, kind: h.kind, url: h.url, title: h.title, text: h.description }));
-  const topBrand = sources.find((s) => s.kind === "brand");
-  if (topBrand) {
-    const page = await deps.fetchText(topBrand.url);
-    if (page) topBrand.text = page.slice(0, PAGE_TEXT_LIMIT);
-  }
+  // Read the full page of the top brand source, and for plants the top care and pets references.
+  const isPets = (s: ResearchSource) => PET_REFERENCES.some((d) => onDomain(domainOf(s.url) ?? "", d));
+  const toRead = [
+    sources.find((s) => s.kind === "brand"),
+    sources.find((s) => s.kind === "reference" && !isPets(s)),
+    sources.find((s) => s.kind === "reference" && isPets(s)),
+  ].filter((s): s is ResearchSource => s !== undefined);
+  await Promise.all(toRead.map(async (s) => {
+    const page = await deps.fetchText(s.url);
+    if (page) s.text = page.slice(0, PAGE_TEXT_LIMIT);
+  }));
   return sources;
 }
 

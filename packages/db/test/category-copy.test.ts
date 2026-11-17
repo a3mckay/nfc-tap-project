@@ -48,6 +48,8 @@ describe("CATEGORY_COPY", () => {
     expect(copyFor("plants").training.truth.label).toBe("Survival truth");
     expect(copyFor("garden_care").training.truth.label).toBe("Results truth");
     expect(copyFor("plants").facts.defaultTopic).toBe("hardiness");
+    // Houseplants and tropicals (Terra's "Moving tropicals indoors" sign, 2026-11-16)
+    for (const t of ["temperature", "humidity", "life cycle", "pests"]) expect(copyFor("plants").facts.topics).toContain(t);
   });
 
   it("knows every category's fact topics, so a fact keeps a valid topic when the category changes", () => {

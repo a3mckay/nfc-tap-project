@@ -12,10 +12,13 @@ import { Pool } from "pg";
 import { randomBytes, createHash } from "crypto";
 import { readFileSync, writeFileSync } from "fs";
 import { pathToFileURL } from "url";
+import { dirname, resolve } from "path";
 import { assignTagToProduct, getTagsByStore, provisionTags } from "../src/tags.js";
 import { createStoreAdmin, getStoreAdminByEmail } from "../src/store-admins.js";
 import { SPEC_CATEGORIES } from "../src/spec-templates.js";
 import { createStoreClaim, hasOpenStoreClaim } from "../src/store-claims.js";
+import { saveUploadedImage } from "../src/uploaded-images.js";
+import { setProductSpecCategory } from "../src/product-specs.js";
 
 // A kit's claim link lasts long enough to be mailed and opened.
 export const CLAIM_TTL_DAYS = 90;
@@ -26,6 +29,8 @@ export interface ProspectProduct {
   productType?: string;
   price?: string;
   imageUrl?: string;
+  imageFile?: string;   // a local photo, relative to the config file (stored like an admin upload)
+  category?: string;    // a spec category, when automatic detection would pick the wrong one
   description?: string;
 }
 
@@ -50,6 +55,7 @@ export interface ProspectResult {
 export interface SeedOptions {
   adminBaseUrl?: string;
   newClaim?: boolean;   // replace an unused claim link (e.g. a lost card)
+  configDir?: string;   // where products' imageFile paths start from
 }
 
 const fail = (msg: string): never => { throw new Error(`Prospect config: ${msg}`); };
@@ -74,9 +80,17 @@ export function parseProspect(raw: unknown): ProspectConfig {
   if (!Array.isArray(c.products) || c.products.length === 0) fail("add at least one product");
   (c.products as Array<Record<string, unknown>>).forEach((p, i) => {
     if (typeof p?.title !== "string" || !p.title.trim()) fail(`products[${i}].title is required`);
-    for (const k of ["vendor", "productType", "price", "imageUrl", "description"]) optionalString(p[k], `products[${i}].${k}`);
+    for (const k of ["vendor", "productType", "price", "imageUrl", "imageFile", "description"]) optionalString(p[k], `products[${i}].${k}`);
+    if (p.category !== undefined && !(SPEC_CATEGORIES as unknown[]).includes(p.category)) fail(`products[${i}].category must be one of: ${SPEC_CATEGORIES.join(", ")}`);
   });
   return raw as ProspectConfig;
+}
+
+// Stores a local photo like an admin upload; the same photo keeps the same address.
+async function storePhoto(pool: Pool, storeId: string, path: string, tapBase: string): Promise<string> {
+  const saved = await saveUploadedImage(pool, storeId, readFileSync(path));
+  if (!saved.ok) throw new Error(`Prospect config: ${path} isn't a usable photo (${saved.error}); use a JPEG, PNG or WebP under 3 MB`);
+  return `${tapBase}/img/${saved.id}`;
 }
 
 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -97,8 +111,10 @@ export async function seedProspect(pool: Pool, config: ProspectConfig, tapBaseUr
   const tagByProduct = new Map((await getTagsByStore(pool, store.id)).map((t) => [t.product_id, t]));
   const tags: ProspectResult["tags"] = [];
 
+  const tapBase = tapBaseUrl.replace(/\/+$/, "");
   for (const p of config.products) {
     const id = productKey(p.title);
+    const imageUrl = p.imageFile ? await storePhoto(pool, store.id, resolve(opts.configDir ?? ".", p.imageFile), tapBase) : p.imageUrl;
     const { rows: [product] } = await pool.query<{ id: string }>(
       `insert into products
          (store_id, shopify_product_id, title, description_html, vendor, product_type,
@@ -109,13 +125,14 @@ export async function seedProspect(pool: Pool, config: ProspectConfig, tapBaseUr
              product_type = excluded.product_type, images = excluded.images, variants = excluded.variants`,
       [
         store.id, id, p.title, p.description ? `<p>${escapeHtml(p.description)}</p>` : null, p.vendor ?? null, p.productType ?? null,
-        JSON.stringify(p.imageUrl ? [{ url: p.imageUrl, altText: p.title }] : []),
+        JSON.stringify(imageUrl ? [{ url: imageUrl, altText: p.title }] : []),
         JSON.stringify(p.price ? [{ id, sku: null, price: p.price, inventoryQuantity: 20 }] : []),
       ],
     ).then(async (r) => r.rows[0]
       ? r
       : pool.query<{ id: string }>(`select id from products where store_id = $1 and shopify_product_id = $2`, [store.id, id]));
     if (!product) throw new Error(`seedProspect: no product row for ${p.title}`);
+    if (p.category) await setProductSpecCategory(pool, store.id, product.id, p.category);
 
     let tag = tagByProduct.get(product.id);
     if (!tag) {
@@ -124,7 +141,7 @@ export async function seedProspect(pool: Pool, config: ProspectConfig, tapBaseUr
       await assignTagToProduct(pool, fresh.id, store.id, product.id);
       tag = { ...fresh, product_id: product.id } as typeof tag & object;
     }
-    tags.push({ title: p.title, url: `${tapBaseUrl.replace(/\/+$/, "")}/p/${tag!.tag_uuid}` });
+    tags.push({ title: p.title, url: `${tapBase}/p/${tag!.tag_uuid}` });
   }
 
   let owner: ProspectResult["owner"] = null;
@@ -167,7 +184,7 @@ async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
     const result = await seedProspect(pool, config, process.env.TAP_PAGE_URL ?? "https://tapshelf.store", {
-      adminBaseUrl: process.env.ADMIN_URL, newClaim,
+      adminBaseUrl: process.env.ADMIN_URL, newClaim, configDir: dirname(file),
     });
     const csv = ["product,url", ...result.tags.map((t) => `"${t.title.replace(/"/g, '""')}",${t.url}`)].join("\n");
     const csvFile = file.replace(/\.json$/, ".tags.csv");

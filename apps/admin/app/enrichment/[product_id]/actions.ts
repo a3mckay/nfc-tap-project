@@ -191,7 +191,7 @@ export async function generateEnrichmentAction(
       ]);
       sources = found;
       if (sources.length > 0) {
-        webContext = "\n\nNumbered sources about this product. Brand sources are the most trusted; ground your copy in them and don't invent facts:\n" +
+        webContext = "\n\nNumbered sources about this product. Brand sources are the most trusted, then reference sources (university and botanical garden plant guides, poison-control lists); ground your copy in them and don't invent facts:\n" +
           sourcesForPrompt(sources);
       }
       video = videoFor(ytResults, product.vendor);

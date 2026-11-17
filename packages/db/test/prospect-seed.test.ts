@@ -4,7 +4,10 @@ import { afterAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "crypto";
 import { seedProspect, parseProspect, type ProspectConfig } from "../seeds/prospect.js";
-import { verifyPassword, getOpenStoreClaim } from "../src/index.js";
+import { verifyPassword, getOpenStoreClaim, getUploadedImage } from "../src/index.js";
+import { mkdtempSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { createHash } from "crypto";
 
 const connectionString = process.env.DATABASE_URL ?? "postgres://nfc:nfc@localhost:5432/nfc";
@@ -40,6 +43,45 @@ describe("parseProspect", () => {
     expect(() => parseProspect({ ...config, industry: "toasters" })).toThrow(/industry/);
     expect(() => parseProspect({ ...config, products: [] })).toThrow(/product/);
     expect(() => parseProspect({ ...config, products: [{ title: "" }] })).toThrow(/title/);
+    expect(() => parseProspect({ ...config, products: [{ title: "Hosta", imageFile: 3 }] })).toThrow(/imageFile/);
+    expect(() => parseProspect({ ...config, products: [{ title: "Trowel", category: "tools" }] })).toThrow(/category/);
+  });
+});
+
+// Photo upload (2026-11-16): a prospect's product photo can be a local file,
+// stored like an admin upload and served from the tap page.
+describe("seedProspect with photo files", () => {
+  const photoSlug = `prospect-photo-${randomUUID().slice(0, 8)}`;
+  const dir = mkdtempSync(join(tmpdir(), "prospect-"));
+  writeFileSync(join(dir, "hosta.jpg"), Buffer.from([0xff, 0xd8, 0xff, 0xe0, 7, 7]));
+  const photoConfig: ProspectConfig = { slug: photoSlug, name: "Terra", industry: "plants", products: [{ title: "Hosta", imageFile: "hosta.jpg" }] };
+
+  afterAll(async () => {
+    await pool.query(`delete from stores where shopify_shop_domain = $1`, [`${photoSlug}.prospect.tapshelf.co`]);
+  });
+
+  it("stores the photo and uses its tap-page address, the same one on every run", async () => {
+    const urls: string[] = [];
+    for (let i = 0; i < 2; i++) {
+      const { storeId } = await seedProspect(pool, photoConfig, "https://tapshelf.store", { configDir: dir });
+      const { rows: [product] } = await pool.query(`select images from products where store_id = $1`, [storeId]);
+      urls.push(product.images[0].url);
+    }
+    expect(urls[0]).toMatch(/^https:\/\/tapshelf\.store\/img\/[0-9a-f-]{36}$/);
+    expect(urls[1]).toBe(urls[0]);
+    expect((await getUploadedImage(pool, urls[0]!.split("/img/")[1]!))?.contentType).toBe("image/jpeg");
+  });
+
+  it("sets a product's category when the config names one (e.g. a tool in a plant store)", async () => {
+    const { storeId } = await seedProspect(pool, { ...photoConfig, products: [{ title: "Moisture Tester", category: "general" }] }, "https://tapshelf.store", { configDir: dir });
+    const { rows: [product] } = await pool.query(`select spec_category from products where store_id = $1 and title = 'Moisture Tester'`, [storeId]);
+    expect(product.spec_category).toBe("general");
+  });
+
+  it("names a photo file that isn't a usable image", async () => {
+    writeFileSync(join(dir, "notes.txt"), "not a photo");
+    await expect(seedProspect(pool, { ...photoConfig, products: [{ title: "Hosta", imageFile: "notes.txt" }] }, "https://tapshelf.store", { configDir: dir }))
+      .rejects.toThrow(/notes\.txt/);
   });
 });
 

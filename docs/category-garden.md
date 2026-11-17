@@ -99,4 +99,14 @@ These rules are pending the legal review in `ACTION_ITEMS.md`, like the alcohol,
 2. **Pets and kids:** research may use named public sources (the ASPCA's toxic plant list; the Canadian Poisonous Plants Information System), cited on the fact sheet.
 3. **Plants' fourth field:** "Pollinators & wildlife".
 
-Still open: which garden centre is the first prospect, so the examples and a demo store can use its real stock.
+
+## Houseplants and tropicals (founder, 2026-11-16)
+
+Added after a visit to Terra (the first garden-centre prospect), from its in-store signs ("Moving tropicals indoors", "Get to know bromeliads"):
+
+- **More plant specs:** indoor or outdoor; lowest temperature (houseplants: e.g. keep above 13 °C, away from drafts; the zone is for outdoor plants); humidity; life cycle (e.g. a bromeliad blooms once, then grows pups); pests to watch.
+- **Plant care guide:** a store-wide entry on the Policies page, shown to stores whose main industry is plants or garden care. Advice for every plant the store sells (settling in, keeping a new plant apart for 10–14 days, the plant guarantee). The assistant uses it for bringing a plant home and general care.
+- **Trusted sources for research:** the grower's own site, then NC State Extension's Plant Toolbox and Missouri Botanical Garden's Plant Finder for care, then the ASPCA and the Canadian Poisonous Plants Information System for pets and kids. Shown as "Reference" on the fact sheet.
+- **Pets and kids stays named-sources only**, even for a store's own sign ("Not toxic to animals and humans" on Terra's bromeliad sign isn't used unless a named source agrees).
+
+Still open: the first garden centre is **Terra**; a demo store from its stock follows.

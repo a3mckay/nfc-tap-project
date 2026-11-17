@@ -11,6 +11,8 @@ import {
   factsFromModel,
   isFetchableUrl,
   videoFor,
+  plantSearchName,
+  PLANT_REFERENCES,
   type ResearchDeps,
 } from "../src/lib/product-research.js";
 
@@ -151,6 +153,50 @@ describe("researchProduct", () => {
     const search = vi.fn(async () => []);
     await researchProduct({ vendor: "Carmel", title: "Animal Face" }, null, "cannabis", { search, fetchText: vi.fn(async () => null) });
     expect(search).toHaveBeenCalledWith("Carmel Animal Face cannabis strain review", 6, "CA");
+  });
+});
+
+// Trusted plant sources (founder, 2026-11-16): the grower's site, then NC State
+// Extension and Missouri Botanical Garden for care, then the ASPCA and the
+// Canadian Poisonous Plants Information System for pets and kids.
+describe("researchProduct: plants", () => {
+  it("names the trusted references in order", () => {
+    expect(PLANT_REFERENCES).toEqual(["plants.ces.ncsu.edu", "missouribotanicalgarden.org", "aspca.org", "cbif.gc.ca"]);
+  });
+
+  it("searches by the plant's name, without pot sizes or quoted cultivar names", () => {
+    expect(plantSearchName('6" Bromeliad Ocean Mist')).toBe("Bromeliad Ocean Mist");
+    expect(plantSearchName("Poinsettia Winter Wonderland, 6\u201d")).toBe("Poinsettia Winter Wonderland");
+    expect(plantSearchName("Yucca Cane, 10\"")).toBe("Yucca Cane");
+    expect(plantSearchName("Hydrangea 'Limelight', #2")).toBe("Hydrangea");
+    expect(plantSearchName("Hosta 10 in")).toBe("Hosta");
+  });
+
+  it("searches each reference, ranks them after the grower and before shops, and reads the top care and pets pages", async () => {
+    const search = vi.fn(async (q: string) => {
+      if (q.startsWith("site:plants.ces.ncsu.edu")) return [r("https://plants.ces.ncsu.edu/plants/euphorbia-pulcherrima/", "Euphorbia pulcherrima", "ncsu snippet")];
+      if (q.startsWith("site:aspca.org")) return [r("https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/poinsettia", "Poinsettia | ASPCA", "aspca snippet")];
+      if (q.startsWith("site:")) return [];
+      return [r("https://www.homedepot.ca/poinsettia", "Poinsettia", "shop snippet")];
+    });
+    const fetchText = vi.fn(async (url: string) => (url.includes("ncsu") ? "Keep above 13 C." : url.includes("aspca") ? "Toxic to dogs and cats: mild." : null));
+
+    const sources = await researchProduct({ vendor: null, title: "Poinsettia Winter Wonderland, 6\"" }, null, "plants", { search, fetchText });
+
+    for (const domain of PLANT_REFERENCES) expect(search).toHaveBeenCalledWith(`site:${domain} Poinsettia Winter Wonderland`, 2);
+    expect(sources.map((s) => [s.kind, s.url])).toEqual([
+      ["reference", "https://plants.ces.ncsu.edu/plants/euphorbia-pulcherrima/"],
+      ["reference", "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants/poinsettia"],
+      ["retailer", "https://www.homedepot.ca/poinsettia"],
+    ]);
+    expect(sources[0]!.text).toBe("Keep above 13 C.");
+    expect(sources[1]!.text).toBe("Toxic to dogs and cats: mild.");
+  });
+
+  it("doesn't search the plant references for other categories", async () => {
+    const search = vi.fn(async (_q: string) => []);
+    await researchProduct({ vendor: "Northfield", title: "Weekend Chukka" }, null, "footwear", { search, fetchText: vi.fn(async () => null) });
+    expect(search.mock.calls.some(([q]) => q.includes("aspca.org"))).toBe(false);
   });
 });
 

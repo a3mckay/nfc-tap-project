@@ -38,6 +38,12 @@ Things we consciously deferred during the build, with enough context to pick the
 **Why deferred:** Not a problem on Railway. It would be on serverless hosting, where each invocation may open a new pool.
 **What's needed:** Only if hosting moves to serverless: a pooled connection (PgBouncer or the provider's pooler).
 
+### Uploaded photos live in Postgres, not object storage
+**Files:** `packages/db/src/uploaded-images.ts`, `apps/admin/app/api/images/route.ts`, `apps/tap-page/app/img/[id]/route.ts`
+**What exists:** photo upload (2026-11-16) stores each photo (shrunk to 1600 px in the browser, 3 MB cap) as `bytea` in `uploaded_images`; the tap page serves it at `/img/<id>` with a one-year immutable cache header.
+**Why deferred:** no object storage or CDN is set up on Railway, and a demo store has a handful of photos. Postgres is fine at that size.
+**What's needed:** once stores upload hundreds of photos (database size, backup time) or tap-page image load shows up in the 2-second budget: move the bytes to object storage (Railway bucket, Cloudflare R2 or S3) behind a CDN, keep `/img/<id>` as a redirect so saved URLs keep working. No cleanup of photos that are no longer used either.
+
 ---
 
 ## Tap Page
@@ -100,10 +106,16 @@ Things we consciously deferred during the build, with enough context to pick the
 **Why deferred:** found while adding garden centres (2026-10-15); no live product is affected and owners can pick a category per product.
 **What's needed:** count "frame" as eyewear only with an eyewear word nearby (e.g. "acetate frame", "optical frame"), or in an eyewear store.
 
+### No botanical-name check (GBIF) before plant research
+**File:** `apps/admin/src/lib/product-research.ts`
+**What exists:** plant research (2026-11-16) searches the trusted references (NC State Extension, Missouri Botanical Garden, ASPCA, CPPIS) by the plant's name from its title, minus pot sizes and quoted cultivars. The reference pages state the botanical name, so Generate fills it from a cited source.
+**Why deferred:** the founder approved a GBIF name check as part of the plan, but titles use common names ("Poinsettia", "Neo. Guacamole Bromeliad") and trade names that GBIF's matcher doesn't resolve without extra work, and the references already give the botanical name with a source.
+**What's needed:** if research picks the wrong plant for common names (e.g. two plants called "snake plant"), look up the title's name with GBIF's species search before searching the references, and search by the botanical name.
+
 ### No garden questions in the AI quality test set
 **Files:** `apps/tap-page/eval/`
 **What exists:** the 350-question set covers shoes, cannabis, wine, womenswear, sunglasses, menswear and home. Beauty, toys, vintage, plants and garden care have rule tests but no graded questions.
-**Why deferred:** no garden centre's catalog yet to write questions from.
+**Why deferred:** no garden centre's catalog yet to write questions from. Terra (the first garden-centre prospect, 2026-11-16) now has a demo catalog to write them from.
 **What's needed:** 50 questions per new category from a real store's products, especially pets and kids, "will it survive?" and pest control use questions, before a garden centre goes live.
 
 ## Email

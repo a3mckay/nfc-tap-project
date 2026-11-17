@@ -58,4 +58,11 @@ describe("spec setup", () => {
     await setProductSpecCategory(pool, own.storeId, own.productId, null);
     expect(await getSpecSetup(pool, own.storeId, own.productId)).toMatchObject({ override: null });
   });
+
+  it("saves a spec found on a trusted plant reference (2026-11-16)", async () => {
+    await saveResearchedSpecs(pool, own.storeId, own.productId, [
+      { key: "min_temperature", value: "Above 13 °C", source_url: "https://plants.ces.ncsu.edu/plants/x/", source_kind: "reference" },
+    ]);
+    expect((await getProductSpecs(pool, own.storeId, own.productId)).map((x) => x.source_kind)).toEqual(["reference"]);
+  });
 });

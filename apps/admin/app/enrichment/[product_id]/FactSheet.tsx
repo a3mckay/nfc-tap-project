@@ -27,7 +27,7 @@ interface Props {
   factCopy: { topics: string[]; defaultTopic: string; example: string; websiteExample: string };
 }
 
-const KIND_LABEL: Record<string, string> = { brand: "Brand site", retailer: "Retailer", review: "Review", other: "Web", owner: "Your note" };
+const KIND_LABEL: Record<string, string> = { brand: "Brand site", reference: "Reference", retailer: "Retailer", review: "Review", other: "Web", owner: "Your note" };
 
 const sectionStyle: React.CSSProperties = { borderTop: "1px solid #eee", paddingTop: "1.5rem", marginTop: "2rem" };
 const headingStyle: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, color: "#444", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.35rem" };

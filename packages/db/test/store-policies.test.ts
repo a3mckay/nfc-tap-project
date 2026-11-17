@@ -3,7 +3,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "crypto";
-import { getStorePolicies, saveStorePolicies, POLICY_TYPES } from "../src/store-policies.js";
+import { getStorePolicies, saveStorePolicies, policyTypesFor, POLICY_TYPES } from "../src/store-policies.js";
 
 const connectionString =
   process.env.DATABASE_URL ?? "postgres://nfc:nfc@localhost:5432/nfc";
@@ -34,9 +34,26 @@ afterAll(async () => {
 describe("store policies", () => {
   it("lists the policy types customers ask about most, each with a label", () => {
     expect(POLICY_TYPES.map((p) => p.key)).toEqual([
-      "returns", "warranty", "alterations", "price_match", "holds", "delivery", "gifts", "id_age",
+      "returns", "warranty", "alterations", "price_match", "holds", "delivery", "gifts", "id_age", "plant_care",
     ]);
     expect(POLICY_TYPES.every((p) => p.label && p.hint)).toBe(true);
+  });
+
+  it("shows the plant care guide only to garden stores, or to a store that already wrote one", () => {
+    const keys = (industry: string | null, filled: string[] = []) => policyTypesFor(industry, filled).map((p) => p.key);
+    expect(keys("plants")).toContain("plant_care");
+    expect(keys("garden_care")).toContain("plant_care");
+    expect(keys("footwear")).not.toContain("plant_care");
+    expect(keys(null)).not.toContain("plant_care");
+    expect(keys("footwear", ["plant_care"])).toContain("plant_care");
+    expect(keys("footwear")).toContain("returns");
+  });
+
+  it("saves a plant care guide like any other policy", async () => {
+    await saveStorePolicies(pool, own, { plant_care: "Keep new plants apart for 10–14 days." });
+    expect(await getStorePolicies(pool, own)).toEqual([
+      { key: "plant_care", label: "Plant care guide", text: "Keep new plants apart for 10–14 days." },
+    ]);
   });
 
   it("saves, trims and returns only the filled-in policies, in the standard order", async () => {

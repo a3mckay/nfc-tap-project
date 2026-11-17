@@ -52,3 +52,11 @@ describe("EnrichmentForm labels and examples by category (docs/category-labels.m
     expect(render(true, "cannabis")).toContain("No lifestyle images for cannabis");
   });
 });
+
+describe("EnrichmentForm photo upload (2026-11-16)", () => {
+  it("offers to upload the main photo and extra photos, as well as pasting links", () => {
+    const html = render(false, "plants");
+    expect(html.match(/Upload photo/g)?.length).toBe(2);
+    expect(html).toContain('accept="image/jpeg,image/png,image/webp,image/heic"');
+  });
+});

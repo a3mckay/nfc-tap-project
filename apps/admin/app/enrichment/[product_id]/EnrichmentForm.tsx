@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveEnrichmentAction, type EnrichmentFormData } from "./actions.js";
 import type { Review, FaqItem, CategoryCopy } from "@nfc/db";
+import { ImageUploadButton } from "./ImageUploadButton.js";
 
 interface Props {
   initial: EnrichmentFormData;
@@ -204,10 +205,11 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
         <p style={sectionHeadingStyle}>Media</p>
         <div style={fieldStyle}>
           <label style={labelStyle}>Primary image URL</label>
-          <span style={hintStyle}>Main product photo — shown on tap pages and your customer collection. Use a direct image link (jpg, png, webp).</span>
+          <span style={hintStyle}>Main product photo — shown on tap pages and your customer collection. Upload a photo, or paste a direct image link (jpg, png, webp).</span>
           <input style={inputStyle} type="url" value={form.primary_image_url}
             onChange={(e) => set("primary_image_url", e.target.value)}
             placeholder="https://cdn.example.com/product-main.jpg" />
+          <ImageUploadButton shop={initial.shop} onUploaded={(url) => set("primary_image_url", url)} />
           {form.primary_image_url && (
             <img src={form.primary_image_url} alt="Preview" style={{ marginTop: "0.5rem", height: "80px", width: "80px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eee" }} />
           )}
@@ -225,6 +227,8 @@ export function EnrichmentForm({ initial, productTitle, isAiGenerated, hideTesti
           <textarea style={taStyle} value={form.extra_images_text}
             onChange={(e) => set("extra_images_text", e.target.value)}
             placeholder={"https://cdn.example.com/detail-1.jpg\nhttps://cdn.example.com/lifestyle.jpg"} />
+          <ImageUploadButton shop={initial.shop}
+            onUploaded={(url) => set("extra_images_text", [form.extra_images_text.trim(), url].filter(Boolean).join("\n"))} />
         </div>
       </div>
 
