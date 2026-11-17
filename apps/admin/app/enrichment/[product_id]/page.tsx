@@ -9,6 +9,7 @@ import {
   getReviewFlags,
   getProductSpecs,
   getSpecSetup,
+  getPairings,
   specCategoryFor,
   copyFor,
   SPEC_TEMPLATES,
@@ -18,6 +19,8 @@ import { SpecsPanel } from "./SpecsPanel.js";
 import { ReviewFlags } from "./ReviewFlags.js";
 import { EnrichmentPageClient } from "./EnrichmentPageClient.js";
 import { FactSheet } from "./FactSheet.js";
+import { PairingsPanel } from "./PairingsPanel.js";
+import { canPair } from "@/lib/pairings.js";
 import { ProductTabs } from "@/ProductTabs.js";
 import type { EnrichmentFormData } from "./actions.js";
 import {
@@ -53,13 +56,14 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
     );
   }
 
-  const [product, enrichment, facts, flags, specs, specSetup] = await Promise.all([
+  const [product, enrichment, facts, flags, specs, specSetup, pairings] = await Promise.all([
     getProductById(pool, product_id),
     getEnrichmentByProductId(pool, product_id),
     getProductFacts(pool, store.id, product_id),
     getReviewFlags(pool, store.id, product_id),
     getProductSpecs(pool, store.id, product_id),
     getSpecSetup(pool, store.id, product_id),
+    getPairings(pool, store.id, product_id),
   ]);
   // Labels and examples follow the product's category (docs/category-labels.md).
   const category = specSetup ? specCategoryFor(specSetup) : "general";
@@ -135,6 +139,8 @@ export default async function EnrichmentEditPage({ params, searchParams }: PageP
           specs={specs.map((x) => ({ key: x.key, value: x.value, source_url: x.source_url, source_kind: x.source_kind }))}
         />
       )}
+
+      <PairingsPanel shop={shop} productId={product_id} pairings={pairings} allowed={canPair(category)} />
 
       <FactSheet
         shop={shop}

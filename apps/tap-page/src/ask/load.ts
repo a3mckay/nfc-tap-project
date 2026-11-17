@@ -4,7 +4,7 @@
 import {
   getTagByUuid, getProductById, getStoreById, getEnrichmentByProductId, getProductTraining,
   getProductFacts, getActiveAnswers, getApprovedReviewsByProduct, getStorePolicies, getRecentQuestions,
-  getProductSpecs, specCategoryFor, specFieldsFor, copyFor,
+  getProductSpecs, specCategoryFor, specFieldsFor, copyFor, getPairings, canPair,
 } from "@nfc/db";
 import { resolveTagState } from "@/tag-state.js";
 import type { LoadedContext } from "./handle.js";
@@ -46,7 +46,7 @@ export async function loadProductContext(
   audience: "customer" | "staff" = "customer",
 ): Promise<LoadedContext | null> {
 
-  const [product, store, enrichment, training, facts, answers, reviews, policies, specValues] = await Promise.all([
+  const [product, store, enrichment, training, facts, answers, reviews, policies, specValues, pairings] = await Promise.all([
     getProductById(pool, productId),
     getStoreById(pool, storeId),
     getEnrichmentByProductId(pool, productId),
@@ -56,6 +56,7 @@ export async function loadProductContext(
     getApprovedReviewsByProduct(pool, productId),
     getStorePolicies(pool, storeId),
     getProductSpecs(pool, storeId, productId),
+    getPairings(pool, storeId, productId),
   ]);
   if (!product || !store || product.store_id !== storeId) return null;
 
@@ -110,6 +111,7 @@ export async function loadProductContext(
       category,
       labels: categoryLabels(category),
       policies: policies.map((p) => ({ label: p.label, text: p.text })),
+      pairings: canPair(category) ? pairings.map((p) => ({ title: p.title, reason: p.reason })) : [],
       ...(audience === "staff" ? {
         staff: {
           internalNotes: enrichment?.internal_staff_notes ?? null,

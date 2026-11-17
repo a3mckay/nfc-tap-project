@@ -412,6 +412,23 @@ export const SCHEMA_SPEC: TableSpec[] = [
     ],
   },
 
+  // "Goes great with" (2026-11-16)
+  {
+    name: "product_pairings",
+    columns: [
+      { name: "id", type: "uuid", nullable: false },
+      { name: "store_id", type: "uuid", nullable: false },
+      { name: "product_id", type: "uuid", nullable: false },
+      { name: "paired_product_id", type: "uuid", nullable: false },
+      { name: "reason", type: "text", nullable: false },
+      { name: "source_url", type: "text", nullable: true },
+      { name: "source_kind", type: "text", nullable: false },
+      { name: "position", type: "integer", nullable: false },
+      { name: "removed_by_owner", type: "boolean", nullable: false },
+      { name: "created_at", type: "timestamp", nullable: false },
+    ],
+  },
+
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {

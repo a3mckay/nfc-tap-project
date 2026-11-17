@@ -1,9 +1,10 @@
-import type { Product, Enrichment, Review, FaqItem, ExternalReview, ReviewAggregate, Award, BrandCollectorInsight, CategoryPatternInsight, SimilarProductSuggestion } from "@nfc/db";
+import type { Product, Enrichment, Review, FaqItem, ExternalReview, ReviewAggregate, Award, BrandCollectorInsight, CategoryPatternInsight, SimilarProductSuggestion, Pairing } from "@nfc/db";
 import type { ThemeSettings } from "@/theme.js";
 import { DEFAULT_THEME } from "@/theme.js";
 import { AuthPromptCard } from "./AuthPromptCard.js";
 import { OfferReveal } from "./OfferReveal.js";
 import { ForYou } from "./ForYou.js";
+import { GoesGreatWith } from "./GoesGreatWith.js";
 import { MediaGallery } from "./MediaGallery.js";
 import { KeyPoints } from "./KeyPoints.js";
 
@@ -26,6 +27,7 @@ interface Props {
   brandCollector: BrandCollectorInsight | null;
   categoryPattern: CategoryPatternInsight | null;
   sameBrand: SimilarProductSuggestion[];
+  pairings: Pairing[];   // "Goes great with" (2026-11-16)
   afterKeyPoints?: React.ReactNode;   // the reactions row (founder, 2026-10-05: under the key points)
   // Headings in the product's category's words (docs/category-labels.md).
   detailLabels: { materials: string; fit: string; care: string; sustainability: string };
@@ -66,7 +68,7 @@ function FaqAccordion({ items, primaryColor }: { items: FaqItem[]; primaryColor:
   );
 }
 
-export function ProductShell({ product, theme, enrichment, tapCount, scarcityThreshold, tagUuid, storeName, isAuthenticated, externalReviews, reviewAggregate, externalAwards, offer, brandCollector, categoryPattern, sameBrand, afterKeyPoints, detailLabels }: Props) {
+export function ProductShell({ product, theme, enrichment, tapCount, scarcityThreshold, tagUuid, storeName, isAuthenticated, externalReviews, reviewAggregate, externalAwards, offer, brandCollector, categoryPattern, sameBrand, pairings, afterKeyPoints, detailLabels }: Props) {
   const images = product.images as ShopifyImage[];
   const variants = product.variants as ShopifyVariant[];
   const primaryImage = images[0];
@@ -297,6 +299,9 @@ export function ProductShell({ product, theme, enrichment, tapCount, scarcityThr
             <FaqAccordion items={faq as FaqItem[]} primaryColor={primaryColor} />
           </section>
         )}
+
+        {/* ── Goes great with ── */}
+        <GoesGreatWith pairings={pairings} primaryColor={primaryColor} />
 
         {/* ── Offer ── */}
         {offer && (

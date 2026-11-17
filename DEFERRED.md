@@ -112,6 +112,12 @@ Things we consciously deferred during the build, with enough context to pick the
 **Why deferred:** the founder approved a GBIF name check as part of the plan, but titles use common names ("Poinsettia", "Neo. Guacamole Bromeliad") and trade names that GBIF's matcher doesn't resolve without extra work, and the references already give the botanical name with a source.
 **What's needed:** if research picks the wrong plant for common names (e.g. two plants called "snake plant"), look up the title's name with GBIF's species search before searching the references, and search by the botanical name.
 
+### Goes great with doesn't refresh when the catalog changes
+**Files:** `apps/admin/src/lib/refresh-pairings.ts`, `apps/admin/app/enrichment/[product_id]/pairingActions.ts`
+**What exists:** a product's pairings are picked at Generate or when the owner clicks "Find again" (2026-11-16). Adding a new product (say, a bark mix) doesn't update the pairings of products that would go with it, and deleting or drafting a product just hides it.
+**Why deferred:** a demo store has a handful of products, and each Generate costs an AI call; refreshing every product on each catalog change is premature.
+**What's needed:** if stores report stale pairings, a "Find pairings for all products" button, or a background refresh after a product import.
+
 ### No garden questions in the AI quality test set
 **Files:** `apps/tap-page/eval/`
 **What exists:** the 350-question set covers shoes, cannabis, wine, womenswear, sunglasses, menswear and home. Beauty, toys, vintage, plants and garden care have rule tests but no graded questions.
