@@ -2,7 +2,7 @@
 
 One JSON file per sales prospect creates their demo store: name, category, theme, products, one tag per product, and an optional dashboard login. Copy `example.json` to `<slug>.json` (these files stay out of git) and fill it in.
 
-- `industry`: one of the spec categories (apparel, footwear, eyewear, cannabis, wine, beer, spirits, home, general).
+- `industry`: one of the spec categories (apparel, footwear, eyewear, beauty, cannabis, wine, beer, spirits, toys, vintage, home, plants, garden_care, general). A garden centre is `plants`.
 - `owner.email` (optional): the prospect's admin login, if you know their email. The password is printed once, the first time.
 - **No email?** Leave `owner` out. The command prints a **claim link** instead (once): print it as a QR code in the kit. Whoever opens it sets the owner's email and password, and is signed in. It works once, for 90 days. Lost the card? Re-run with `--new-claim`; the old link stops working.
 - `products`: the products you chose. Only `title` is required.

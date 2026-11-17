@@ -57,6 +57,8 @@ const CATEGORY_SEARCH: Record<SpecCategory, { word: string; match: RegExp | null
   beauty: { word: "beauty", match: /beauty|cosmetic|makeup|make-up|skin|fragrance|hair/i, research: "ingredients review" },
   toys: { word: "toys", match: /toy|play|kids|children|baby/i, research: "toy review ages" },
   vintage: { word: "", match: null, research: "maker history" },   // the maker, if the owner sets one
+  plants: { word: "plants", match: /plant|garden|perennial|shrub|nurser|grow/i, research: "hardiness zone care toxic to pets" },
+  garden_care: { word: "garden", match: /garden|lawn|soil|fertili|organic/i, research: "label application rate" },
   general: { word: "", match: null, research: "materials features review" },
 };
 

@@ -420,6 +420,76 @@ const vintage: CategoryCopy = {
   },
 };
 
+// docs/category-garden.md (founder-approved 2026-10-15). Plants: growing facts
+// only as the grower or a named source states them; never a promise it'll thrive.
+const plants: CategoryCopy = {
+  productNameExample: "e.g. Hydrangea 'Limelight', #2",
+  backstoryExample: "Where this variety comes from and why growers love it…",
+  fields: {
+    materials: f("Light & soil", "Full sun to part shade; any well-drained soil, including clay…", "One sentence on light and soil, only as the grower or sources state them."),
+    fit_notes: f("Size & habit", "Grows 1.8 m tall and wide; upright, sturdy stems that don't flop…", "One sentence on mature size and shape, as the grower states them. Describe what's typical; never promise a size."),
+    care_instructions: f("Care", "Water deeply the first summer; prune in late winter; flowers on new growth…", "One or two plain sentences on watering, pruning and winter care."),
+    sustainability_notes: f("Pollinators & wildlife", "Bees love it in August; deer usually leave it alone…", "One sentence on pollinators and wildlife (bees, butterflies, birds, deer), only if a source states it. Empty string if nothing is known."),
+  },
+  greatWhenExample: ["you have a sunny spot and want flowers from July to frost", "you want a hydrangea that blooms every year, even after a hard winter", "you want cut flowers for the house"],
+  greatWhenHint: GREAT_WHEN_HINT,
+  reasonsExample: ["Blooms every year", "Hardy to zone 3", "Great for cutting and drying"],
+  awardsExample: ["Perennial Plant of the Year 2024"],
+  faqExample: { question: "Does it need full sun?", answer: "At least 6 hours for the most flowers." },
+  staffNameExample: "Pat, Perennials lead",
+  staffQuoteExample: "\"The hydrangea I tell first-time gardeners to buy.\"",
+  internalNotesExample: "The bench-front plants are #2; bigger #5s are in the back yard…",
+  extraImagesHint: "One URL per line — in bloom, at mature size in a garden, the grower's tag",
+  facts: { topics: ["hardiness", "light", "water", "size", "bloom", "care", "wildlife", "pets & kids", "origin", "other"], defaultTopic: "hardiness", example: "Hardy to zone 4 (Canada)", websiteExample: "provenwinners.com" },
+  training: {
+    oneLineSellExample: "The hydrangea we recommend when someone wants big flowers without the fuss.",
+    whoItsForExample: "First-time gardeners, sunny front yards, anyone who wants cut flowers.",
+    whoItsNotForExample: "Not for deep shade; not for a small balcony pot.",
+    truth: { label: "Survival truth", hint: "What really happens in local gardens, not the tag version.", example: "Tag says zone 5, but we lost a few in open, windy yards last winter; plant it near the house." },
+    worthExample: ["Flowers on new growth, so a hard winter doesn't cost you the blooms.", "Sturdy stems that don't flop after rain.", "Lives for decades."],
+    closestAlternativeExample: "Like 'Annabelle', but stronger stems and lime-green flowers.",
+    questionExample: { question: "When do I prune it?", answer: "Late winter or early spring, before new growth starts." },
+    companionExample: "Customers often add a bag of compost and the slow-release feed.",
+    brandExample: "Grown in Ontario by a family nursery we've bought from for ten years…",
+    stockNoteExample: "The #2s are on the front bench; a new delivery of #5s comes Thursday.",
+  },
+};
+
+// Garden care: soil, fertilizer, pest and weed control. Claims only as the label
+// states them (Pest Control Products Act for pest control).
+const garden_care: CategoryCopy = {
+  productNameExample: "e.g. Organic All-Purpose Fertilizer 4-4-4, 2 kg",
+  backstoryExample: "The brand and what makes this mix different…",
+  fields: {
+    materials: f("What's in it", "Composted poultry manure, feather meal and kelp; 4-4-4…", "One sentence on what it's made of and its N-P-K, only as the label states them."),
+    fit_notes: f("What it's for", "Vegetables, flowers and containers; one bag feeds a 3 × 3 m bed…", "One sentence on what it's used on and how far it goes, only as the label states them."),
+    care_instructions: f("How to use", "Mix into the top 5 cm of soil; repeat every 6–8 weeks…", "One or two plain sentences on how to apply it, only as the label states it."),
+    sustainability_notes: f("Sustainability", "Peat-free; made in Ontario from local compost…", SUSTAINABILITY_INSTRUCTION),
+  },
+  greatWhenExample: ["you're starting a new vegetable bed", "you want one feed for flowers and vegetables", "you'd rather go organic"],
+  greatWhenHint: GREAT_WHEN_HINT,
+  reasonsExample: ["Organic", "Slow release: feeds for weeks", "Made in Canada"],
+  awardsExample: ["OMRI listed"],
+  faqExample: { question: "Can I use it on vegetables?", answer: "Yes, the label lists vegetables." },
+  staffNameExample: "Pat, Garden care lead",
+  staffQuoteExample: "\"The only feed I use on my tomatoes.\"",
+  internalNotesExample: "Keep bags off the concrete; damp bags split…",
+  extraImagesHint: "One URL per line — the bag front, the label, before and after",
+  facts: { topics: ["use", "ingredients", "analysis", "application", "coverage", "certifications", "other"], defaultTopic: "use", example: "Covers 10 m² per bag", websiteExample: "espoma.com" },
+  training: {
+    oneLineSellExample: "The organic feed we recommend for vegetable gardens.",
+    whoItsForExample: "Vegetable gardeners, container gardens, people going organic.",
+    whoItsNotForExample: "Not for a quick fix: it works slowly.",
+    truth: { label: "Results truth", hint: "What customers really see, and how soon.", example: "Works, but slowly: tell people it takes 3–4 weeks to see a difference." },
+    worthExample: ["One bag lasts a whole season for most gardens.", "Won't burn roots if you overdo it.", "Feeds the soil, not just the plant."],
+    closestAlternativeExample: "Like the liquid feed, but slower and lasts longer.",
+    questionExample: { question: "How often do I use it?", answer: "Every 6–8 weeks through the season, per the label." },
+    companionExample: "Customers often add a bag of compost for new beds.",
+    brandExample: "A family company making organic garden products since the 1920s…",
+    stockNoteExample: "Pallet in the yard; small bags by the till.",
+  },
+};
+
 const general: CategoryCopy = {
   productNameExample: "e.g. Product name",
   backstoryExample: "Brand origin or product story…",
@@ -453,7 +523,7 @@ const general: CategoryCopy = {
   },
 };
 
-export const CATEGORY_COPY: Record<SpecCategory, CategoryCopy> = { apparel, footwear, eyewear, beauty, cannabis, wine, beer, spirits, toys, vintage, home, general };
+export const CATEGORY_COPY: Record<SpecCategory, CategoryCopy> = { apparel, footwear, eyewear, beauty, cannabis, wine, beer, spirits, toys, vintage, home, plants, garden_care, general };
 
 export function copyFor(category: SpecCategory): CategoryCopy {
   return CATEGORY_COPY[category];

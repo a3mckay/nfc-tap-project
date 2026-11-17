@@ -100,6 +100,12 @@ describe("findBrandDomain", () => {
     expect(d.search).toHaveBeenCalledWith("Glossier beauty", 5, "CA");
   });
 
+  it("searches plant growers as plants, and checks the page is about plants", async () => {
+    const d = deps({ CA: [r("https://www.provenwinners.com/", "Proven Winners. Perennials, annuals and shrubs for your garden", "")] });
+    expect(await findBrandDomain("Proven Winners", null, "plants", d)).toEqual({ domain: "provenwinners.com", found: true });
+    expect(d.search).toHaveBeenCalledWith("Proven Winners plants", 5, "CA");
+  });
+
   it("searches the brand alone for general products, and needs only the brand on the page", async () => {
     const d = deps({ CA: [r("https://www.apc.fr/", "A.P.C. official site", "")] });
     expect(await findBrandDomain("A.P.C.", null, "general", d)).toEqual({ domain: "apc.fr", found: true });

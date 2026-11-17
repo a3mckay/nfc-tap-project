@@ -116,6 +116,28 @@ describe("beauty, toys and vintage rules (docs/category-beauty.md, docs/category
   });
 });
 
+describe("plants and garden care rules (docs/category-garden.md)", () => {
+  it("marks those categories so their rules apply", () => {
+    for (const c of ["plants", "garden_care"]) expect(buildContext(ctx({ category: c }))).toContain(`CATEGORY: ${c}`);
+  });
+
+  it("plants: no survival promises; pets, kids and eating are regulated; no health claims", () => {
+    const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: plants"'));
+    expect(rule).toMatch(/never promise/i);
+    expect(rule).toMatch(/pets/i);
+    expect(rule).toMatch(/edible/i);
+    expect(rule).toMatch(/"regulated": true/);
+    expect(rule).toMatch(/health/i);
+  });
+
+  it("garden care: only what the label says; never suggests an unlisted use", () => {
+    const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: garden_care"'));
+    expect(rule).toMatch(/label/i);
+    expect(rule).toMatch(/Follow the label/);
+    expect(rule).toMatch(/non-toxic/i);
+  });
+});
+
 describe("cannabis (Cannabis Act promotion rules)", () => {
   it("marks cannabis products so the cannabis rules apply, and only those", () => {
     expect(buildContext(ctx({ category: "cannabis" }))).toContain("CATEGORY: cannabis");

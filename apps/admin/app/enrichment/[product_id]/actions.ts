@@ -63,10 +63,14 @@ const TOY_RULES = `This is a toy. Write to the adult buyer, never to the child. 
 // Vintage: one-of-a-kind pieces, written from the owner's notes.
 const VINTAGE_RULES = `This is a one-of-a-kind vintage or antique piece. Write from the store's description; any research is about the maker, not this exact piece. Never invent an era, maker, provenance or condition, and never state its value or investment potential. "One of a kind" is a fact: no urgency ("won't last", "grab it before it's gone").`;
 
+// Garden centres (docs/category-garden.md, founder-approved 2026-10-15; pending legal review).
+const PLANT_RULES = `This is a living plant. Give hardiness, light, size and bloom only as the grower or a source states them; always name the zone system (Canadian or USDA) and never convert one to the other. Never promise it will survive, bloom or reach a size: describe what's typical. Say whether it's toxic to pets or children only when a named source states it (e.g. the ASPCA's toxic plant list, or the Canadian Poisonous Plants Information System), naming that source. Never say a plant is edible unless it's sold as a food plant (vegetables, herbs, fruit). No health or medicinal claims (e.g. for echinacea or chamomile): growing and kitchen use only. Say native (naming where), non-invasive, deer-resistant, pollinator-friendly or drought-tolerant only when a source says so.`;
+const GARDEN_CARE_RULES = `This is a garden care product (soil, fertilizer, or pest or weed control). Give ingredients, N-P-K, uses and directions only as the label states them, and promise no results. For pest and weed control (Pest Control Products Act): name only the pests and uses the label lists, and never call it safe, non-toxic, harmless or pet-safe, or say it's natural so it's safe.`;
+
 // The extra rules each regulated or special category gets.
 const CATEGORY_RULES: Partial<Record<string, string>> = {
   cannabis: CANNABIS_RULES, wine: ALCOHOL_RULES, beer: ALCOHOL_RULES, spirits: ALCOHOL_RULES,
-  beauty: BEAUTY_RULES, toys: TOY_RULES, vintage: VINTAGE_RULES,
+  beauty: BEAUTY_RULES, toys: TOY_RULES, vintage: VINTAGE_RULES, plants: PLANT_RULES, garden_care: GARDEN_CARE_RULES,
 };
 
 const GREAT_WHEN_HINT = "Exactly 3 short phrases that complete the sentence 'Great when…', naming the situation or problem this product is for (e.g. 'you need one boot from office to bar'). Max 10 words each. Don't repeat 'Great when'. No upselling.";
