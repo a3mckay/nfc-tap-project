@@ -22,7 +22,7 @@ interface Props {
   specs: Spec[];
 }
 
-const KIND: Record<string, string> = { brand: "Brand site", retailer: "Retailer", review: "Review", other: "Web", owner: "Your entry" };
+const KIND: Record<string, string> = { brand: "Brand site", reference: "Reference", retailer: "Retailer", review: "Review", other: "Web", owner: "Your entry" };
 const inputStyle: React.CSSProperties = { padding: "0.4rem 0.5rem", border: "1px solid #ddd", borderRadius: "4px", fontSize: "0.88rem", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 
 function hostOf(url: string): string {

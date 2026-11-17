@@ -5,6 +5,7 @@
 
 export type ColumnType =
   | "uuid"
+  | "bytea"
   | "text"
   | "varchar"
   | "boolean"
@@ -398,10 +399,24 @@ export const SCHEMA_SPEC: TableSpec[] = [
     ],
   },
 
+  // Photo upload (2026-11-16)
+  {
+    name: "uploaded_images",
+    columns: [
+      { name: "id", type: "uuid", nullable: false },
+      { name: "store_id", type: "uuid", nullable: false },
+      { name: "content_type", type: "text", nullable: false },
+      { name: "sha256", type: "text", nullable: false },
+      { name: "bytes", type: "bytea", nullable: false },
+      { name: "created_at", type: "timestamp", nullable: false },
+    ],
+  },
+
 ];
 
 const TYPE_TO_PG: Record<ColumnType, string[]> = {
   uuid: ["uuid"],
+  bytea: ["bytea"],
   text: ["text"],
   varchar: ["character varying", "text"],
   boolean: ["boolean"],

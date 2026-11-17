@@ -79,7 +79,10 @@ describe("templates", () => {
     expect(specFieldsFor("beauty").map((f) => f.key)).toEqual(["shade", "finish", "skin_type", "key_ingredients", "free_from", "size"]);
     expect(specFieldsFor("toys").map((f) => f.key)).toEqual(["ages", "safety", "materials", "batteries", "origin", "dimensions"]);
     expect(specFieldsFor("vintage").map((f) => f.key)).toEqual(["era", "maker", "materials", "condition", "dimensions", "provenance"]);
-    expect(specFieldsFor("plants").map((f) => f.key)).toEqual(["botanical_name", "hardiness_zone", "light", "water", "mature_size", "bloom", "pot_size", "pets_kids"]);
+    expect(specFieldsFor("plants").map((f) => f.key)).toEqual([
+      "botanical_name", "indoor_outdoor", "hardiness_zone", "min_temperature", "light", "water", "humidity",
+      "mature_size", "bloom", "life_cycle", "pests", "pot_size", "pets_kids",
+    ]);
     expect(specFieldsFor("garden_care").map((f) => f.key)).toEqual(["type", "npk", "use_on", "coverage", "size", "registration", "certifications"]);
     expect(Object.keys(SPEC_TEMPLATES).sort()).toEqual(["apparel", "beauty", "beer", "cannabis", "eyewear", "footwear", "garden_care", "general", "home", "plants", "spirits", "toys", "vintage", "wine"]);
     for (const fields of Object.values(SPEC_TEMPLATES)) for (const f of fields) expect(f.label && f.hint).toBeTruthy();

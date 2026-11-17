@@ -1,4 +1,4 @@
-import { getPool, getStoreByDomain, getStorePolicies, POLICY_TYPES } from "@nfc/db";
+import { getPool, getStoreByDomain, getStorePolicies, policyTypesFor } from "@nfc/db";
 import { PoliciesForm } from "./PoliciesForm.js";
 
 // PRD v4 §7 Step 15j: the store's policies, which the AI assistant answers
@@ -26,7 +26,7 @@ export default async function PoliciesPage({ searchParams }: PageProps) {
         Customers ask about these at the shelf. The AI assistant answers from what you write here, so keep it short and
         specific. Leave anything that doesn&apos;t apply blank; the assistant will say it&apos;s shared the question with you.
       </p>
-      <PoliciesForm shop={shop} types={POLICY_TYPES} initial={initial} />
+      <PoliciesForm shop={shop} types={policyTypesFor(store.industry, policies.map((p) => p.key))} initial={initial} />
     </main>
   );
 }

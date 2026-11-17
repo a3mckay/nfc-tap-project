@@ -13,7 +13,16 @@ export const POLICY_TYPES = [
   { key: "delivery", label: "Delivery and shipping", hint: "Local delivery, shipping, pickup, costs and timing." },
   { key: "gifts", label: "Gift cards and gift wrap", hint: "Gift cards, gift receipts, wrapping." },
   { key: "id_age", label: "ID and age requirements", hint: "For age-restricted products such as alcohol or cannabis: ID rules, purchase limits." },
-] as const;
+  // Store-wide plant advice, e.g. Terra's "Moving tropicals indoors" sign (2026-11-16).
+  { key: "plant_care", label: "Plant care guide", hint: "Advice for every plant you sell: settling a new plant in at home, keeping it apart from other houseplants, your plant guarantee.", industries: ["plants", "garden_care"] },
+] as const satisfies ReadonlyArray<{ key: string; label: string; hint: string; industries?: readonly string[] }>;
+
+// The policy types a store's policies page shows: every general type, plus an
+// industry-specific one when the store is in that industry or has already written it.
+export function policyTypesFor(industry: string | null | undefined, filledKeys: readonly string[]) {
+  return POLICY_TYPES.filter((p) =>
+    !("industries" in p) || (industry != null && (p.industries as readonly string[]).includes(industry)) || filledKeys.includes(p.key));
+}
 
 export type PolicyKey = (typeof POLICY_TYPES)[number]["key"];
 

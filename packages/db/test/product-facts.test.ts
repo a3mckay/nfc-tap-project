@@ -62,6 +62,16 @@ describe("replaceResearchedFacts / getProductFacts", () => {
     expect(facts[0]).toMatchObject({ topic: "materials", source_url: "https://northfield.com/chukka", owner_edited: false });
   });
 
+  it("saves facts from trusted plant references, ranked after the brand and before shops (2026-11-16)", async () => {
+    await replaceResearchedFacts(pool, own.storeId, own.productId, [
+      { topic: "care", fact: "Sold at a garden centre", source_url: "https://shop.example/x", source_kind: "retailer" },
+      { topic: "temperature", fact: "Keep above 13 °C", source_url: "https://plants.ces.ncsu.edu/plants/euphorbia-pulcherrima/", source_kind: "reference" },
+      { topic: "bloom", fact: "Bracts last into January", source_url: "https://grower.example/x", source_kind: "brand" },
+    ]);
+    const facts = await getProductFacts(pool, own.storeId, own.productId);
+    expect(facts.map((f) => f.source_kind)).toEqual(["brand", "reference", "retailer"]);
+  });
+
   it("replaces researched facts on regenerate but keeps facts the owner edited or added", async () => {
     await replaceResearchedFacts(pool, own.storeId, own.productId, researched);
     const [first] = await getProductFacts(pool, own.storeId, own.productId);

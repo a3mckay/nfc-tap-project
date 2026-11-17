@@ -130,6 +130,14 @@ describe("plants and garden care rules (docs/category-garden.md)", () => {
     expect(rule).toMatch(/health/i);
   });
 
+  it("plants: temperature, humidity and life cycle only as stated; the store's plant care guide applies", () => {
+    const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: plants"'));
+    expect(rule).toMatch(/temperature/i);
+    expect(rule).toMatch(/humidity/i);
+    expect(rule).toMatch(/life cycle/i);
+    expect(rule).toMatch(/Plant care guide/);
+  });
+
   it("garden care: only what the label says; never suggests an unlisted use", () => {
     const rule = SYSTEM_PROMPT.slice(SYSTEM_PROMPT.indexOf('"CATEGORY: garden_care"'));
     expect(rule).toMatch(/label/i);

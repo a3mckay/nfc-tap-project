@@ -97,12 +97,17 @@ export const SPEC_TEMPLATES = {
   // docs/category-garden.md (founder-approved 2026-10-15)
   plants: [
     f("botanical_name", "Botanical name", "e.g. Hydrangea paniculata 'Limelight'"),
-    f("hardiness_zone", "Hardiness zone", "As on the grower's tag, naming the system, e.g. Zone 4 (Canada)"),
-    f("light", "Light", "Full sun, part shade, shade"),
-    f("water", "Water", "e.g. average; drought-tolerant once established"),
+    f("indoor_outdoor", "Indoor or outdoor", "Houseplant, outdoor, or seasonal (e.g. a holiday poinsettia)"),
+    f("hardiness_zone", "Hardiness zone", "Outdoor plants: as on the grower's tag, naming the system, e.g. Zone 4 (Canada)"),
+    f("min_temperature", "Lowest temperature", "Houseplants and tropicals: e.g. keep above 13 °C, away from cold drafts"),
+    f("light", "Light", "Full sun, part shade, shade; indoors: bright indirect, low light"),
+    f("water", "Water", "e.g. average; drought-tolerant once established; keep the central cup ¼ full"),
+    f("humidity", "Humidity", "e.g. likes 50%+; mist or use a pebble tray"),
     f("mature_size", "Mature size", "Height × spread, e.g. 1.8 × 1.5 m"),
     f("bloom", "Bloom", "Colour and season, e.g. white to pink, July–September"),
-    f("pot_size", "Pot size", "e.g. #2 (2 gal)"),
+    f("life_cycle", "Life cycle", "e.g. blooms once, then grows pups you can pot up"),
+    f("pests", "Pests to watch", "e.g. mealybugs, spider mites"),
+    f("pot_size", "Pot size", "e.g. #2 (2 gal), 6 in"),
     f("pets_kids", "Pets & kids", "Only as a named source states, e.g. toxic to cats (ASPCA)"),
   ],
   garden_care: [

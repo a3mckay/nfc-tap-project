@@ -440,7 +440,7 @@ const plants: CategoryCopy = {
   staffQuoteExample: "\"The hydrangea I tell first-time gardeners to buy.\"",
   internalNotesExample: "The bench-front plants are #2; bigger #5s are in the back yard…",
   extraImagesHint: "One URL per line — in bloom, at mature size in a garden, the grower's tag",
-  facts: { topics: ["hardiness", "light", "water", "size", "bloom", "care", "wildlife", "pets & kids", "origin", "other"], defaultTopic: "hardiness", example: "Hardy to zone 4 (Canada)", websiteExample: "provenwinners.com" },
+  facts: { topics: ["hardiness", "temperature", "light", "water", "humidity", "size", "bloom", "life cycle", "care", "pests", "wildlife", "pets & kids", "origin", "other"], defaultTopic: "hardiness", example: "Hardy to zone 4 (Canada)", websiteExample: "provenwinners.com" },
   training: {
     oneLineSellExample: "The hydrangea we recommend when someone wants big flowers without the fuss.",
     whoItsForExample: "First-time gardeners, sunny front yards, anyone who wants cut flowers.",

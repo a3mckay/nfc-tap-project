@@ -4,7 +4,7 @@ import type { Pool } from "pg";
 // D42). Facts the AI research tool found, each with its source; owners and
 // managers can edit them, and their edits survive regeneration.
 
-export type FactSourceKind = "brand" | "retailer" | "review" | "other" | "owner";
+export type FactSourceKind = "brand" | "reference" | "retailer" | "review" | "other" | "owner";
 
 export interface ResearchedFact {
   topic: string;
@@ -31,8 +31,8 @@ export async function getProductFacts(pool: Pool, storeId: string, productId: st
   const { rows } = await pool.query<ProductFact>(
     `select * from product_facts
       where store_id = $1 and product_id = $2
-      order by case source_kind when 'owner' then 0 when 'brand' then 1 when 'retailer' then 2
-                                when 'review' then 3 else 4 end,
+      order by case source_kind when 'owner' then 0 when 'brand' then 1 when 'reference' then 2
+                                when 'retailer' then 3 when 'review' then 4 else 5 end,
                topic, created_at`,
     [storeId, productId],
   );
